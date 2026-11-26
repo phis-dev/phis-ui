@@ -15,6 +15,7 @@ import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhisThreadKind } from "../../../constants/threads";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS, PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
 import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
+import { phiThreadMessageSourceLangField } from "../../../components/forms/thread-message-language";
 
 export const PHI_THREADS_FORM_IDS = {
   newConversation: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "threads/new-conversation"),
@@ -98,6 +99,8 @@ const PHI_THREADS_NEW_CONVERSATION_FORM_DESCRIPTOR: PhiFormDescriptor = {
         message: label("messageRequired", "A conversation starts with a message."),
       }],
     },
+    // What the first message is written in, as for every message (THREADS.md section 9).
+    phiThreadMessageSourceLangField(label("language", "Written in")),
   ],
   layout: {
     gap: { compact: "sm", medium: "base" },
@@ -117,6 +120,7 @@ const loadLabels = createPhiFormLabelSetLoader(
     message: labels.messageLabel,
     messagePlaceholder: labels.messagePlaceholder,
     messageRequired: labels.messageRequired,
+    language: labels.languageLabel,
   }),
 );
 

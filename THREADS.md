@@ -104,7 +104,8 @@ The composer is the one place a message is written and a file is hung on it. The
 Modules reuse it rather than each growing their own.
 
 It is a declared Form -- `threads/message`, placed through the one generic Form Widget -- and not a Widget
-of its own. Three field descriptors: a hidden conversation, a textarea, and the shared upload field. What
+of its own. Its field descriptors: a hidden conversation, a textarea, the language it is written in (section 9),
+and the shared upload field. What
 it used to do for itself is somebody else's declared job now: validation is a Provider, the wording is a
 label set a translator reaches, the Send button belongs to the placement, and the submit is a handler
 Provider behind `/api/site/forms` rather than a `fetch` written into a client component.
@@ -167,45 +168,68 @@ session and refuses without one ([DASHBOARD.md](./DASHBOARD.md)).
 
 ## 9. The language a message is written in
 
-**Nobody is asked.** Nothing on these surfaces offers a language picker, and no message carries a
-language a person chose -- because a translator determines the source language itself, and asking would
-have been a field somebody has to fill in for an answer that is already available for nothing.
+**The writer declares it** (owner decision, 2026-11-26). Every Form that writes a message carries a
+"Written in" picker beside the message, and the translate link appears only on a message in another
+language than the reader's.
 
-### Why nothing is asked
+### Why it is asked
 
-The obvious design -- the writer declares it -- was built and taken out again, and the reason is worth
-keeping: the field would have decided *whether there is anything to translate at all*, which only pays
-where translating happens by itself. It never does here. A translation is one press of one button by one
-person who does not understand one message, and that person is a better filter than any stored value:
-they do not press on the messages they can read.
+Nothing used to be asked: a translator detects the source language itself, and the person who does not
+understand a message seemed the better filter -- they do not press on the messages they can read. That
+was built (2026-09-25, `0ea53a9`) and it is replaced, because the filter it relied on is a control drawn
+on every row whether anybody needs it or not. The owner's own German messages, read in German, carried
+"Translate", which looks wrong, and pressed it pays DeepL to turn German into German. Without a declared
+language the surface cannot tell that message from a Portuguese one; with one it can, and the control is
+absent where there is nothing to translate.
 
-What a declared language would have bought is therefore a control that hides itself -- against a field
-in every composer and every conversation form, filled in by everyone, for the sake of the few who ever
-translate.
+The cost is small because the picker is almost never touched. It opens on the writer's own language --
+`viewer.preferredLocale` where the Site offers it, otherwise the locale the page is read in -- so leaving
+it alone is declaring.
 
-**The source language is still known afterwards.** A provider reports what it detected, so a translation
-can say which language it came out of. It is a result rather than a precondition, which is all this
-surface needs.
+### Where the picker is, and where it is not
+
+**Only where a person sends a message**, never on a read view, a listing or a table:
+
+- Core's Reply Form (`PHI_SHARED_FORM_IDS.threadReply`), wherever it is placed: the conversations Page,
+  the customer file's "Add note" and its reply, and both halves of Support's Page.
+- The threads Module's "New conversation".
+- `@phis/support`'s "Ask for support" and the Supporter's "Open a ticket".
+
+It is one field, `sourceLang` (`components/forms/thread-message-language.ts`): the Site locale select
+every other language field already is -- Core's `site-locales` Options Provider over the placement's
+`availableLocales` -- with no layout of its own and its label in the Form's label set. The page tree that
+places the Form hands it the Site's languages and the writer's default through
+`buildPhiThreadMessageFormConfig`; the registered Form knows neither. `@phis/support` spells the same two
+keys for its own Forms, as `@phis/products` does, because neither is a package export.
+
+Core's Site routes take it as an optional `sourceLang` and store it as it resolves, without
+`LangDetected`; a key the platform does not know is a 400 ([phis-server design/THREADS.md §14](https://github.com/phis-dev/phis-server/blob/main/design/THREADS.md)).
 
 ### The one place a language is stored
 
-`thread_messages.source_lang` exists and stays, and **only an integration writes it**
-([phis-server design/THREADS.md §14](https://github.com/phis-dev/phis-server/blob/main/design/THREADS.md)). An Add-on delivering messages
-usually knows the language for nothing -- a mail header, the locale of the page a form was submitted
-from, the browser language a chat widget saw -- and that is a fact which is lost if there is nowhere to
-put it. It is also the only kind of value a *filter* can use: routing Portuguese enquiries to the people
-who speak Portuguese needs a stored column, because nothing that comes into being while somebody reads
-can appear in a `WHERE` clause.
+`thread_messages.source_lang`. Three things write it: the writer through the picker, an integration
+through the threads capability -- an Add-on delivering messages usually knows the language for nothing,
+from a mail header or the page a form was submitted from -- and, where neither declared one, a
+translation. It is also the only kind of value a *filter* can use: routing Portuguese enquiries to the
+people who speak Portuguese needs a stored column, because nothing that comes into being while somebody
+reads can appear in a `WHERE` clause.
 
-**The ad-hoc translation fills it as well.** A provider reports the language it recognised, and a message
-that declared none keeps that value with the flag `LangDetected` (32) beside it -- because the recognition
-is free with a translation somebody paid for, and without it the column would stay empty for every message
-a person ever wrote. The flag is what keeps the column readable: without it, a declared language and a
-guess about five characters would look the same to whatever routes on them. A declaration is never
-overwritten.
+**The ad-hoc translation fills what nobody declared.** A provider reports the language it recognised, and
+a message that declared none keeps that value with the flag `LangDetected` (32) beside it -- because the
+recognition is free with a translation somebody paid for. The flag is what keeps the column readable:
+without it, a declaration and a guess about five characters would look the same to whatever routes on
+them. A declaration is never overwritten.
 
-These surfaces only ever read the column, and today not even that. The writing happens in Core, on the
-translate call -- not here, and not from a browser.
+### When the link is offered
+
+`offersPhiMessageTranslation` (`widgets/thread-conversation/message-language.ts`): there is a target --
+the reader's language, offered by this installation -- a body, no `Confidential` flag, and the message's
+`sourceLang` is not already the reader's language. "The same" is the language and the script, never the
+region: `de` reads as `de-AT`, `pt` as `pt-BR`, `en-US` as `en-GB`, while `zh-Hans` and `zh-Hant` differ.
+That is the capability table's own distinction, and Core's translate route asks the same question and
+answers with the original instead of calling a provider, so a caller that asks anyway is not billed. A
+message whose language nobody knows -- written before the picker, or delivered without one -- still
+offers the link; the provider finds out.
 
 ### The ad-hoc translation
 
@@ -215,9 +239,9 @@ is persisted: not the text, not a record that it was shown.
 - **The thread shows originals.** Translating is never automatic and never a consequence of two
   languages differing.
 - **One message, one control, one round trip.** Not a thread at a time. A mixed thread translated in one
-  batch asks the provider for German into German for every message that is already German, and a batch
-  could skip those only if it knew their languages -- which it does not, because nothing declares them.
-  A person does know, and skips them by not pressing.
+  batch asks the provider for German into German for every message that is already German. A declared
+  language now lets the surface skip those, but only for messages that declared one; the press per
+  message is still what keeps the bill to what somebody wanted to read.
 
   Two measurements against the DeepL Free API sharpen this and correct one thing it would have been easy
   to assume. Billing is by **source** text, and a German sentence asked for German is charged in full
@@ -303,11 +327,12 @@ In order:
    control may be drawn after it has been drawn.
 5. ~~**The route.**~~ Done: `POST /api/site/threads/<threadId>/messages/<messageId>/translate` with the
    target locale in the body. It asks in this order -- can this installation translate into that locale,
-   may this viewer read the message, is it `Confidential` -- then calls, answers, and stores nothing. It
-   passes the message's `source_lang` where an integration recorded one and `null` otherwise, and answers
-   with the language the provider detected where it reported one. `POST` for a call that stores nothing,
-   because it spends money and reaches a third party: a `GET` invites a prefetch, a retry and a cache to
-   translate on somebody's behalf.
+   may this viewer read the message, is it `Confidential`, is it already written in that language (then
+   the original is the answer and no provider is called) -- then calls, answers, and stores nothing but a
+   recognised language where none was declared. It passes the message's `source_lang` where one is known
+   and `null` otherwise, and answers with the language the provider detected where it reported one.
+   `POST` for a call that stores nothing, because it spends money and reaches a third party: a `GET`
+   invites a prefetch, a retry and a cache to translate on somebody's behalf.
 
 The body sent is `body_markdown ?? body_text`. Markdown passes through as text and the control codes
 survive, so the richer body is the one to send, and the answer is rendered the way the original is.

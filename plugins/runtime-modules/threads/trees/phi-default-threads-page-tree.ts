@@ -20,6 +20,7 @@ import { createPhiThreadsPageIds } from "../addresses";
 import type { PhiSidebarAreaKey } from "../../sidebar-route";
 import { PHI_THREADS_FORM_IDS } from "../forms";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
+import { buildPhiThreadMessageFormConfig } from "../../../../components/forms/thread-message-language";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiThreadPageLabels } from "../labels";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
@@ -625,9 +626,12 @@ export async function buildPhiDefaultThreadsPageTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: labels.newConversationLabel,
+        // The Form config carries the Site's language names, which no translation pass may touch.
+        flags: PhiCmsFlags.NoTranslate,
         config: {
           formId: PHI_THREADS_FORM_IDS.newConversation,
-          formConfig: {},
+          // The Site's languages for "Written in", opened on the writer's own (THREADS.md section 9).
+          formConfig: buildPhiThreadMessageFormConfig(runtime),
           execution: { mode: "handler" },
           source: null,
           signalRoutes: {
@@ -785,7 +789,7 @@ export async function buildPhiDefaultThreadsPageTree({
         flags: PhiCmsFlags.NoTranslate,
         config: {
           formId: PHI_SHARED_FORM_IDS.threadReply,
-          formConfig: {},
+          formConfig: buildPhiThreadMessageFormConfig(runtime),
           execution: { mode: "handler" },
           source: { providerKey: PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS.table, resourceKey: "inbox" },
           openActionKey: "reply",

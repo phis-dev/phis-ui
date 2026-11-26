@@ -25,6 +25,7 @@ import type { PhiThreadConversationLabels } from "../../messaging/label-defaults
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { offersPhiMessageTranslation } from "./message-language";
 
 export type PhiThreadConversationWidgetClientProps = PhiClientBlockBaseProps<
   PhiThreadConversationLabels,
@@ -565,7 +566,7 @@ export function PhiThreadConversationWidgetClient({
       onLoadOlder={() => void loadOlder()}
       onReply={reply}
       translations={translations}
-      canTranslate={translationTarget != null}
+      translationTarget={translationTarget}
       onTranslate={translate}
       formatLanguage={formatLanguage}
     />
@@ -589,7 +590,7 @@ export function PhiThreadConversationView({
   onLoadOlder,
   onReply,
   translations = {},
-  canTranslate = false,
+  translationTarget = null,
   onTranslate,
   formatLanguage,
   sampleLabel,
@@ -604,7 +605,11 @@ export function PhiThreadConversationView({
   onLoadOlder?: () => void;
   onReply?: () => void;
   translations?: Readonly<Record<number, PhiMessageTranslation>>;
-  canTranslate?: boolean;
+  /**
+   * The reader's language where this installation can translate into it, and null otherwise. A message
+   * offers to be read in it only where it is not already written in it (`offersPhiMessageTranslation`).
+   */
+  translationTarget?: string | null;
   onTranslate?: (messageId: number) => void;
   formatLanguage?: (locale: string | null) => string | null;
   /** A tag on the heading saying the conversation is a sample, where it is one. */
@@ -717,7 +722,7 @@ export function PhiThreadConversationView({
                   formatTime={formatTime}
                   formatLanguage={formatLanguage ?? readNoLanguage}
                   translation={translations[message.id] ?? null}
-                  canTranslate={canTranslate}
+                  translationTarget={translationTarget}
                   onTranslate={onTranslate}
                 />
               </Fragment>
@@ -792,7 +797,7 @@ function PhiThreadMessageRow({
   formatTime,
   formatLanguage,
   translation,
-  canTranslate,
+  translationTarget,
   onTranslate,
 }: {
   message: PhisThreadMessage;
@@ -800,21 +805,18 @@ function PhiThreadMessageRow({
   formatTime: (value: string) => string;
   formatLanguage: (locale: string | null) => string | null;
   translation: PhiMessageTranslation | null;
-  canTranslate: boolean;
+  translationTarget: string | null;
   onTranslate?: (messageId: number) => void;
 }) {
   const internal = (message.flags & PhisThreadMessageFlag.Internal) !== 0;
   const redacted = (message.flags & PhisThreadMessageFlag.Redacted) !== 0;
-  /*
-   * `Confidential` gets no control, and the route would refuse it anyway.
-   *
-   * It is the one flag about where a body may go rather than who may read it, and a translation is the
-   * body leaving Core. Whoever may read this message still may not have it translated, so the button is
-   * absent rather than there to be refused.
-   */
-  const confidential = (message.flags & PhisThreadMessageFlag.Confidential) !== 0;
   const shown = translation?.status === "ready" && translation.visible ? translation : null;
-  const offerTranslation = canTranslate && !confidential && message.bodyText != null;
+  /*
+   * Absent rather than there to be refused: for a `Confidential` message, whose body may not leave Core,
+   * and for one already written in the reader's language -- declared by its writer, or recognised by an
+   * earlier translation -- which there is nothing to translate out of.
+   */
+  const offerTranslation = offersPhiMessageTranslation(message, translationTarget);
 
   return (
     <PhiFlexControl vertical gap={4}>

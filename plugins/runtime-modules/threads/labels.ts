@@ -165,6 +165,8 @@ const PHI_THREAD_FORM_LABEL_SET = definePhiRuntimeModuleLabelSet(PHI_THREADS_RUN
     message_label: "Message",
     message_placeholder: definePhiMessageLabel("Write the first message"),
     message_required: definePhiMessageLabel("A conversation starts with a message."),
+    /* Beside the first message: the language it is written in, which opens on the writer's own. */
+    language_label: "Written in",
   },
 });
 
@@ -181,5 +183,6 @@ export async function getPhiThreadFormLabels(options: PhiGlobalTranslatorOptions
     messageLabel: labels.message_label,
     messagePlaceholder: labels.message_placeholder,
     messageRequired: labels.message_required,
+    languageLabel: labels.language_label,
   };
 }

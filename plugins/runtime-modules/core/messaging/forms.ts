@@ -12,6 +12,7 @@ import { PHI_CMS_AREA_KEYS } from "../../../../constants/cms-areas";
 import { PhisThreadMessageFlag } from "../../../../constants/threads";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "../ids";
 import { phiFormLabel as label } from "../../../../components/forms/form-descriptor-text";
+import { phiThreadMessageSourceLangField } from "../../../../components/forms/thread-message-language";
 
 /*
  * Answering a conversation, as Core's Form, for every Module that runs conversations.
@@ -79,6 +80,12 @@ const PHI_THREAD_REPLY_FORM_DESCRIPTOR: PhiFormDescriptor = {
       }],
     },
     /*
+     * What the message is written in, declared by its writer (THREADS.md section 9). The placement hands
+     * it the Site's languages and opens it on the writer's own (`buildPhiThreadMessageFormConfig`), so
+     * leaving it alone is declaring. It is what keeps "Translate" off a message the reader can read.
+     */
+    phiThreadMessageSourceLangField(label("replyLanguage", "Written in")),
+    /*
      * The attachment narrows nothing the Site has not narrowed already: the kinds are what the writer's
      * own Space accepts, which the control plane answers for. An area rather than a button, because a
      * file is part of what a reply says. What it says is the upload field's own (`widget:upload`).
@@ -101,6 +108,7 @@ const loadLabels = createPhiFormLabelSetLoader(
     replyPlaceholder: labels.replyPlaceholder,
     replyRequired: labels.replyRequired,
     replyThreadRequired: labels.replyThreadRequired,
+    replyLanguage: labels.replyLanguageLabel,
     audienceEveryone: labels.audienceEveryone,
     audienceInternal: labels.audienceInternal,
     replySend: labels.replySendLabel,

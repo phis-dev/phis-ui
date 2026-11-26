@@ -9,6 +9,7 @@ import { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../constants/thr
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../constants/core-data-provider-keys";
 import { PhisThreadKind } from "../../../../constants/threads";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
+import { buildPhiThreadMessageFormConfig } from "../../../../components/forms/thread-message-language";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import { PHI_DIALOG_WIDTH_SINGLE_COLUMN } from "../../../../helpers/cms-dialog";
@@ -192,8 +193,11 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
       flags: PhiCmsFlags.NoTranslate,
       config: {
         formId: PHI_SHARED_FORM_IDS.threadReply,
-        // A reply may be an internal note; in the file every message is one (Core), so there is nothing to choose.
-        ...(note ? {} : { formConfig: { initialValues: { internalAllowed: true } } }),
+        /*
+         * A reply may be an internal note; in the file every message is one (Core), so there is nothing to
+         * choose. Both declare what they are written in, opened on the writer's own language.
+         */
+        formConfig: buildPhiThreadMessageFormConfig(runtime, note ? {} : { internalAllowed: true }),
         execution: { mode: "handler" },
         source: { providerKey: PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS.table, resourceKey: "inbox" },
         openActionKey: "reply",
