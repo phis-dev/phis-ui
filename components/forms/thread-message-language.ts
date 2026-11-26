@@ -3,12 +3,6 @@ import type { PhiFormFieldDescriptor, PhiFormTextDescriptor } from "../../types/
 import { PHI_FORM_FIELD_PROVIDER_KEYS } from "./form-provider-contract";
 import { PHI_SITE_LOCALES_CONFIG_KEY } from "./site-locales-config";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-provider-keys";
-import {
-  PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE,
-  PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY,
-} from "./thread-message-source-lang";
-
-export { PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE, PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY };
 
 /*
  * The language a message is written in, declared by whoever writes it (THREADS.md section 9).
@@ -27,13 +21,20 @@ export { PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE, PHI_THREAD_MESSAGE_SOURCE_LANG
  * layout either: it stands where the Form's own template puts a field.
  */
 
+/** The value's name, which is the name Core's Site routes take it under and `PhisThreadMessage` reads it back as. */
+export const PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY = "sourceLang";
+
 /**
  * The picker, as a field of a Form that writes a message.
  *
+ * Its last choice, after a separator, is "Other language" -- the field's `emptyOption` (FORMS.md, "The
+ * empty option"): chosen, the field holds nothing and the Form leaves it out of the request, so Core sees
+ * no declaration and stores `source_lang` NULL. It is the writer's way of saying "not one of yours".
+ *
  * No `required` rule and no way to clear it, for the reason the profile's language carries none: it
- * opens on a language or on "Other language" and offers no way to empty it, so the rule could only pass and would print an
- * asterisk beside something nobody can leave blank. Core refuses a key it does not know, which is where
- * that answer belongs.
+ * opens on a language or on "Other language" and offers no other way to empty it, so the rule would print
+ * an asterisk beside a choice that is meant to be left as it is. Core refuses a key it does not know,
+ * which is where that answer belongs.
  */
 export function phiThreadMessageSourceLangField(
   label: PhiFormTextDescriptor,
@@ -44,9 +45,7 @@ export function phiThreadMessageSourceLangField(
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
     label,
     optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales },
-    // Last, after a separator (the Site locales provider sets it apart): declares nothing. The relay leaves the language out of the request, and
-    // Core stores NULL.
-    options: [{ value: PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE, label: otherLanguageLabel }],
+    emptyOption: { label: otherLanguageLabel },
   };
 }
 
@@ -54,16 +53,16 @@ export function phiThreadMessageSourceLangField(
  * What a writer is assumed to write in: the language they read in.
  *
  * Their own preference where they set one and the Site offers it, otherwise the locale this page is
- * rendered in; where the Site offers neither, "Other language", which declares nothing. Most people
- * never touch the picker, so this is what nearly every message declares.
+ * rendered in; where the Site offers neither, nothing -- the picker opens on "Other language", which
+ * declares nothing. Most people never touch the picker, so this is what nearly every message declares.
  */
 export function resolvePhiThreadMessageSourceLang(
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer">,
-): string {
+): string | undefined {
   const preferred = runtime.viewer.preferredLocale?.trim() ?? "";
   const offered = runtime.site.availableLocales.map((option) => option.code);
   if (preferred && offered.includes(preferred)) return preferred;
-  return offered.includes(runtime.locale.current) ? runtime.locale.current : PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE;
+  return offered.includes(runtime.locale.current) ? runtime.locale.current : undefined;
 }
 
 /**
@@ -72,19 +71,22 @@ export function resolvePhiThreadMessageSourceLang(
  *
  * Built per request from the page tree, which knows both; the registered Form knows neither
  * (`site-locales-config.ts`). `initialValues` are whatever else the placement starts the Form on -- an
- * internal note offered, say -- and the language is added to them, not put in their place.
+ * internal note offered, say -- and the language is added to them, not put in their place. Where the
+ * writer is assumed to write in none of the Site's languages, the language is no initial value at all,
+ * and the picker opens on its empty option.
  */
 export function buildPhiThreadMessageFormConfig(
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer">,
   initialValues: Record<string, unknown> = {},
 ): Record<string, unknown> {
+  const sourceLang = resolvePhiThreadMessageSourceLang(runtime);
   return {
     [PHI_SITE_LOCALES_CONFIG_KEY]: runtime.site.availableLocales.map(
       (option) => ({ code: option.code, label: option.label }),
     ),
     initialValues: {
       ...initialValues,
-      [PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY]: resolvePhiThreadMessageSourceLang(runtime),
+      ...(sourceLang ? { [PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY]: sourceLang } : {}),
     },
   };
 }

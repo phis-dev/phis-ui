@@ -59,8 +59,17 @@ const viewer = (flags: number) => ({
 
 const ROUTE = PHI_ACCOUNTING_RUNTIME_MODULE_ROUTES.find((entry) => entry.presetKey === PHI_ACCOUNTING_CUSTOMER_FILE_PAGE_PRESET_KEY)!;
 
-async function loadTree(flags: number) {
-  return ROUTE.loadTree({ page: PAGE, runtime: { locale: { current: "en" }, viewer: viewer(flags) } } as never);
+/*
+ * The Site's languages are part of the runtime every Page tree is built with: the file's two Reply Forms
+ * hand them to their language picker (THREADS.md section 9).
+ */
+const SITE = { key: "site", availableLocales: [{ code: "de", label: "Deutsch" }, { code: "en", label: "English" }] };
+
+async function loadTree(flags: number, preferredLocale: string | null = null, site = SITE) {
+  return ROUTE.loadTree({
+    page: PAGE,
+    runtime: { site, locale: { current: "en" }, viewer: { ...viewer(flags), preferredLocale } },
+  } as never);
 }
 
 /** Staff's customer file (phis-server `GET /api/site/members/{userId}/file`). */
@@ -143,11 +152,26 @@ describe("the customer file page", () => {
       expect(replies).toContain(controller);
     }
     // Core's Reply Form twice: the note's, where every message is internal, and the reply's, which offers it.
+    // Both offer the Site's languages and open on the page's, the writer having set none.
     const forms = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/form"));
-    expect(forms.map((form) => (form.config.formConfig as { initialValues: unknown } | undefined)?.initialValues ?? null))
-      .toEqual([null, { internalAllowed: true }]);
+    expect(forms.map((form) => form.config.formConfig)).toEqual([
+      { availableLocales: SITE.availableLocales, initialValues: { sourceLang: "en" } },
+      { availableLocales: SITE.availableLocales, initialValues: { internalAllowed: true, sourceLang: "en" } },
+    ]);
     expect(tree.overlays).toHaveLength(2);
     expect(tree.controllerSettings?.length).toBe(1);
+  });
+
+  it("opens both Reply Forms' language on the writer's own, and on \"Other language\" where the Site offers neither", async () => {
+    const initialValues = async (preferredLocale: string | null, site = SITE) =>
+      (await loadTree(PhiBaseRole.Accountant, preferredLocale, site)).contentWidgets
+        .filter((widget) => widget.widgetType.endsWith("/form"))
+        .map((form) => (form.config.formConfig as { initialValues: unknown }).initialValues);
+    expect(await initialValues("de")).toEqual([{ sourceLang: "de" }, { internalAllowed: true, sourceLang: "de" }]);
+    // A German-only Site read in English by a French writer: no language at all, so the picker opens on
+    // its empty option and the Form submits none.
+    const germanOnly = { ...SITE, availableLocales: [{ code: "de", label: "Deutsch" }] };
+    expect(await initialValues("fr", germanOnly)).toEqual([{}, { internalAllowed: true }]);
   });
 
   it("reads nothing for a viewer without accounting, a Supporter included", async () => {

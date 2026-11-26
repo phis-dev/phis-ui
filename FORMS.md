@@ -192,14 +192,15 @@ errors: {
 
 `PhiFormFieldDescriptor` has `key` (unique within the Form), `fieldProviderKey`, and optional `label`,
 `controlLabel`, `description`, `placeholder`, `autoComplete`, `initialValue`, `options`,
-`optionsProvider`, `validation`, `visibleWhen`, `disabledWhen`, `placement`, and `config`
+`optionsProvider`, `emptyOption`, `validation`, `visibleWhen`, `disabledWhen`, `placement`, and `config`
 (provider-specific settings).
 
 - Required state is the `required` validation rule; there is no `required` boolean on a field.
 - Static `options` and an `optionsProvider` follow the options contract of the Controls. A field whose
   options depend on another value declares `optionsProvider.dependencies`. An option's `parentValue`
   names the option it stands under (see [components/widgets/README.md](components/widgets/README.md));
-  a Control that cannot draw a hierarchy lists the options as they come.
+  a Control that cannot draw a hierarchy lists the options as they come. A written-out option's
+  `separator` (`"before"` or `"after"`, anything else refused) draws a line in a Select's menu.
 - A field's Options Provider hears what the field holds (`selected` in its context, one value or the
   list of a multiple field), so one that answers a search with a page of matches can name a held value
   that is not among them, and a held value keeps the option it was last seen with while a later answer
@@ -237,6 +238,38 @@ errors: {
     validation: required("personRequired", "Choose a person."),
   }
   ```
+
+### The empty option
+
+A `select` field that offers options -- written out or from an Options Provider -- may declare
+`emptyOption: { label }` (`@phis/contracts/forms`, owner decision 2026-11-26): its "none of these". The
+Select lists it **last, after a line**, in the Form's words (`label` is a Form text, so it is translated
+through the Form's label set like every other). Choosing it leaves the field with **no value**: the Form
+holds nothing for it, a field that holds nothing opens on it, and the submit **leaves the field out**
+(`omitPhiFormEmptyOptionFields`, `components/forms/form-empty-option.ts`), so a handler reads the key as
+absent -- the one reading "not declared" has everywhere. There is no value of its own to spell, and no
+handler has to know to throw a sentinel away: the contract refuses `value` beside it, a field without
+options declaring it, and any label that is no Form text; `checkPhiPresetForms` refuses it on a field
+other than a `select` (the one Control that draws it).
+
+The message-language picker is the first user: "Other language" on every Form that writes a message
+(`phiThreadMessageSourceLangField`, THREADS.md section 9). It opens on the writer's own language, else the
+page's, and where the Site offers neither it opens on "Other language" by having no initial value at all
+(`buildPhiThreadMessageFormConfig`); chosen, the message goes without `sourceLang` and Core stores
+`source_lang` NULL.
+
+```ts
+{
+  key: "sourceLang",
+  fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+  label: label("language", "Written in"),
+  optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales },
+  emptyOption: { label: label("languageOther", "Other language") },
+}
+```
+
+A required rule beside it says the empty option is no answer, which is the Form's choice to make; the
+picker above carries none.
 
 ### Conditions
 
@@ -368,19 +401,24 @@ type PhiFormFieldPlacementDescriptor = {
 ### Size
 
 A Form is drawn at one of two sizes, the Controls' vocabulary without `large` (`PhiFormSize`):
-`medium`, which every Form is unless its placement says otherwise, and `small`, for a Form that stands
-among chrome -- a picker, a popover, a panel of tools. The size is the placement's, not the descriptor's:
-the same Form may be a page's question in one place and a popover's in another, and
-`PhiFormLayoutDescriptor` is `@phis/contracts/forms`, which carries no size.
+`medium`, and `small`, for a Form that stands among chrome -- a picker, a popover, a panel of tools.
 
-- Where it is said: the Form Widget's `controlSize` (`small` or `medium`, the Inspector's Size field;
-  `medium` where unstated) and `PhiFormControl`'s `size` prop, for a Form built in code -- the HTML editor's
-  image popover is one (`components/widgets/client/html-editor-image-node.tsx`).
+- Where it is said, in this order of precedence (owner, 2026-11-26):
+  1. **the placement**: the Form Widget's `controlSize` (`small` or `medium`, the Inspector's Size field)
+     or `PhiFormControl`'s `size` prop, for a Form built in code -- the HTML editor's image popover is one
+     (`components/widgets/client/html-editor-image-node.tsx`);
+  2. **the descriptor**: `layout.size` (`@phis/contracts/forms`, `"small"` or `"medium"`, anything else
+     refused), for a Form made to stand among chrome wherever it is placed;
+  3. **`medium`**, where neither says anything.
+
+  The placement wins because the same Form may be a page's question in one place and a popover's in
+  another; the descriptor's size is its default, not its last word. The Form Widget's frame -- its submit
+  and the gap above it -- reads the same order (`PhiFormWidgetFrame`).
 - `PhiFormControl` hands it to every field as `size` (`PhiFormFieldProviderProps`), and **a field draws
   every control it has in it**: its inputs, its buttons, a picker's trigger, the sentence beside a
   checkbox. A field never writes a size of its own -- a `medium` input in a `small` Form stands out of
   every row around it, and a button written `size="small"` is small in every Form.
-  `components/forms/form-field-size.test.tsx` renders every registered field at both sizes and fails a
+  `plugins/runtime-modules/form-field-size.test.tsx` renders every registered field at both sizes and fails a
   field whose controls do not follow; the only exceptions are written there with their reason (`table` and
   `tree`, whose collection chrome is small at every size; a `hidden` or `honeypot` field draws nothing).
   Ant Design's Slider has one size, so a `slider` field's rail stays as it is and its number input follows.

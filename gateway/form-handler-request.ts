@@ -1,8 +1,4 @@
 import { isPhiRecord } from "../helpers/is-record";
-import {
-  PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE,
-  PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY,
-} from "../components/forms/thread-message-source-lang";
 
 const PATH_PLACEHOLDER = /\{([A-Za-z][A-Za-z0-9_]*)\}/gu;
 
@@ -27,8 +23,7 @@ export function readPhiFormHandlerPathError(upstreamPath: string | null): string
 /**
  * The request a relayed submit makes (FORMS.md, "Request shape"): the path's `{key}` segments filled with
  * those fields' values, percent-encoded, and those fields left out of the body, which is every other value
- * as the Form holds it -- except a message's "Other language", which declares nothing and is left out
- * (THREADS.md section 9). A path value that is empty or no text or number refuses the submit: an address
+ * as the Form holds it. A path value that is empty or no text or number refuses the submit: an address
  * without it is another route.
  */
 export function shapePhiFormHandlerRequest(input: {
@@ -44,9 +39,6 @@ export function shapePhiFormHandlerRequest(input: {
     if (!text) missing ??= key;
     return encodeURIComponent(text);
   });
-  if (values[PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY] === PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE) {
-    delete values[PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY];
-  }
   if (missing) return { error: `The form has no value for "${missing}", which the address of its handler needs.` };
   return { path, body: values };
 }

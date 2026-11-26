@@ -45,6 +45,17 @@ describe("a Form's fields against their Controls' rules", () => {
     expect(checkPhiFormDescriptorFields({ fields: [flags(["1", "1"])] })[0]).toMatch(/names the bit 1 twice/u);
   });
 
+  it("takes an emptyOption on a select field and refuses it on any other", () => {
+    const emptyOption = { label: { kind: "literal" as const, value: "None" } };
+    const options = [{ value: "a", label: { kind: "literal" as const, value: "A" } }];
+    expect(checkPhiFormDescriptorFields({
+      fields: [{ key: "pick", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select, options, emptyOption }],
+    })).toEqual([]);
+    expect(checkPhiFormDescriptorFields({
+      fields: [{ key: "pick", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.segmented, options, emptyOption }],
+    })).toEqual(['Field "pick" declares an emptyOption, which only a select field draws.']);
+  });
+
   it("is what checkPhiPresetForms reports, under the Form's id", () => {
     expect(checkPhiPresetForms([
       { formId: "@acme/shop/modules/shop/forms/price", descriptor: { fields: [money("amount", { currencyField: "currency" })] } },

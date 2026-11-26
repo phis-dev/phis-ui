@@ -2,23 +2,24 @@ import { createElement, type ReactNode } from "react";
 import { prerenderToNodeStream } from "react-dom/static";
 import { describe, expect, it, vi } from "vitest";
 
-import { PhiConfigProvider } from "../root/phi-config-provider";
-import { PhiIntlLocaleProvider } from "../root/phi-intl-locale";
-import { resolvePhiRootThemeState } from "../root/phi-root-theme-resolver";
+import { PhiConfigProvider } from "../../components/root/phi-config-provider";
+import { PhiIntlLocaleProvider } from "../../components/root/phi-intl-locale";
+import { resolvePhiRootThemeState } from "../../components/root/phi-root-theme-resolver";
 import { PHI_CORE_THEME_PRESET_PLUGINS } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
-import { PHI_SHARED_FORM_PROVIDER_REGISTRY } from "./shared-form-provider-registry";
-import { PhiButtonControl } from "../controls/phi-button-control";
-import { PhiTextControl } from "../controls/phi-text-control";
-import { PHI_FORM_FIELD_PROVIDER_KEYS } from "./form-provider-contract";
-import type { PhiFormFieldProviderProps, PhiFormProviderRegistry, PhiFormSize } from "./form-provider-registry";
-import { PHI_AUTH_FORM_PROVIDER_REGISTRY } from "../../plugins/runtime-modules/auth/form-provider-registry";
-import { PHI_ASSET_FORM_PROVIDER_REGISTRY } from "../../plugins/runtime-modules/asset/form-ui-provider";
-import { PHI_AUTH_FORM_FIELD_PROVIDER_KEYS } from "./form-provider-contract";
+import { PHI_SHARED_FORM_PROVIDER_REGISTRY } from "../../components/forms/shared-form-provider-registry";
+import { PhiButtonControl } from "../../components/controls/phi-button-control";
+import { PhiTextControl } from "../../components/controls/phi-text-control";
+import { PhiFormControl } from "../../components/controls/phi-form-control";
+import { PHI_FORM_FIELD_PROVIDER_KEYS } from "../../components/forms/form-provider-contract";
+import type { PhiFormFieldProviderProps, PhiFormProviderRegistry, PhiFormSize } from "../../components/forms/form-provider-registry";
+import { PHI_AUTH_FORM_PROVIDER_REGISTRY } from "./auth/form-provider-registry";
+import { PHI_ASSET_FORM_PROVIDER_REGISTRY } from "./asset/form-ui-provider";
+import { PHI_AUTH_FORM_FIELD_PROVIDER_KEYS } from "../../components/forms/form-provider-contract";
 import {
   PHI_ASSET_MEDIA_ASSET_FORM_PROVIDER_DESCRIPTOR,
   PHI_ASSET_MEDIA_ASSETS_FORM_PROVIDER_DESCRIPTOR,
-} from "../../plugins/runtime-modules/asset/form-providers";
+} from "./asset/form-providers";
 
 /*
  * A Form has a size, and every field draws its controls in it (FORMS.md, "Size"). A field that draws a
@@ -35,27 +36,27 @@ import {
  * Rendered with `prerender`, which waits for the lazy field Controls to load, inside a real Theme.
  */
 
-vi.mock("../media/use-authoring-asset-details", () => ({
+vi.mock("../../components/media/use-authoring-asset-details", () => ({
   usePhiAuthoringAssetDetails: () => null,
 }));
-vi.mock("../widgets/client/shared/use-page-reference-options", () => ({
+vi.mock("../../components/widgets/client/shared/use-page-reference-options", () => ({
   usePhiPageReferenceOptions: () => ({ options: [], failed: false }),
 }));
 // The Media fields' library and Collection bindings talk to the signal runtime; the picker they feed is drawn here.
-vi.mock("../media/phi-media-picker-binding", async (importOriginal) => ({
+vi.mock("../../components/media/phi-media-picker-binding", async (importOriginal) => ({
   ...await importOriginal<object>(),
   usePhiMediaPickerBinding: () => ({ assets: [] }),
 }));
-vi.mock("../media/use-media-library-add-picker", async (importOriginal) => ({
+vi.mock("../../components/media/use-media-library-add-picker", async (importOriginal) => ({
   ...await importOriginal<object>(),
   usePhiMediaLibraryAddPicker: () => ({ assets: [] }),
 }));
-vi.mock("../widgets/client/shared/phi-collection-provider", async (importOriginal) => ({
+vi.mock("../../components/widgets/client/shared/phi-collection-provider", async (importOriginal) => ({
   ...await importOriginal<object>(),
   usePhiCollectionProvider: () => ({ provider: null }),
 }));
-vi.mock("../runtime/runtime-module-calendar-adapter-client-manifest", async () => {
-  const { PHI_GREGORY_CALENDAR_ADAPTER_CLIENT: adapter } = await import("../calendar/gregory-calendar-adapter-client");
+vi.mock("../../components/runtime/runtime-module-calendar-adapter-client-manifest", async () => {
+  const { PHI_GREGORY_CALENDAR_ADAPTER_CLIENT: adapter } = await import("../../components/calendar/gregory-calendar-adapter-client");
   return { usePhiCalendarAdapterClient: () => adapter };
 });
 
@@ -197,5 +198,54 @@ describe("every field draws its controls in the Form's size", () => {
     expect(small, "the size reaches nothing the field draws").not.toBe(medium);
     expect(rootsDrawn(small, false), "controls left at their normal size in a small Form").toEqual([]);
     expect(rootsDrawn(medium, true), "controls drawn small in a medium Form").toEqual([]);
+  });
+});
+
+/*
+ * Where the Form's size comes from (FORMS.md, "Size"): the placement's, else the descriptor's
+ * `layout.size`, else `medium`. Drawn whole, through `PhiFormControl`, and judged as the fields above are.
+ */
+describe("a Form's size", () => {
+  const descriptor = (size?: PhiFormSize) => ({
+    schemaVersion: 1 as const,
+    key: "sized",
+    fields: [
+      { key: "name", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text, label: { kind: "literal" as const, value: "Name" } },
+      {
+        key: "kind",
+        fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+        label: { kind: "literal" as const, value: "Kind" },
+        options: OPTIONS.map((option) => ({ value: option.value, label: { kind: "literal" as const, value: option.label } })),
+      },
+    ],
+    ...(size ? { layout: { size } } : {}),
+  });
+  const renderForm = (size: PhiFormSize | undefined, placed?: PhiFormSize) => render(
+    <PhiFormControl
+      descriptor={descriptor(size)}
+      initialValues={{ name: "Ada", kind: "1" }}
+      submitOnEnter={false}
+      onSubmit={() => undefined}
+      {...(placed ? { size: placed } : {})}
+    />,
+  );
+
+  it("is the descriptor's layout.size where the placement states none", async () => {
+    const small = await renderForm("small");
+    expect(rootsDrawn(small, true)).toEqual(["ant-select"]);
+    expect(rootsDrawn(small, false), "controls left at their normal size in a small Form").toEqual([]);
+    // A plain text input has no affix wrapper; its own small class says it.
+    expect(classLists(small).some((classes) => classes.includes("ant-input-sm"))).toBe(true);
+    expect(small).not.toBe(await renderForm(undefined));
+  });
+
+  it("is the placement's where it states one, and medium where nobody does", async () => {
+    const placedMedium = await renderForm("small", "medium");
+    expect(rootsDrawn(placedMedium, true), "a placement's medium beside a descriptor's small").toEqual([]);
+    expect(classLists(placedMedium).some((classes) => classes.includes("ant-input-sm"))).toBe(false);
+    expect(rootsDrawn(await renderForm("medium", "small"), false)).toEqual([]);
+    const unstated = await renderForm(undefined);
+    expect(rootsDrawn(unstated, true)).toEqual([]);
+    expect(unstated).toBe(await renderForm("medium"));
   });
 });

@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-provider-keys";
 import { PHI_FORM_FIELD_PROVIDER_KEYS } from "./form-provider-contract";
 import { PHI_SITE_LOCALES_CONFIG_KEY } from "./site-locales-config";
+import { parsePhiFormDescriptor } from "./form-descriptor-contract";
 import {
-  PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE,
   PHI_THREAD_MESSAGE_SOURCE_LANG_FIELD_KEY,
   buildPhiThreadMessageFormConfig,
   phiThreadMessageSourceLangField,
@@ -33,9 +33,14 @@ describe("the message language a placement hands its Form", () => {
     expect(resolvePhiThreadMessageSourceLang(runtime("fr", "de"))).toBe("de");
   });
 
-  it("opens on \"Other language\" where neither the writer's nor the page's language is one the Site offers", () => {
-    expect(resolvePhiThreadMessageSourceLang(runtime("fr", "it"))).toBe("other");
-    expect(resolvePhiThreadMessageSourceLang(runtime(null, "it"))).toBe(PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE);
+  it("opens on \"Other language\", no value, where neither the writer's nor the page's language is one the Site offers", () => {
+    expect(resolvePhiThreadMessageSourceLang(runtime("fr", "it"))).toBeUndefined();
+    expect(resolvePhiThreadMessageSourceLang(runtime(null, "it"))).toBeUndefined();
+    // No initial value at all, rather than one that says nothing: the picker opens on its empty option.
+    expect(buildPhiThreadMessageFormConfig(runtime("fr", "it"), { internalAllowed: true })).toEqual({
+      [PHI_SITE_LOCALES_CONFIG_KEY]: [{ code: "de", label: "Deutsch" }, { code: "en", label: "English" }],
+      initialValues: { internalAllowed: true },
+    });
   });
 
   it("offers the Site's languages and keeps the placement's other initial values", () => {
@@ -55,12 +60,11 @@ describe("the message language a placement hands its Form", () => {
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
       label: { kind: "label", key: "language", fallback: "Written in" },
       optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales },
-      // Last (the provider sets it apart by a separator); the relay sends no language, Core stores NULL.
-      options: [{
-        value: "other",
-        label: { kind: "label", key: "languageOther", fallback: "Other language" },
-      }],
+      // Its empty option: last, after a line; chosen, the Form submits no language and Core stores NULL.
+      emptyOption: { label: { kind: "label", key: "languageOther", fallback: "Other language" } },
     });
-    expect(PHI_THREAD_MESSAGE_OTHER_LANGUAGE_VALUE).toBe("other");
+    // A field the contract takes as it is, the empty option with it.
+    expect(parsePhiFormDescriptor({ schemaVersion: 1, key: "reply", fields: [field] }).fields[0]?.emptyOption)
+      .toEqual(field.emptyOption);
   });
 });

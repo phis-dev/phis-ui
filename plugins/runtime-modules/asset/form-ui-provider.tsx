@@ -18,7 +18,7 @@ const PhiLazyMediaAssetFormControl = lazyPhiFormFieldControl(() =>
 const PhiLazyMediaAssetsFormControl = lazyPhiFormFieldControl(() =>
   import("./media-assets-form-control").then((module) => module.PhiMediaAssetsFormControl));
 
-// Exported for the field size contract (`components/forms/form-field-size.test.tsx`), which renders every field.
+// Exported for the field size contract (`plugins/runtime-modules/form-field-size.test.tsx`), which renders every field.
 export const PHI_ASSET_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
   fieldTypes: [
     {

@@ -155,7 +155,10 @@ export type PhiFormWidgetFrameProps = {
    * frame is the element both are inside, so this is where the answer has to arrive.
    */
   layout?: PhiFormLayoutDescriptor;
-  /** The placement's size (FORMS.md, "Size"): a small Form's submit is small and stands a step closer. */
+  /**
+   * The placement's size (FORMS.md, "Size"), else the descriptor's `layout.size`, else `medium`: a small
+   * Form's submit is small and stands a step closer.
+   */
   size?: PhiFormSize;
   children: ReactNode;
 };
@@ -190,8 +193,10 @@ function resolvePhiFormBoxChrome(card: PhiCmsFormWidgetCardConfig | null | undef
  * column a Form Layout decides -- that column is a custom property both of them read.
  */
 export function PhiFormWidgetFrame(
-  { submit, card, maxFormWidth, links, layout, size = "medium", children }: PhiFormWidgetFrameProps,
+  { submit, card, maxFormWidth, links, layout, size: statedSize, children }: PhiFormWidgetFrameProps,
 ) {
+  // The Form's own size, by the same precedence its fields are drawn in: the placement's, else the descriptor's.
+  const size = statedSize ?? layout?.size ?? "medium";
   const [registration, setRegistration] = useState<PhiFormWidgetSubmitRegistration | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const slot = useMemo<PhiFormWidgetSubmitSlot>(

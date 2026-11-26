@@ -61,9 +61,10 @@ export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
   feedback: PhiCmsFormWidgetFeedbackConfig | null;
   /**
    * How large the Form draws its fields, its labels and its submit: `medium`, or `small` for a Form that
-   * stands among chrome. The Controls' `controlSize`, answered `medium` where the placement says nothing.
+   * stands among chrome. The Controls' `controlSize`; absent where the placement says nothing, and the
+   * descriptor's `layout.size` answers then, else `medium` (FORMS.md, "Size").
    */
-  controlSize: PhiFormSize;
+  controlSize?: PhiFormSize;
   links: readonly PhiCmsFormWidgetLinkConfig[];
   formConfig: Record<string, unknown>;
   execution: {
@@ -130,6 +131,8 @@ function readPhiFormWidgetMaxFormWidth(value: unknown): number | string | null {
 }
 
 export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): PhiCmsFormWidgetConfig {
+  // Unstated stays unstated: the descriptor's own size answers then (FORMS.md, "Size").
+  const controlSize = parsePhiControlPresentationConfig(rawConfig, PHI_FORM_SIZES).controlSize;
   /*
    * The block's own geometry, which this Widget used to drop on the floor.
    *
@@ -181,7 +184,7 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
       title: typeof card.title === "string" && card.title.trim() ? card.title.trim() : null,
       padding: cardPadding,
     },
-    controlSize: parsePhiControlPresentationConfig(rawConfig, PHI_FORM_SIZES).controlSize ?? "medium",
+    ...(controlSize ? { controlSize } : {}),
     // Absent means silent, so a Form that says nothing about feedback keeps reporting where it stands.
     feedback: rawConfig.feedback == null ? null : {
       mode: feedback.mode === "notification" ? "notification" : "message",

@@ -13,7 +13,9 @@ import { PHI_FORM_FIELD_PROVIDER_KEYS } from "./form-provider-contract";
  *   units (`readPhiMoneyFieldConfig`); and a `currencyField` naming another field of the same Form;
  * - a `flags` field with options written out: each option's value a bit, none twice, and `requires`
  *   naming two of its options (`readPhiFlagsFieldConfig`). Options an Options Provider answers are only
- *   known once it answers, and are read by the Control then.
+ *   known once it answers, and are read by the Control then;
+ * - an `emptyOption` only on a `select` field: the one Control that draws it, last after a line, and
+ *   turns choosing it into no value (FORMS.md, "The empty option"). Any other would leave it undrawn.
  *
  * A validation rule naming a Provider nobody declares is refused by catalog construction, which knows
  * the Area's Providers (`plugins/runtime-modules/resolver.ts`); this check knows only the descriptor.
@@ -25,6 +27,9 @@ export function checkPhiFormDescriptorFields(descriptor: Pick<PhiFormDescriptor,
   const keys = new Set(descriptor.fields.map((field) => field.key));
   for (const field of descriptor.fields) {
     const where = `Field "${field.key}"`;
+    if (field.emptyOption && field.fieldProviderKey !== PHI_FORM_FIELD_PROVIDER_KEYS.select) {
+      findings.push(`${where} declares an emptyOption, which only a select field draws.`);
+    }
     try {
       if (field.fieldProviderKey === PHI_FORM_FIELD_PROVIDER_KEYS.money) {
         const money = readPhiMoneyFieldConfig(field.config, { hasOptionsProvider: field.optionsProvider != null });

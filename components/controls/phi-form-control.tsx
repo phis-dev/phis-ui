@@ -65,6 +65,10 @@ import {
 import { PhiFormFieldLabelText } from "../forms/form-field-row";
 import { readPhiMoneyFieldCurrencyFieldKey } from "../forms/money-field-currency-key";
 import {
+  PHI_FORM_EMPTY_OPTION_CONTROL_VALUE,
+  omitPhiFormEmptyOptionFields,
+} from "../forms/form-empty-option";
+import {
   collectFormOptionFlagFieldKeys,
   resolveFormChosenOptionFlags,
 } from "../forms/form-option-flags";
@@ -89,7 +93,8 @@ export type PhiFormControlProps = {
   disabled?: boolean;
   readOnly?: boolean;
   /**
-   * How large every field is drawn, `medium` where unstated (FORMS.md, "Size"). `small` draws each
+   * How large every field is drawn (FORMS.md, "Size"): this, else the descriptor's `layout.size`, else
+   * `medium`. `small` draws each
    * field's controls small, its label in the small text size and the gaps between rows one spacing step
    * down -- a picker or a popover built from descriptor fields, which stands among chrome.
    */
@@ -325,6 +330,31 @@ function PhiResolvedFormFieldControl({
     if (last.key === requiredDependencyKey || !Object.is(last.value, value)) return;
     if (value != null && value !== "") onChange?.(undefined);
   }, [onChange, requiredDependencyKey, value]);
+  /*
+   * The field's "none of these" (FORMS.md, "The empty option"): last, after a line, under a value no
+   * option can have -- the contract refuses an empty option value, written out or answered -- and turned
+   * back into no value the moment it is chosen. The Form holds nothing for it, so a field that opens on
+   * no value opens on it, and the submit leaves the field out.
+   */
+  const emptyOptionLabel = field.emptyOption
+    ? resolvePhiFormText(field.emptyOption.label, labels, formConfig)
+    : undefined;
+  const controlOptions = useMemo(
+    () => emptyOptionLabel === undefined
+      ? resolvedOptions.options
+      : [...resolvedOptions.options, { value: PHI_FORM_EMPTY_OPTION_CONTROL_VALUE, label: emptyOptionLabel, separator: "before" as const }],
+    [emptyOptionLabel, resolvedOptions.options],
+  );
+  const hasEmptyOption = emptyOptionLabel !== undefined;
+  const controlValue = hasEmptyOption && (value == null || value === PHI_FORM_EMPTY_OPTION_CONTROL_VALUE)
+    ? PHI_FORM_EMPTY_OPTION_CONTROL_VALUE
+    : value;
+  const controlOnChange = useMemo(
+    () => hasEmptyOption && onChange
+      ? (next: unknown, ...rest: unknown[]) => onChange(next === PHI_FORM_EMPTY_OPTION_CONTROL_VALUE ? undefined : next, ...rest)
+      : onChange,
+    [hasEmptyOption, onChange],
+  );
   const chosenOptionFlags = onChosenOptionFlags
     ? resolveFormChosenOptionFlags(resolvedOptions.options, value)
     : undefined;
@@ -348,14 +378,14 @@ function PhiResolvedFormFieldControl({
         labels={labels}
         formConfig={formConfig}
         placeholder={placeholder}
-        options={resolvedOptions.options}
+        options={controlOptions}
         onSearch={resolvedOptions.search.enabled ? setSearchDraft : undefined}
         filterOptionsLocally={resolvedOptions.search.filterLocally}
         disabled={disabled}
         readOnly={readOnly}
-        value={value}
+        value={controlValue}
         checked={checked}
-        onChange={onChange}
+        onChange={controlOnChange}
         formContext={formContext}
         size={size}
         {...(formValues ? { formValues } : {})}
@@ -382,7 +412,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   submitOnEnter,
   disabled = false,
   readOnly = false,
-  size = "medium",
+  size: statedSize,
   conditionControllerStates = PHI_FORM_NO_CONTROLLER_STATES,
   unavailableFieldKeys,
   mediaLimits,
@@ -405,6 +435,8 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     [contributedRegistry, registry],
   );
   const unavailableKeys = useMemo(() => new Set(unavailableFieldKeys ?? []), [unavailableFieldKeys]);
+  // The placement's size, else the descriptor's, else medium (FORMS.md, "Size").
+  const size: PhiFormSize = statedSize ?? descriptor.layout?.size ?? "medium";
   const [internalForm] = Form.useForm<Record<string, unknown>>();
   const form = providedForm ?? internalForm;
   /*
@@ -540,7 +572,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         const held = form.getFieldValue(key);
         return held === undefined ? [] : [[key, held]];
       }));
-      await onSubmit({ ...kept, ...values });
+      await onSubmit(omitPhiFormEmptyOptionFields(descriptor.fields, { ...kept, ...values }));
     } finally {
       setSubmitting(false);
       onSubmittingChange?.(false);
