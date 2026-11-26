@@ -13,17 +13,18 @@ const PHI_AREA_BASE_MODULE_TITLES = {
 /**
  * The icon an Area is shown by, which is its base Module's.
  *
- * One answer for both places that draw it: the base Module's own row in the Builder's Modules table and
+ * One answer for every place that draws it: the base Module's own row in the Builder's Modules table and
  * that Area's checkbox column heading beside it, where the icon stands alone and the Area's name is its
  * tooltip. The base Module takes it from here rather than stating its own, so the two cannot drift
- * apart. Names from the shared icon vocabulary (`@phis/ui/widgets:<family>` is a Widget family's icon).
+ * apart, and the sidebar entries that lead into another Area (`target: { kind: "area" }`) wear it too.
+ * Names from the shared icon vocabulary (`@phis/ui/widgets:<family>` is a Widget family's icon).
  */
 export const PHI_AREA_ICONS = {
   public: "antd:global",
   app: "antd:appstore",
   accounting: "antd:profile",
-  admin: "@phis/ui/widgets:admin",
-  builder: "@phis/ui/widgets:builder",
+  admin: "antd:cluster",
+  builder: "antd:build",
   editor: "@phis/ui/widgets:editor",
 } as const satisfies Record<PhiCmsAreaKey, string>;
 

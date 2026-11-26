@@ -10,6 +10,7 @@ import type {
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import { createPhiCoreRuntimeControllerAddress } from "../../components/runtime/core-runtime-controller-address";
 import { PHI_DEFAULT_PUB_AREA_PRESET_KEY } from "./preset-contracts/pub-area";
+import { PHI_AREA_ICONS } from "./area-base-definition";
 import {
   PHI_VIEWER_ACCESS_ACCOUNTING,
   PHI_VIEWER_ACCESS_ANYONE,
@@ -289,7 +290,7 @@ export const PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS = [
         {
           itemKey: "@phis/ui/modules/accounting/nav/admin",
           label: label("Admin"),
-          icon: "antd:cluster",
+          icon: PHI_AREA_ICONS.admin,
           standing: "last",
           target: { kind: "area", area: "admin" },
         },
@@ -335,7 +336,7 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
           {
             itemKey: "@phis/ui/modules/admin/nav/builder",
             label: label("Builder"),
-            icon: "antd:build",
+            icon: PHI_AREA_ICONS.builder,
             standing: "last",
             target: { kind: "area", area: "builder" },
           },
@@ -401,7 +402,7 @@ const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
         {
           itemKey: "@phis/ui/builder/nav/admin",
           label: label("Admin"),
-          icon: "antd:cluster",
+          icon: PHI_AREA_ICONS.admin,
           standing: "last",
           target: { kind: "area", area: "admin" },
         },
