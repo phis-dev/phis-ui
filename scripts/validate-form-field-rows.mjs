@@ -51,8 +51,6 @@ const TEMPORARY_EXCEPTIONS = new Map([
   ["components/controls/phi-surface-control.tsx", { "control-label": 1 }],
   // Asset Inspector section: the variants select under the Asset name, not an Inspector row.
   ["components/media/phi-asset-inspector-section.tsx", { "control-label": 1 }],
-  // HTML editor, image popover: Title, Alt text, Size.
-  ["components/widgets/client/html-editor-image-node.tsx", { "control-label": 3 }],
   // Table: a filter's inline label, and the label of a select or cascader tool.
   ["plugins/runtime-modules/core/widgets/table/client.tsx", { "control-label": 3 }],
   // Theme brand controls (colours, surfaces, identity, social, campaign preview).

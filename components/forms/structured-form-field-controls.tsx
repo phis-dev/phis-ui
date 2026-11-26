@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState, type ComponentType } from "r
 import { PhiAddressControl } from "../controls/phi-address-control";
 import { PhiCheckboxGroupControl } from "../controls/phi-checkbox-group-control";
 import { PhiCountrySelectControl } from "../controls/phi-country-select-control";
+import { PhiDimensionControl } from "../controls/phi-dimension-control";
+import { readPhiDimensionValue } from "../../types/dimension";
 import {
   PHI_ADDRESS_PARTS,
   findPhiAddressProblems,
@@ -93,6 +95,28 @@ export const PhiAddressFormControl: ComponentType<PhiFormFieldProviderProps> = (
     />
   );
 };
+
+/**
+ * A width and a height (`PhiDimensionControl`), `null` when both are empty. The pair is one field with
+ * one label; each half is named by its placeholder, as the Control names them everywhere.
+ */
+export const PhiDimensionFormControl: ComponentType<PhiFormFieldProviderProps> = ({
+  value, onChange, label, disabled, readOnly, size,
+}) => (
+  <PhiDimensionControl
+    size={size}
+    ariaLabel={label}
+    value={readPhiDimensionValue(value)}
+    disabled={disabled}
+    readOnly={readOnly}
+    /*
+     * The unit list opens beside its trigger, inside whatever holds the Form. Mounted at the document's
+     * end, it was out of the HTML editor's image popover, and a click on a unit chose nothing there.
+     */
+    getPopupContainer={(triggerNode) => triggerNode.parentElement ?? triggerNode}
+    onChange={(next) => onChange?.(next)}
+  />
+);
 
 /** Several yes-or-no answers as one bit-flag number (`flags-field.ts`). */
 export const PhiFlagsFormControl: ComponentType<PhiFormFieldProviderProps> = ({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import {
   $applyNodeReplacement,
@@ -25,11 +25,13 @@ import {
 } from "./html-editor-image-attributes";
 import { readPhiInternalReference } from "../../../types/references";
 import { PhiButtonControl } from "../../controls/phi-button-control";
-import { PhiDimensionControl } from "../../controls/phi-dimension-control";
-import { PhiLabeledControl } from "../../controls/phi-labeled-control";
+import { PhiFormControl } from "../../controls/phi-form-control";
 import { PhiPopoverControl } from "../../controls/phi-popover-control";
-import { PhiTextControl } from "../../controls/phi-text-control";
+import { createPhiFormLiteralText } from "../../forms/form-descriptor-contract";
+import { PHI_FORM_FIELD_PROVIDER_KEYS } from "../../forms/form-provider-contract";
+import { PHI_FORM_DESCRIPTOR_SCHEMA_VERSION, type PhiFormDescriptor } from "../../../types/form-descriptor";
 import { PHI_Z_INDEX } from "../../../theme/phi-tokens";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { usePhiWidgetScaffoldPopup } from "./shared/phi-widget-scaffold-popup";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 
@@ -214,6 +216,28 @@ export class PhiHtmlImageNode extends DecoratorNode<ReactNode> {
   }
 }
 
+/*
+ * The image's attributes, as a small Form of descriptor fields (FORMS.md, "Size"): a popover builds no
+ * label+input pairs of its own. Each change is written to the image as it is made, so there is no submit.
+ * The words are English, as the editor's other tools are.
+ */
+const PHI_HTML_IMAGE_FORM: PhiFormDescriptor = {
+  schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
+  key: "html-editor-image",
+  fields: [
+    {
+      key: "title",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+      label: createPhiFormLiteralText("Title"),
+      config: { allowClear: true },
+    },
+    { key: "alt", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text, label: createPhiFormLiteralText("Alt text") },
+    { key: "size", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.dimension, label: createPhiFormLiteralText("Size") },
+  ],
+};
+
+function submitNothing() {}
+
 /** How long a typed size waits for the next digit before it moves the image. */
 const PHI_HTML_IMAGE_SIZE_SETTLE_MS = 500;
 
@@ -246,9 +270,14 @@ function PhiHtmlImageDecorator({
   /*
    * A size types digit by digit, and the first of them would be a real size: "480" passes through 4px,
    * where the image collapses and takes this Popover with it, because the image is what the Popover is
-   * anchored to. The typed size is held briefly and applied once the author stops.
+   * anchored to. The typed size is held briefly and applied once the author stops; the Form holds
+   * what is typed meanwhile.
    */
-  const [draftSize, setDraftSize] = useState<PhiHtmlImageSize | null>(null);
+  /*
+   * Each opening counts, so the Form mounts afresh on the image as it now is: an undo while it was
+   * closed would otherwise meet the values its fields were last left at.
+   */
+  const [openCount, setOpenCount] = useState(0);
   /*
    * While the Popover is open the image's own box is held at what it was when it opened. Otherwise a
    * typed size resizes the image, the line and everything after it move, and the Popover moves with
@@ -263,7 +292,6 @@ function PhiHtmlImageDecorator({
   const box = popoverOpen ? heldBox : null;
   const flushRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSizeRef = useRef<PhiHtmlImageSize | null>(null);
-  const size = draftSize ?? { width, height };
 
   /*
    * A size still waiting for its next digit is written the moment the Popover closes, however it
@@ -306,9 +334,13 @@ function PhiHtmlImageDecorator({
     }, { tag: SKIP_DOM_SELECTION_TAG });
   };
 
+  const openPopover = () => {
+    setOpenCount((count) => count + 1);
+    setOpen(true);
+  };
+
   const closePopover = () => {
     setOpen(false);
-    setDraftSize(null);
   };
 
   const image = (
@@ -324,8 +356,7 @@ function PhiHtmlImageDecorator({
         }
         const rect = hostRef.current?.getBoundingClientRect();
         setHeldBox(rect ? { width: rect.width, height: rect.height } : null);
-        setDraftSize(null);
-        setOpen(true);
+        openPopover();
       } : undefined}
       style={{
         maxWidth: "100%",
@@ -370,20 +401,14 @@ function PhiHtmlImageDecorator({
         rootClassName={popup.rootClassName}
         onOpenChange={(nextOpen) => {
           if (nextOpen) {
-            setOpen(true);
+            openPopover();
           } else {
             closePopover();
           }
         }}
         content={
           <div
-            style={{
-              display: "grid",
-              gap: 8,
-              minWidth: 280,
-              // 6/18 of the 24-column form grid, the same label ratio the Form layout uses.
-              "--phi-labeled-control-label-width": "25%",
-            } as CSSProperties & Record<`--${string}`, string>}
+            style={{ display: "grid", gap: PHI_SPACE.xs, minWidth: 280 }}
             /*
              * A portal keeps the DOM out of the contenteditable but not the React tree: an event here
              * still bubbles to the editor and the scaffold, which would take a click in a field for a
@@ -395,32 +420,23 @@ function PhiHtmlImageDecorator({
             onPointerDown={stopEditorEvent}
             onKeyDown={stopEditorEvent}
           >
-            <PhiTextControl
+            {/* Mounted afresh with each opening, so it starts from the image as it now is. */}
+            <PhiFormControl
+              key={openCount}
+              descriptor={PHI_HTML_IMAGE_FORM}
               size="small"
-              label="Title"
-              value={title}
-              allowClear
-              style={{ width: "100%" }}
-              onChange={(nextValue) => patch({ title: nextValue })}
-            />
-            <PhiTextControl
-              size="small"
-              label="Alt text"
-              value={alt}
-              style={{ width: "100%" }}
-              onChange={(nextValue) => patch({ alt: nextValue ?? "" })}
-            />
-            <PhiLabeledControl label="Size" fill>
-              <PhiDimensionControl
-                size="small"
-                value={size}
-                getPopupContainer={(triggerNode) => triggerNode.parentElement ?? triggerNode}
-                onChange={(nextSize) => {
+              submitOnEnter={false}
+              initialValues={{ title: title ?? "", alt, size: { width, height } }}
+              onSubmit={submitNothing}
+              onValuesChange={(changed) => {
+                if ("title" in changed) patch({ title: readImageTitle(changed.title) });
+                if ("alt" in changed) patch({ alt: typeof changed.alt === "string" ? changed.alt : "" });
+                if ("size" in changed) {
+                  const nextSize = changed.size as { width?: unknown; height?: unknown } | null;
                   const next = {
                     width: readImageLength(nextSize?.width),
                     height: readImageLength(nextSize?.height),
                   };
-                  setDraftSize(next);
                   pendingSizeRef.current = next;
                   if (flushRef.current) {
                     clearTimeout(flushRef.current);
@@ -430,9 +446,9 @@ function PhiHtmlImageDecorator({
                     pendingSizeRef.current = null;
                     patch(next);
                   }, PHI_HTML_IMAGE_SIZE_SETTLE_MS);
-                }}
-              />
-            </PhiLabeledControl>
+                }
+              }}
+            />
             <PhiFlexControl justify="flex-end">
               <PhiButtonControl
                 size="small"

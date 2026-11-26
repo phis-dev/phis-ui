@@ -471,8 +471,8 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   places that had one when it came stand in its temporary list until they are moved.
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
-  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `money`, `country`,
-  `address`, `flags`. The Asset Module
+  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `dimension`, `money`,
+  `country`, `address`, `flags`. The Asset Module
   owns `media-asset` (below); it is not part of the shared registry.
 - A `select` field may be emptied when its `config.allowClear` is `true`, for a choice whose empty answer
   means something ("the Site's own language"), and takes a typed value beside its options when its
@@ -593,6 +593,10 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   Builder's picker does and answers the same tree, to everybody who writes for the Site. The Control is
   the shared link control the Inspector uses (`phi-link-target-control.tsx`), and its wording is the
   Label Set keys in `PHI_FORM_LINK_TARGET_LABEL_KEYS`, falling back to English.
+- `dimension` is a width and a height, each a CSS length (`PhiDimensionControl`, a number and its unit per
+  half). Its value is `{ width?, height? }` (`PhiRenderableBlockSize`) and `null` when both are empty;
+  each half is named by its placeholder. It came for the HTML editor's image popover, whose Size had been
+  a Dimension Control with a label of its own (owner, 2026-11-26: a popover is a Form of descriptor fields).
 - `media-asset` is **owned by the Asset Module** (`@phis/ui/modules/asset/form-field/media-asset`,
   `PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY` in `constants/media-library-provider-keys.ts`, the Foundation's name for it), because
   that Module owns the Media library. It is declared in the Module's `formProviders.fieldTypes` and

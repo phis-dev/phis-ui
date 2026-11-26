@@ -45,6 +45,7 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   // Spelled beside its label keys, which the Form Widget reads on the Server without this whole file.
   upload: PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY,
   linkTarget: createPhiSharedFormProviderKey("field", "link-target"),
+  dimension: createPhiSharedFormProviderKey("field", "dimension"),
   money: createPhiSharedFormProviderKey("field", "money"),
   country: createPhiSharedFormProviderKey("field", "country"),
   address: createPhiSharedFormProviderKey("field", "address"),
@@ -311,6 +312,16 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
     settingsFields: [
       { key: "area", type: "string", label: "Area", description: "Whose Pages are offered; Public when empty." },
     ],
+  },
+  /*
+   * A width and a height, each a CSS length or empty: `{ width?, height? }` (`PhiRenderableBlockSize`),
+   * `null` when both are empty. The size of an image in the HTML editor is the first.
+   */
+  {
+    key: PHI_FORM_FIELD_PROVIDER_KEYS.dimension,
+    title: "Dimension",
+    valueType: "json",
+    presentation: "control",
   },
   /*
    * An amount of money: minor units in the value, major units on screen beside the currency's code.

@@ -2,12 +2,9 @@
 
 import type { CSSProperties } from "react";
 
-import {
-  readPhiLengthValue,
-  type PhiControlSize,
-  type PhiCssLength,
-  type PhiRenderableBlockSize,
-} from "../../types";
+import type { PhiControlSize } from "../../types/control";
+import { readPhiLengthValue, type PhiCssLength } from "../../types/length";
+import type { PhiRenderableBlockSize } from "../../types/renderable-block";
 import { PhiLengthControl } from "./phi-length-control";
 import { PHI_SPACE } from "../../theme/antd-css-var-contract";
 

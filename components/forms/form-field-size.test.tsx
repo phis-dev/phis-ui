@@ -108,6 +108,7 @@ const FIXTURES: Readonly<Record<string, Partial<PhiFormFieldProviderProps>>> = {
   [PHI_FORM_FIELD_PROVIDER_KEYS.linkTarget]: { value: { kind: "external", href: "https://example.com" } },
   [PHI_FORM_FIELD_PROVIDER_KEYS.money]: { value: { currency: "CHF", minor: "100" }, field: { config: { currency: "CHF" } } as never },
   [PHI_FORM_FIELD_PROVIDER_KEYS.country]: { value: "CH" },
+  [PHI_FORM_FIELD_PROVIDER_KEYS.dimension]: { value: { width: "10px", height: "50%" } },
   [PHI_AUTH_FORM_FIELD_PROVIDER_KEYS.termsConsent]: {
     checked: false,
     field: { config: { href: { kind: "literal", value: "/terms" }, linkLabel: { kind: "literal", value: "terms" } } } as never,

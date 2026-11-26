@@ -3,14 +3,14 @@
 import { InputNumber, Select } from "antd";
 import { useState, type CSSProperties } from "react";
 
+import type { PhiControlSize } from "../../types/control";
 import {
   PHI_CSS_LENGTH_UNITS,
   readPhiCssLengthPart,
   serializePhiCssLength,
-  type PhiControlSize,
   type PhiCssLength,
   type PhiCssLengthUnit,
-} from "../../types";
+} from "../../types/length";
 import { PhiLabeledControl } from "./phi-labeled-control";
 import { PhiCompactGroupControl } from "./phi-compact-group-control";
 
