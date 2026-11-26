@@ -1047,25 +1047,24 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `openActionKey` | The action key that opens a record -- a Table's row action or a Collection View's item action -- default `edit`. |
 | `titleFromRecord` | Optional `{ template, field }`: a title made of the record the `source` reads, announced on `recordTitle`. See below. |
 | `signalRoutes` | The Widget's routes. |
-| `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Defaults to `PHI_LAYOUT.contentMax`, or that for each column of a Form of columns; see below. |
+| `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Unstated, `PHI_LAYOUT.contentMax`, or that for each column of a Form of columns; see below. Not in `defaultConfig`. |
 | block geometry | `maxSize`, `minSize`, `size`, `surface` -- read from the node like any other Widget. They measure the block the slot frame draws, which is the box *around* the Form's own. |
 
-- **A Form is capped at the reading measure unless the placement says otherwise.** `maxFormWidth` is
-  declared as `PHI_LAYOUT.contentMax` (610) in the Widget's `defaultConfig`, the measure
-  [THEME.md](./THEME.md) names for a labelled form, and it is a ceiling rather than a width: the Form
-  still fills a narrower slot edge to edge, and 610 is exactly where its own layout switches to `wide`,
-  so capping never demotes the layout. A cap is also not a size -- it leaves the slot policy
-  `fill-inline` and the Layout in charge of placing the Form. It is declared in `defaultConfig` for the
-  Builder, which writes it into the node it creates, and for the Inspector, which shows it under the node
-  it edits -- and answered again on the render path, because only a Widget's *block base* is merged under
-  a node that states nothing (`widgetBlockDefaultsByType`). A Widget field of its own reaches a Preset
-  placement no other way; that is the same gap that once left every Preset-placed Form uncapped. The
+- **A Form is capped at the reading measure unless the placement says otherwise.** The house cap is
+  `PHI_LAYOUT.contentMax` (610), the measure [THEME.md](./THEME.md) names for a labelled form, and it is a
+  ceiling rather than a width: the Form still fills a narrower slot edge to edge, and 610 is exactly where
+  its own layout switches to `wide`, so capping never demotes the layout. A cap is also not a size -- it
+  leaves the slot policy `fill-inline` and the Layout in charge of placing the Form. It is answered on the
+  render path, because only a Widget's *block base* is merged under a node that states nothing
+  (`widgetBlockDefaultsByType`) -- the gap that once left every Preset-placed Form uncapped -- and it is
+  not in the Widget's `defaultConfig`: the Builder wrote 610 from there into every node it created,
+  before any Form was chosen, and a Form of columns then stood capped in a dialog made wide for it
+  (owner, 2026-11-26). The Inspector shows the field empty, which is the house's answer. The
   parser leaves an unstated cap `null` and the Widget answers it from the Form it resolved
   (`resolvePhiFormHouseMaxWidth`): the reading measure for a Form of one column, and the reading measure for each column for a Form of columns (1220 for two, 1830 for three). Capped at
   610, a Form whose columns stand only at `wide` reached them only at its very edge, and in the dialog made
   wide enough for its columns any such Form stood as a strip of 610 in the middle of the body
-  (owner, 2026-11-26). The Builder still writes 610 into a node it creates, before any Form is chosen; a
-  stated cap is the placement's and wins. A placement that means something else names a length
+  (owner, 2026-11-26). A stated cap is the placement's and wins. A placement that means something else names a length
   and wins -- `contentMaxNarrow` for a column of Controls with no label beside them, the Page's width
   (`PHI_PAGE.max`) for a Form read across, `100%` for a Form that takes its slot, such as a reply under a conversation that
   runs the page. "No ceiling" is spelled `100%`, because that is what every other block says.

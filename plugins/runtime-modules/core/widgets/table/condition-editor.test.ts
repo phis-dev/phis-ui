@@ -19,7 +19,7 @@ describe("the Table's condition editor", () => {
   it("offers notEquals beside equals, and a value only where the operator compares with one", () => {
     const operator = conditionFields().find((field) => field.key === "operator");
     if (operator?.type !== "choice") throw new Error("No operator choice.");
-    expect(operator.options.map((option) => option.value)).toEqual(["truthy", "falsy", "equals", "notEquals", "contains"]);
+    expect(operator.options?.map((option) => option.value)).toEqual(["truthy", "falsy", "equals", "notEquals", "contains"]);
     expect(conditionFields().find((field) => field.key === "value")?.visibleWhen).toEqual([
       { field: "operator", notEquals: "truthy" },
       { field: "operator", notEquals: "falsy" },

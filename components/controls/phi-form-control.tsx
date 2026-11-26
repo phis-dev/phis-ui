@@ -239,6 +239,9 @@ function pickPhiFormWatchedValues(
   return picked;
 }
 
+/** The distance a cell that opens a column keeps from the one before it, per width (`phiFormCellOpensColumn`). */
+const PHI_FORM_COLUMN_GUTTER_PROPERTY = "--phi-form-column-gutter";
+
 function PhiResolvedFormFieldControl({
   id,
   provider,
@@ -800,7 +803,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         ...Object.fromEntries(PHI_FORM_RESPONSIVE_MODES.flatMap((mode) => [
           [`--phi-form-row-gap-${mode}`, `${rowGapByMode[mode]}px`],
           [`--phi-form-label-gutter-${mode}`, `${Math.round(rowGapByMode[mode] / 2)}px`],
-          [`--phi-form-column-gutter-${mode}`, `${columnGapByMode[mode]}px`],
+          [`${PHI_FORM_COLUMN_GUTTER_PROPERTY}-${mode}`, `${columnGapByMode[mode]}px`],
         ])),
         // A label beside its control is as tall as the control, so the two read as one line.
         "--phi-form-label-min-height": `${size === "small" ? token.controlHeightSM : token.controlHeight}px`,
@@ -873,7 +876,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                 : `var(--phi-form-label-gutter-${mode})`],
               [`--phi-form-cell-lead-${mode}`,
                 phiFormCellOpensColumn(range, part === "label" ? placed.control : placed.labelSlot)
-                  ? `var(--phi-form-column-gutter-${mode})`
+                  ? `var(${PHI_FORM_COLUMN_GUTTER_PROPERTY}-${mode})`
                   : "0px"],
             ];
           }),

@@ -8,7 +8,6 @@ import {
   type PhiCmsFormWidgetConfig,
 } from "../../../../../components/forms/form-widget-config";
 import { PHI_FORM_RECORD_TITLE_CAPABILITY } from "../../../../../components/forms/form-record-title";
-import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
 import { PHI_COMPACT_CONTROL_SIZE_FIELD } from "../../../../../components/widgets/config/control-signal-config";
 
@@ -192,29 +191,14 @@ export const PHI_FORM_WIDGET_DEFINITION = {
   ],
   defaultConfig: {
     /*
-     * How wide a Form is allowed to get, answered by the house where nobody said otherwise.
-     *
-     * `PHI_LAYOUT.contentMax` is the measure the Theme names for exactly this -- "the one a labelled
-     * form wants" -- and it is a ceiling, not a width: the Form still fills a narrower slot edge to
-     * edge, and 610 is the width at which its own layout switches to `wide`, so the cap lands on the
-     * threshold rather than below it and nothing is demoted by being capped.
-     *
-     * Stated as the Form's own field and deliberately NOT as the block's `maxSize`, which is where it
-     * stood until the Widget grew a box. A block cap is drawn by the slot frame on the outermost
-     * element, and everything the Widget puts inside it -- a Card's inset, a Wash's ground -- comes off
-     * the width the fields are left with and off the width their container query measures. At the house
-     * cap that was 568 inside a `card`, one step under the threshold the number was picked to sit on, so
-     * `wide` could not be reached from inside a box at all. Measured at the fields, the Frame adds the
-     * box's chrome back on and the box is the one that ends up wider than 610.
-     *
-     * Declared here for the two readers that read a declaration -- the Builder writes it into a node it
-     * creates, the Inspector shows it under the node it edits -- while the render path is answered by
-     * the parser, because only a Widget's block base is merged under a node that states nothing. Both
-     * sides name `PHI_LAYOUT.contentMax`, so there is one number and two readers of it. A placement that
-     * means something else writes a length of its own and wins: `contentMaxNarrow` for a column of
-     * Controls with no label beside them, `100%` for a Form that really takes its slot.
+     * No `maxFormWidth`: a Form is capped by the house where nobody says otherwise, and the house measure
+     * depends on the Form -- the reading measure, or that for each of its columns
+     * (`resolvePhiFormHouseMaxWidth`) -- which a node the Builder creates has not chosen yet. Writing 610
+     * here stated a cap into every new node that a Form of columns then stood inside, a strip in a dialog
+     * made wide for it (owner, 2026-11-26). The Inspector shows the field empty, which is the house's
+     * answer; a length written there is the placement's and wins. The cap is the Form's own field and
+     * never the block's `maxSize` (FORMS.md, "Form Widget").
      */
-    maxFormWidth: PHI_LAYOUT.contentMax,
     formId: null,
     submit: "external",
     links: [],

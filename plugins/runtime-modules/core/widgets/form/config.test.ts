@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { parsePhiFormWidgetConfig } from "../../../../../components/forms/form-widget-config";
 import { PHI_FORM_RECORD_TITLE_CAPABILITY } from "../../../../../components/forms/form-record-title";
 import { PHI_FORM_WIDGET_DEFINITION } from "./config";
@@ -22,8 +21,9 @@ import { PHI_FORM_WIDGET_DEFINITION } from "./config";
  * the fields a second time.
  */
 describe("the Form Widget's cap", () => {
-  it("is declared as the reading measure", () => {
-    expect(PHI_FORM_WIDGET_DEFINITION.defaultConfig.maxFormWidth).toBe(PHI_LAYOUT.contentMax);
+  it("is not written into a node the Builder creates: the house answers it from the Form", () => {
+    // 610 written there capped every new node, a Form of columns among them (owner, 2026-11-26).
+    expect(PHI_FORM_WIDGET_DEFINITION.defaultConfig).not.toHaveProperty("maxFormWidth");
   });
 
   it("is not stated as the block's geometry", () => {
