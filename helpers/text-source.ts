@@ -35,5 +35,6 @@ export function readPhiTextSource(value: unknown): PhiTextSource | undefined {
  */
 export function isPhiAuthoredTextField(field: PhiCmsConfigField): boolean {
   if (field.type === "collection") return field.itemFields.some(isPhiAuthoredTextField);
+  if (field.type === "condition-group") return field.conditionFields.some(isPhiAuthoredTextField);
   return readPhiConfigFieldTextRegister(field) != null;
 }

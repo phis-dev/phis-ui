@@ -92,6 +92,11 @@ export type PhiInspectorFieldLabels = {
   addItem: string;
   remove: string;
   edit: string;
+  conditions: string;
+  conditionMatch: string;
+  conditionMatchAll: string;
+  conditionMatchAny: string;
+  conditionGroupIncomplete: string;
   width: string;
   height: string;
   staticOptions: string;
@@ -174,6 +179,11 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     addItem: "Add item",
     remove: "Remove",
     edit: "Edit",
+    conditions: "Conditions",
+    conditionMatch: "Match",
+    conditionMatchAll: "All conditions",
+    conditionMatchAny: "Any condition",
+    conditionGroupIncomplete: "Not saved until every condition is complete: a Controller condition needs its Controller Address.",
     width: "Width",
     height: "Height",
     staticOptions: "Static options",

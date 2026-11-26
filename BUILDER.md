@@ -682,6 +682,13 @@ Field rows:
 - inside such a dialog a row splits label and control 10 : 14 of 24, the medium tier of the house Form
   layout (`PHI_INSPECTOR_DIALOG_FIELD_LABEL_SHARE`, read from `PHI_FORM_DEFAULT_LAYOUT`); the dialog says
   so through `PhiInspectorDialogContext`. The Inspector column keeps `PHI_INSPECTOR_FIELD_LABEL_WIDTH`.
+- a group of conditions (`{ match, conditions }`, `PhiRuntimeConditionExpression`) is one
+  `condition-group` field, drawn like a list: its label and an Edit button, the match and the conditions
+  in the Overlay (in place inside another Overlay's entry). The Inspector writes only what the strict
+  reader accepts: the first condition brings `match: "all"`, the last one removed takes the key with it,
+  and a group the reader refuses -- a Controller condition without its address -- is held in the dialog
+  with a warning and not saved (closing the dialog drops it). Never a `match` field beside a
+  `conditions` collection: the two wrote half-groups the Widget's parser refused.
 
 Control rules:
 

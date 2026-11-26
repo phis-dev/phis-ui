@@ -81,6 +81,9 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
   the entries edited in a dialog -- or `select` for a list whose length is decided elsewhere. A list is
   never edited in the Inspector column; a collection inside an Overlay entry is edited in place there and
   states none ([BUILDER.md](../../BUILDER.md), "Field rows"; `scripts/validate-inspector-collections.ts`).
+- A group of conditions stored under one key (`{ match, conditions }`) is a `condition-group` field with
+  `conditionFields` and a `defaultCondition`, never a `match` choice beside a `conditions` collection;
+  the Inspector writes it only in a shape `readPhiRuntimeConditionExpression` accepts.
 - `category` is one of `PHI_CMS_PLUGIN_CATEGORIES` and only groups Widgets in the Picker. Availability
   comes from ownership: the Widget appears where its owner Module is active.
 - `runtimeSignals` declares signal capabilities and `signalSubcontrols` declares dynamic subcontrol

@@ -75,6 +75,8 @@ import { PhiFlexControl } from "../../../../components/controls/phi-flex-control
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 import { PhiDescriptionHint } from "../../../../components/controls/phi-description-tooltip-icon";
 import { isPhiRecord } from "../../../../helpers/is-record";
+import { PhiAlertControl } from "../../../../components/controls/phi-alert-control";
+import { resolvePhiInspectorConditionGroupWrite } from "./inspector-condition-group";
 import {
   PHI_INSPECTOR_WIDGET_DEFAULT_LABELS,
   type PhiInspectorFieldLabels,
@@ -1009,6 +1011,125 @@ function PhiInspectorCollectionFieldControl({
 }
 
 /**
+ * A `condition-group` field: the group is one value, `{ match, conditions }`, written only in a shape the
+ * strict reader accepts (`resolvePhiInspectorConditionGroupWrite`). Its label and an Edit button in the
+ * Inspector column, the group in an Overlay; inside another Overlay's entry, in place there. The match
+ * and the list are drawn as the Inspector's own choice and collection fields on the group, so a
+ * condition is edited exactly as a list entry is anywhere else.
+ */
+function PhiInspectorConditionGroupFieldControl({
+  field,
+  labels,
+  value,
+  disabled,
+  onChange,
+}: {
+  field: Extract<PhiCmsConfigField, { type: "condition-group" }>;
+  labels: PhiInspectorFieldLabels;
+  value: unknown;
+  disabled: boolean;
+  onChange?: (next: Record<string, unknown>) => void;
+}) {
+  const popup = usePhiWidgetScaffoldPopup();
+  const inDialog = useContext(PhiInspectorDialogContext);
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  /* What the dialog shows while it differs from what is stored: a match chosen before any condition, or a held group. */
+  const [draft, setDraft] = useState<{ group: Record<string, unknown>; held: boolean } | null>(null);
+  const stored = isPhiRecord(value) ? value : null;
+  const group: Record<string, unknown> = draft?.group ?? stored ?? {};
+
+  const apply = (patch: Record<string, unknown>) => {
+    const next = { ...group, ...patch };
+    const write = resolvePhiInspectorConditionGroupWrite(next);
+    if (write.kind === "write") {
+      setDraft(null);
+      onChange?.({ [field.key]: write.value });
+      return;
+    }
+    if (write.kind === "hold") {
+      setDraft({ group: write.draft, held: true });
+      return;
+    }
+    setDraft(next.match === "all" || next.match === "any" ? { group: { match: next.match, conditions: [] }, held: false } : null);
+    if (stored) onChange?.({ [field.key]: undefined });
+  };
+
+  const matchField: PhiCmsConfigField = {
+    key: "match",
+    type: "choice",
+    label: labels.conditionMatch,
+    options: [
+      { value: "all", label: labels.conditionMatchAll },
+      { value: "any", label: labels.conditionMatchAny },
+    ],
+  };
+  const conditionsField: PhiCmsConfigField = {
+    key: "conditions",
+    type: "collection",
+    label: labels.conditions,
+    itemKeyField: "valuePath",
+    itemLabelField: "valuePath",
+    itemFields: field.conditionFields,
+    defaultItem: field.defaultCondition,
+    ...(field.addLabel == null ? {} : { addLabel: field.addLabel }),
+    ...(field.emptyLabel == null ? {} : { emptyLabel: field.emptyLabel }),
+  };
+  const body = (
+    <PhiInspectorDialogContext.Provider value>
+      <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
+        {renderPhiInspectorConfigField({
+          field: matchField,
+          value: group.match,
+          defaultValue: "all",
+          config: group,
+          disabled,
+          fieldLabels: labels,
+          onChange: apply,
+        })}
+        {renderPhiInspectorConfigField({
+          field: conditionsField,
+          value: Array.isArray(group.conditions) ? group.conditions : [],
+          defaultValue: undefined,
+          config: group,
+          disabled,
+          fieldLabels: labels,
+          onChange: apply,
+        })}
+        {draft?.held ? <PhiAlertControl level="warning" title={labels.conditionGroupIncomplete} showIcon /> : null}
+      </PhiFlexControl>
+    </PhiInspectorDialogContext.Provider>
+  );
+
+  if (inDialog) return renderPhiInspectorConfigFieldBlock(field, body);
+
+  return renderPhiInspectorConfigFieldControl(
+    field,
+    <>
+      <PhiButtonControl
+        label={labels.edit}
+        icon={<PhiIcon name="edit" />}
+        disabled={disabled}
+        onClick={() => setOverlayOpen(true)}
+      />
+      <PhiDialogControl
+        open={overlayOpen}
+        title={field.label}
+        controlSize="medium"
+        mountPolicy="remount"
+        rootClassName={popup.rootClassName}
+        onDismiss={() => {
+          // A held group is not saved: closing the dialog lets it go, and the stored one shows again.
+          setOverlayOpen(false);
+          setDraft(null);
+        }}
+      >
+        {body}
+      </PhiDialogControl>
+    </>,
+  );
+}
+
+/**
  * A list of whole numbers typed as "10, 20, 50".
  *
  * The text is a draft until the field is left or Enter is pressed: reading it on every keystroke would
@@ -1439,6 +1560,19 @@ function renderPhiInspectorConfigFieldBody({
         disabled={disabled || !onChange}
         widgetReferenceOptions={widgetReferenceOptions ?? []}
         labels={fieldLabels}
+        onChange={onChange}
+      />
+    );
+  }
+
+  if (field.type === "condition-group") {
+    return (
+      <PhiInspectorConditionGroupFieldControl
+        key={field.key}
+        field={field}
+        labels={fieldLabels}
+        value={value}
+        disabled={disabled || !onChange}
         onChange={onChange}
       />
     );

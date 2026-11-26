@@ -103,5 +103,14 @@ function mapPhiConfigFieldText(
     };
   }
 
+  if (mapped.type === "condition-group") {
+    return {
+      ...mapped,
+      conditionFields: mapped.conditionFields.map((conditionField) => mapPhiConfigFieldText(conditionField, mapText)),
+      ...(mapped.addLabel == null ? {} : { addLabel: mapOptionalText(mapped.addLabel, mapText) }),
+      ...(mapped.emptyLabel == null ? {} : { emptyLabel: mapOptionalText(mapped.emptyLabel, mapText) }),
+    };
+  }
+
   return mapped;
 }

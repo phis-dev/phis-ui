@@ -395,6 +395,25 @@ export type PhiCmsConfigField =
     })
   | (PhiCmsConfigFieldBase & {
       /**
+       * A group of conditions stored under `key` as one `PhiRuntimeConditionExpression` group,
+       * `{ match, conditions }`, edited as one field: its label and an Edit button, the group in an
+       * Overlay (inside another Overlay's entry, in place there). The Inspector writes only what the
+       * strict reader (`readPhiRuntimeConditionExpression`) accepts: the first condition added writes
+       * `match: "all"` with it, removing the last one removes `key` altogether, and a group the reader
+       * refuses -- a Controller condition without its address -- stays in the dialog, marked as not
+       * saved, until it is complete. Two separate fields for `match` and `conditions` wrote half-groups
+       * the reader refused, and the Widget failed to draw.
+       */
+      type: "condition-group";
+      /** The fields of one condition. */
+      conditionFields: PhiCmsConfigField[];
+      /** What a condition starts as when one is added. */
+      defaultCondition: Record<string, unknown>;
+      addLabel?: string;
+      emptyLabel?: string;
+    })
+  | (PhiCmsConfigFieldBase & {
+      /**
        * A Surface (`types/surface.ts`) of something the Widget draws inside itself -- each entry of a
        * list -- edited with the same Control as a Widget's own Surface. `null` is stored for "None", so a
        * look a Widget is created with is not drawn again under a box that was set to have none.

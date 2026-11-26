@@ -212,8 +212,8 @@
       "clientBytes": 4995475
     },
     "./next/areas/builder": {
-      "runtimeBytes": 6473940,
-      "clientBytes": 2745504
+      "runtimeBytes": 6480090,
+      "clientBytes": 2751654
     },
     "./next/areas/builder-client": {
       "runtimeBytes": 6136948,
