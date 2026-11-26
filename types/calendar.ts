@@ -149,6 +149,11 @@ export type PhiCalendarAdapterDatePickerProps = {
    * The Control passes `ariaLabelledBy` only where this is absent.
    */
   ariaLabel?: string;
+  /**
+   * Where the picker's panel is mounted, given the element that opened it; the document's end where
+   * left out. A Form in a popover hands its own down (FORMS.md, "Popup container").
+   */
+  getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   onChange?: (selection: PhiTemporalSelection) => void;
 };
 

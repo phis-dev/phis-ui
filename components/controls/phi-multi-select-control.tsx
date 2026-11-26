@@ -31,6 +31,8 @@ export type PhiMultiSelectControlProps<TValue extends string | number = string> 
   size?: PhiControlSize;
   variant?: PhiControlVariant;
   popupMatchSelectWidth?: boolean | number;
+  /** Where the list is mounted; the document's end where left out. */
+  getPopupContainer?: SelectProps["getPopupContainer"];
   style?: SelectProps["style"];
   onFocus?: () => void;
   onBlur?: () => void;
@@ -53,6 +55,7 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
   size,
   variant,
   popupMatchSelectWidth = false,
+  getPopupContainer,
   style,
   onFocus,
   onBlur,
@@ -101,6 +104,7 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
       }}
       maxTagCount={maxTagCount}
       popupMatchSelectWidth={popupMatchSelectWidth}
+      getPopupContainer={getPopupContainer}
       size={size}
       variant={variant}
       onFocus={onFocus}

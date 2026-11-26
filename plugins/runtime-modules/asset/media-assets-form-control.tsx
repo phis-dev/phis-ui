@@ -84,6 +84,7 @@ export const PhiMediaAssetsFormControl: ComponentType<PhiFormFieldProviderProps>
   formContext,
   mediaLimits,
   size,
+  getPopupContainer,
 }) => {
   const { token } = usePhiConfig();
   const config = useMemo(
@@ -235,7 +236,7 @@ export const PhiMediaAssetsFormControl: ComponentType<PhiFormFieldProviderProps>
         disabled={full && !uploadFolderPath}
         onClick={() => setUploadFolderPath((current) => current ? null : resolveFolderPath())}
       />
-      <PhiMediaPickerControl {...picker} size={size} disabled={full} />
+      <PhiMediaPickerControl {...picker} getPopupContainer={getPopupContainer} size={size} disabled={full} />
     </PhiToolbarControl>
   );
   // The Collection's own drag handles; the order dropped is the value's new order.

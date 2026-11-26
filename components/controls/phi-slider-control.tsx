@@ -17,6 +17,8 @@ type PhiSliderControlBaseProps = {
   reverse?: boolean;
   tooltipMode?: PhiSliderTooltipMode;
   tooltipSuffix?: ReactNode;
+  /** Where the value's tooltip is mounted; the document's end where left out. */
+  getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   disabled?: boolean;
   readOnly?: boolean;
   style?: CSSProperties;
@@ -60,6 +62,7 @@ export function PhiSliderControl(props: PhiSliderControlProps) {
     reverse,
     tooltipMode = "auto",
     tooltipSuffix,
+    getPopupContainer,
     disabled,
     readOnly,
     style,
@@ -80,6 +83,7 @@ export function PhiSliderControl(props: PhiSliderControlProps) {
       formatter: tooltipSuffix == null
         ? undefined
         : (nextValue?: number) => nextValue == null ? null : <>{nextValue}{tooltipSuffix}</>,
+      ...(getPopupContainer ? { getPopupContainer } : {}),
     },
     style: { minWidth: 0, flex: label == null ? undefined : "1 1 auto", ...style },
   };

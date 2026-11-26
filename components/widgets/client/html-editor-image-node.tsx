@@ -425,6 +425,7 @@ function PhiHtmlImageDecorator({
               key={openCount}
               descriptor={PHI_HTML_IMAGE_FORM}
               size="small"
+              getPopupContainer={popup.getNestedPopupContainer}
               submitOnEnter={false}
               initialValues={{ title: title ?? "", alt, size: { width, height } }}
               onSubmit={submitNothing}

@@ -32,6 +32,7 @@ import {
 import type {
   PhiFormFieldProviderProps,
   PhiFormFieldTypeProvider,
+  PhiFormPopupContainer,
   PhiFormProviderRegistry,
   PhiFormSize,
 } from "../forms/form-provider-registry";
@@ -99,6 +100,13 @@ export type PhiFormControlProps = {
    * down -- a picker or a popover built from descriptor fields, which stands among chrome.
    */
   size?: PhiFormSize;
+  /**
+   * Where every field mounts its floating layers -- a select's list, a picker's panel, a unit list, a
+   * tooltip (FORMS.md, "Popup container") -- handed to every field as `getPopupContainer`. A Form in a
+   * popover passes one that answers an element inside it, so a list opened there is part of the popover
+   * and a click in it is a click inside. Left out, each layer goes to the document's end, as before.
+   */
+  getPopupContainer?: PhiFormPopupContainer;
   conditionControllerStates?: Readonly<Record<string, Record<string, unknown>>>;
   /**
    * The fields whose field type belongs to a Module that is not active in this Area. Each says so in the
@@ -246,6 +254,7 @@ function PhiResolvedFormFieldControl({
   formValues,
   mediaLimits,
   size,
+  getPopupContainer,
   onChosenOptionFlags,
 }: {
   /** Set by the Form Item this sits in, from the form's name and the field's key. */
@@ -266,7 +275,7 @@ function PhiResolvedFormFieldControl({
   placeholder?: string;
   disabled?: boolean;
   readOnly?: boolean;
-} & Pick<PhiFormFieldProviderProps, "value" | "checked" | "onChange" | "formContext" | "mediaLimits" | "size">) {
+} & Pick<PhiFormFieldProviderProps, "value" | "checked" | "onChange" | "formContext" | "mediaLimits" | "size" | "getPopupContainer">) {
   const staticOptions = useMemo(
     () => field.options?.map((option) => ({
       ...option,
@@ -388,6 +397,7 @@ function PhiResolvedFormFieldControl({
         onChange={controlOnChange}
         formContext={formContext}
         size={size}
+        {...(getPopupContainer ? { getPopupContainer } : {})}
         {...(formValues ? { formValues } : {})}
         {...(mediaLimits ? { mediaLimits } : {})}
       />
@@ -413,6 +423,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   disabled = false,
   readOnly = false,
   size: statedSize,
+  getPopupContainer,
   conditionControllerStates = PHI_FORM_NO_CONTROLLER_STATES,
   unavailableFieldKeys,
   mediaLimits,
@@ -975,6 +986,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                   readOnly={readOnly}
                   formContext={fieldFormContext}
                   size={size}
+                  getPopupContainer={getPopupContainer}
                   formValues={formValues}
                   mediaLimits={mediaLimits}
                   onChosenOptionFlags={field.optionsProvider ? optionFlagReporters.get(field.key) : undefined}

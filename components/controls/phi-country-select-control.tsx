@@ -17,6 +17,8 @@ export type PhiCountrySelectControlProps = {
   readOnly?: boolean;
   allowClear?: boolean;
   size?: PhiControlSize;
+  /** Where the list is mounted; the document's end where left out. */
+  getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   style?: CSSProperties;
   onBlur?: () => void;
   onChange: (code: string | null) => void;
@@ -36,6 +38,7 @@ export function PhiCountrySelectControl({
   readOnly,
   allowClear,
   size,
+  getPopupContainer,
   style,
   onBlur,
   onChange,
@@ -52,6 +55,7 @@ export function PhiCountrySelectControl({
       readOnly={readOnly}
       allowClear={allowClear}
       size={size}
+      getPopupContainer={getPopupContainer}
       options={options}
       style={style ?? { width: "100%" }}
       onBlur={onBlur}

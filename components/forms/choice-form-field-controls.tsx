@@ -21,9 +21,11 @@ import type { PhiFormFieldProviderProps } from "./form-provider-registry";
  */
 export const PhiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
   id, field, value, onChange, options, placeholder, disabled, readOnly, onSearch, filterOptionsLocally, size,
+  getPopupContainer,
 }) => (
   <PhiSelectControl
     size={size}
+    getPopupContainer={getPopupContainer}
     id={id}
     value={typeof value === "string" ? value : undefined}
     placeholder={placeholder}
@@ -40,10 +42,11 @@ export const PhiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
 );
 
 export const PhiMultiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, options, placeholder, disabled, readOnly, size,
+  id, field, value, onChange, options, placeholder, disabled, readOnly, size, getPopupContainer,
 }) => (
   <PhiMultiSelectControl
     size={size}
+    getPopupContainer={getPopupContainer}
     id={id}
     value={Array.isArray(value) ? value.map(String) : []}
     placeholder={placeholder}

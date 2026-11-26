@@ -24,10 +24,11 @@ import { readPhiFormAddressLabels, type PhiFormAddressLabels } from "./structure
  */
 
 export const PhiCountryFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, placeholder, disabled, readOnly, size,
+  id, field, value, onChange, placeholder, disabled, readOnly, size, getPopupContainer,
 }) => (
   <PhiCountrySelectControl
     size={size}
+    getPopupContainer={getPopupContainer}
     id={id}
     value={typeof value === "string" ? value : null}
     placeholder={placeholder}
@@ -57,7 +58,7 @@ function describeProblem(problem: PhiAddressProblem, labels: PhiFormAddressLabel
  * it has been left.
  */
 export const PhiAddressFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, labels, disabled, readOnly, formContext, size,
+  id, field, value, onChange, labels, disabled, readOnly, formContext, size, getPopupContainer,
 }) => {
   const address = readPhiAddressFieldValue(value);
   const words = useMemo(() => readPhiFormAddressLabels(labels), [labels]);
@@ -85,6 +86,7 @@ export const PhiAddressFormControl: ComponentType<PhiFormFieldProviderProps> = (
     <PhiAddressControl
       id={id}
       size={size}
+      getPopupContainer={getPopupContainer}
       value={address}
       labels={Object.fromEntries(PHI_ADDRESS_PARTS.map((part) => [part, words[part]])) as Record<PhiAddressPart, string>}
       errors={errors}
@@ -101,7 +103,7 @@ export const PhiAddressFormControl: ComponentType<PhiFormFieldProviderProps> = (
  * one label; each half is named by its placeholder, as the Control names them everywhere.
  */
 export const PhiDimensionFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  value, onChange, label, disabled, readOnly, size,
+  value, onChange, label, disabled, readOnly, size, getPopupContainer,
 }) => (
   <PhiDimensionControl
     size={size}
@@ -109,11 +111,7 @@ export const PhiDimensionFormControl: ComponentType<PhiFormFieldProviderProps> =
     value={readPhiDimensionValue(value)}
     disabled={disabled}
     readOnly={readOnly}
-    /*
-     * The unit list opens beside its trigger, inside whatever holds the Form. Mounted at the document's
-     * end, it was out of the HTML editor's image popover, and a click on a unit chose nothing there.
-     */
-    getPopupContainer={(triggerNode) => triggerNode.parentElement ?? triggerNode}
+    getPopupContainer={getPopupContainer}
     onChange={(next) => onChange?.(next)}
   />
 );

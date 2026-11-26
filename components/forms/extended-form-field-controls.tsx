@@ -52,7 +52,9 @@ function readPhiNumberFieldPrefix(prefix: unknown, labels: PhiFormFieldProviderP
 /*
  * The slider's rail and handle have one size in Ant Design; a small Form draws the number beside it small.
  */
-export const PhiSliderFormControl: ComponentType<PhiFormFieldProviderProps> = ({ field, value, onChange, disabled, readOnly, size }) => {
+export const PhiSliderFormControl: ComponentType<PhiFormFieldProviderProps> = ({
+  field, value, onChange, disabled, readOnly, size, getPopupContainer,
+}) => {
   const numericValue = typeof value === "number" ? value : undefined;
   const min = typeof field.config?.min === "number" ? field.config.min : undefined;
   const max = typeof field.config?.max === "number" ? field.config.max : undefined;
@@ -72,6 +74,7 @@ export const PhiSliderFormControl: ComponentType<PhiFormFieldProviderProps> = ({
           : "auto"
       }
       tooltipSuffix={typeof field.config?.tooltipSuffix === "string" ? field.config.tooltipSuffix : undefined}
+      getPopupContainer={getPopupContainer}
       disabled={disabled}
       readOnly={readOnly}
       style={{ width: "100%" }}
@@ -97,9 +100,12 @@ export const PhiSliderFormControl: ComponentType<PhiFormFieldProviderProps> = ({
   ) : slider;
 };
 
-export const PhiCascaderFormControl: ComponentType<PhiFormFieldProviderProps> = ({ field, value, onChange, options, placeholder, disabled, readOnly, size }) => (
+export const PhiCascaderFormControl: ComponentType<PhiFormFieldProviderProps> = ({
+  field, value, onChange, options, placeholder, disabled, readOnly, size, getPopupContainer,
+}) => (
   <PhiCascaderControl
     size={size}
+    getPopupContainer={getPopupContainer}
     value={typeof value === "string" ? value : undefined}
     placeholder={placeholder}
     disabled={disabled}

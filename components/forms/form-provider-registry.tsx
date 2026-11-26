@@ -26,6 +26,14 @@ import type { PhiControlSize } from "../../types/control";
  */
 export type PhiFormSize = Extract<PhiControlSize, "small" | "medium">;
 
+/**
+ * Where a Form's fields mount their floating layers, given the element that opened one -- the
+ * `getPopupContainer` every Control with a floating layer takes. A Form inside a popover passes one
+ * that answers an element inside the popover: a layer mounted at the document's end stands outside it,
+ * and the popover, or the editor beneath it, takes a click there for a click elsewhere.
+ */
+export type PhiFormPopupContainer = (triggerNode: HTMLElement) => HTMLElement;
+
 export type PhiFormFieldProviderProps = {
   /**
    * The DOM id the form gives this field, unique on the page: the field's label points at it. A
@@ -50,6 +58,14 @@ export type PhiFormFieldProviderProps = {
    * stands out of every row around it. Held by `form-field-size.test.tsx` over every registered field.
    */
   size: PhiFormSize;
+  /**
+   * Where every floating layer the field opens is mounted -- a select's list, a picker's panel, a unit
+   * list, a tooltip -- the Form's `getPopupContainer` (FORMS.md, "Popup container"). A field hands it to
+   * each Control it draws that opens one, and never chooses a container of its own. Absent, each layer
+   * goes where its Control puts it, the document's end. Held by `form-field-size.test.tsx` over every
+   * registered field.
+   */
+  getPopupContainer?: PhiFormPopupContainer;
   /** Reports what has been typed. Absent where the field's provider is not searchable. */
   onSearch?: (search: string) => void;
   /** `false` where the provider answered the search itself, so the control must not filter it again. */

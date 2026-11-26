@@ -28,6 +28,8 @@ export type PhiAddressControlProps = {
   readOnly?: boolean;
   /** The size every part's input is drawn in; its Form's (`PhiFormFieldProviderProps.size`). */
   size?: PhiControlSize;
+  /** Where the country's list is mounted; the document's end where left out. */
+  getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   onChange?: (next: PhisSiteAddressInput) => void;
   /** A part was left, so whoever validates may now say what is wrong with it. */
   onPartBlur?: (part: PhiAddressPart) => void;
@@ -60,6 +62,7 @@ export function PhiAddressControl({
   disabled,
   readOnly,
   size,
+  getPopupContainer,
   onChange,
   onPartBlur,
 }: PhiAddressControlProps) {
@@ -81,6 +84,7 @@ export function PhiAddressControl({
             <PhiCountrySelectControl
               id={partId(part)}
               size={size}
+              getPopupContainer={getPopupContainer}
               value={value.country}
               disabled={disabled}
               readOnly={readOnly}

@@ -431,6 +431,28 @@ A Form is drawn at one of two sizes, the Controls' vocabulary without `large` (`
   its labels stand above their inputs. That is the template, not a fault (Layout and placement).
 - `medium` writes nothing new: no label size, the same gaps and the same submit as before sizes existed.
 
+### Popup container
+
+A field's floating layers -- a select's list, a picker's panel, a cascader's levels, the dimension's unit
+lists, the Media picker, a slider's tooltip -- are mounted where the Form says
+(owner, 2026-11-26).
+
+- `PhiFormControl`'s `getPopupContainer` (`(triggerNode) => HTMLElement`, the name every Control with a
+  floating layer uses) is handed to every field as `getPopupContainer` (`PhiFormFieldProviderProps`), and
+  **a field hands it to every Control it draws that opens a layer** -- the calendar adapter's date picker
+  included (`PhiCalendarAdapterDatePickerProps.getPopupContainer`). A field never chooses a container of
+  its own. Left out, nothing changes: each layer goes where its Control puts it, the document's end.
+- It is for a Form inside a popover. A list mounted at the document's end stands outside the popover, and
+  the popover -- or the editor beneath it -- takes a click on an entry for a click elsewhere: in the HTML
+  editor's image popover a click on a unit chose nothing (checked on dev.phis.dev). A Form in a scaffold
+  popover passes `usePhiWidgetScaffoldPopup().getNestedPopupContainer`, which mounts each layer beside
+  its trigger and so inside the popover; the image popover does.
+- `plugins/runtime-modules/form-field-size.test.tsx` mounts every registered field with a container of
+  its own, opens everything that opens a layer and fails a field whose layer stands outside it; the
+  fields that have a layer are listed there, so one that opens nothing it lists, or something it does
+  not, fails too. `table` and `tree` stand out of it as they stand out of the size: the lists their cell
+  editors open are the Table and Tree Controls' own and are not handed the container.
+
 ### Compound Table and Tree values
 
 A field provider may render `PhiTableControl` or `PhiTreeControl` when the whole collection is one value
@@ -492,6 +514,8 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   given; it never keeps a second value state and never renders a Widget or Layout.
 - A field provider draws every control in the `size` it is given, the Form's ([Size](#size)), and writes
   no size of its own.
+- A field provider hands the `getPopupContainer` it is given to every Control it draws that opens a
+  floating layer ([Popup container](#popup-container)), and chooses no container of its own.
 - **A field draws no label layout of its own.** A Form is built from descriptor fields, and where a
   field's label stands -- beside its control from 377px of Form width, above it below that -- is the
   Form's template (`PHI_FORM_DEFAULT_LAYOUT`, [Layout and placement](#layout-and-placement)), drawn by the

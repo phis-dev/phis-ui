@@ -33,6 +33,7 @@ export const PhiLinkTargetFormControl: ComponentType<PhiFormFieldProviderProps> 
   readOnly,
   onChange,
   size,
+  getPopupContainer,
 }) => {
   const area: PhiCmsAreaKey = isPhiCmsAreaKey(field.config?.area) ? field.config.area : "public";
   const { options, failed } = usePhiPageReferenceOptions(area, "phi-form");
@@ -57,6 +58,7 @@ export const PhiLinkTargetFormControl: ComponentType<PhiFormFieldProviderProps> 
       labels={controlLabels}
       area={area}
       size={size}
+      getPopupContainer={getPopupContainer}
       disabled={disabled || readOnly}
       onChange={onChange ? (next) => onChange(next ?? null) : undefined}
     />

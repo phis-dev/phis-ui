@@ -20,6 +20,17 @@ function getPhiWidgetScaffoldPopupContainer(triggerNode: HTMLElement) {
   return document.body;
 }
 
+/*
+ * A layer opened from inside a scaffold popup -- a Form's select list, a unit list, a picker's panel --
+ * mounts beside its trigger and so inside the popup. At the document's end it stood outside it: the
+ * popup, or the editor beneath it, took a click on an entry for a click elsewhere, and nothing was
+ * chosen (the HTML editor's image popover, checked on dev.phis.dev). A Form in a popup hands this to
+ * `PhiFormControl`'s `getPopupContainer`.
+ */
+function getPhiWidgetScaffoldNestedPopupContainer(triggerNode: HTMLElement) {
+  return triggerNode.parentElement ?? triggerNode;
+}
+
 export function PhiWidgetScaffoldPopupProvider({
   children,
   onOpenChange,
@@ -63,6 +74,7 @@ export function usePhiWidgetScaffoldPopup() {
 
   return useMemo(() => ({
     getPopupContainer: getPhiWidgetScaffoldPopupContainer,
+    getNestedPopupContainer: getPhiWidgetScaffoldNestedPopupContainer,
     rootClassName: PHI_WIDGET_SCAFFOLD_POPUP_CLASS_NAME,
     setOpen,
   }), [setOpen]);

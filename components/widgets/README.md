@@ -231,6 +231,13 @@ exports complete Widgets only.
   inside it:
   `PhiSegmentedControl` on its radio group, `PhiCheckboxGroupControl` and `PhiDimensionControl` on a
   `role="group"` element. A calendar adapter receives the name as `ariaLabel` beside `ariaLabelledBy`.
+- The Controls a Form field draws that open a floating layer -- a list, a panel, a tooltip -- take
+  `getPopupContainer` (`(triggerNode) => HTMLElement`) and mount the layer there: `PhiSelectControl`,
+  `PhiMultiSelectControl`, `PhiTreeSelectControl`, `PhiCascaderControl`, `PhiCountrySelectControl`,
+  `PhiAddressControl`, `PhiSliderControl` (its tooltip), `PhiLengthControl`, `PhiDimensionControl`,
+  `PhiColorControl`, `PhiColorFieldControl`, `PhiMediaPickerControl`, and the calendar adapter's date
+  picker (`PhiCalendarAdapterDatePickerProps`). A Form hands its own to every field
+  ([FORMS.md](../../FORMS.md), "Popup container").
 - Option-bearing consumers normalize static options to `PhiControlOption` and resolve dynamic options
   with `PhiControlOptionsProviderConfig` and `usePhiControlOptionsProvider`; the Control receives only
   resolved options.

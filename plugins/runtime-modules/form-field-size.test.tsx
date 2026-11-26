@@ -1,6 +1,8 @@
+// @vitest-environment happy-dom
+import { act, cleanup, fireEvent, render as mount, waitFor } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 import { prerenderToNodeStream } from "react-dom/static";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PhiConfigProvider } from "../../components/root/phi-config-provider";
 import { PhiIntlLocaleProvider } from "../../components/root/phi-intl-locale";
@@ -8,6 +10,7 @@ import { resolvePhiRootThemeState } from "../../components/root/phi-root-theme-r
 import { PHI_CORE_THEME_PRESET_PLUGINS } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
 import { PHI_SHARED_FORM_PROVIDER_REGISTRY } from "../../components/forms/shared-form-provider-registry";
+import { createPhiPageReference } from "../../types/references";
 import { PhiButtonControl } from "../../components/controls/phi-button-control";
 import { PhiTextControl } from "../../components/controls/phi-text-control";
 import { PhiFormControl } from "../../components/controls/phi-form-control";
@@ -36,6 +39,12 @@ import {
  * Rendered with `prerender`, which waits for the lazy field Controls to load, inside a real Theme.
  */
 
+/*
+ * The Media pickers' open state, which their binding holds: closed for the size, open for the popup
+ * container (below), where the popover the picker draws has to be there to be found.
+ */
+const pickerBinding = vi.hoisted(() => ({ open: undefined as boolean | undefined }));
+
 vi.mock("../../components/media/use-authoring-asset-details", () => ({
   usePhiAuthoringAssetDetails: () => null,
 }));
@@ -45,11 +54,11 @@ vi.mock("../../components/widgets/client/shared/use-page-reference-options", () 
 // The Media fields' library and Collection bindings talk to the signal runtime; the picker they feed is drawn here.
 vi.mock("../../components/media/phi-media-picker-binding", async (importOriginal) => ({
   ...await importOriginal<object>(),
-  usePhiMediaPickerBinding: () => ({ assets: [] }),
+  usePhiMediaPickerBinding: () => ({ assets: [], open: pickerBinding.open }),
 }));
 vi.mock("../../components/media/use-media-library-add-picker", async (importOriginal) => ({
   ...await importOriginal<object>(),
-  usePhiMediaLibraryAddPicker: () => ({ assets: [] }),
+  usePhiMediaLibraryAddPicker: () => ({ assets: [], open: pickerBinding.open }),
 }));
 vi.mock("../../components/widgets/client/shared/phi-collection-provider", async (importOriginal) => ({
   ...await importOriginal<object>(),
@@ -247,5 +256,146 @@ describe("a Form's size", () => {
     const unstated = await renderForm(undefined);
     expect(rootsDrawn(unstated, true)).toEqual([]);
     expect(unstated).toBe(await renderForm("medium"));
+  });
+});
+
+/*
+ * Where a field's floating layers go (FORMS.md, "Popup container"): a Form hands its `getPopupContainer`
+ * to every field, and every list, panel, unit list or tooltip a field opens is mounted in it. A field
+ * that leaves one at the document's end is the HTML editor's image popover again, where a unit list
+ * stood outside the popover and a click on a unit chose nothing. So every field of every registered field
+ * type is mounted with a container of its own, everything that opens a layer is opened, and:
+ *
+ * 1. no layer stands outside the container;
+ * 2. a field listed in `FLOATING` opened at least one, so the check reached what the field draws;
+ * 3. a field not listed opened none, so the list says which fields have a floating layer.
+ *
+ * `table` and `tree` stand out of this as they stand out of the size (`ONE_SIZE`): the lists their cell
+ * editors open are the Table and Tree Controls' own and are not handed the container (FORMS.md).
+ */
+
+/* The fields that open a floating layer, with what it is. */
+const FLOATING: Readonly<Record<string, string>> = {
+  [PHI_FORM_FIELD_PROVIDER_KEYS.select]: "the option list",
+  [PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect]: "the option list",
+  [PHI_FORM_FIELD_PROVIDER_KEYS.cascader]: "the levels",
+  [PHI_FORM_FIELD_PROVIDER_KEYS.slider]: "the value's tooltip",
+  [PHI_FORM_FIELD_PROVIDER_KEYS.datetime]: "the calendar panel",
+  [PHI_FORM_FIELD_PROVIDER_KEYS.linkTarget]: "the Page tree",
+  [PHI_FORM_FIELD_PROVIDER_KEYS.dimension]: "the unit lists",
+  [PHI_FORM_FIELD_PROVIDER_KEYS.country]: "the country list",
+  [PHI_FORM_FIELD_PROVIDER_KEYS.address]: "the country list",
+  [PHI_ASSET_MEDIA_ASSET_FORM_PROVIDER_DESCRIPTOR.key]: "the Media picker",
+  [PHI_ASSET_MEDIA_ASSETS_FORM_PROVIDER_DESCRIPTOR.key]: "the Media picker",
+};
+
+/* What a field needs beyond its size fixture to open its layer: a Page link, a tooltip that stays. */
+const POPUP_FIXTURES: Readonly<Record<string, Partial<PhiFormFieldProviderProps>>> = {
+  [PHI_FORM_FIELD_PROVIDER_KEYS.linkTarget]: { value: { kind: "page", reference: createPhiPageReference({ kind: "site", pageScopeId: 1 }) } },
+  [PHI_FORM_FIELD_PROVIDER_KEYS.slider]: { value: 3, field: { config: { showInput: true, tooltipMode: "always" } } as never },
+};
+
+const LAYER_SELECTOR = [
+  ".ant-select-dropdown",
+  ".ant-picker-dropdown",
+  ".ant-cascader-dropdown",
+  ".ant-popover",
+  ".ant-tooltip",
+  ".ant-dropdown",
+].join(", ");
+
+/* Everything that opens a layer: a select's box, a picker's input, a colour swatch. */
+function openEveryLayer(root: HTMLElement) {
+  for (const box of root.querySelectorAll<HTMLElement>(".ant-select-content, .ant-select-selector")) fireEvent.mouseDown(box);
+  for (const input of root.querySelectorAll<HTMLElement>(".ant-picker input")) {
+    fireEvent.mouseDown(input);
+    fireEvent.focus(input);
+    fireEvent.click(input);
+  }
+  for (const swatch of root.querySelectorAll<HTMLElement>(".ant-color-picker-trigger")) fireEvent.click(swatch);
+}
+
+describe("every field mounts its floating layers in the Form's popup container", () => {
+  afterEach(() => {
+    cleanup();
+    pickerBinding.open = undefined;
+    document.body.replaceChildren();
+  });
+
+  it("knows every field it lists", () => {
+    const keys = new Set(FIELDS.map((provider) => provider.key as string));
+    for (const key of Object.keys(FLOATING)) expect(keys.has(key)).toBe(true);
+  });
+
+  it.each(FIELDS.map((provider) => [provider.key, provider] as const))("%s", async (key, provider) => {
+    pickerBinding.open = true;
+    const container = document.createElement("div");
+    document.body.append(container);
+    const fixture = { ...FIXTURES[provider.key], ...POPUP_FIXTURES[provider.key] };
+    const view = mount(withTheme(createElement(provider.Control, {
+      options: OPTIONS,
+      value: "value",
+      onChange: () => undefined,
+      formContext: { getValues: () => ({}), setValues: () => undefined, holdSubmit: () => undefined },
+      ...fixture,
+      field: { key: "field", fieldProviderKey: provider.key, ...(fixture.field ?? {}) } as PhiFormFieldProviderProps["field"],
+      label: "Field",
+      size: "small",
+      getPopupContainer: () => container,
+    })));
+    // The lazy field Controls stand as a placeholder until their code is there.
+    await waitFor(() => expect(view.container.querySelector("[aria-busy='true']")).toBeNull());
+    await act(async () => { openEveryLayer(view.container); });
+    const layers = () => [...document.querySelectorAll<HTMLElement>(LAYER_SELECTOR)];
+    if (key in FLOATING) {
+      await waitFor(() => expect(layers().length, `${FLOATING[key]} opened nowhere`).toBeGreaterThan(0));
+    } else {
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+      expect(layers(), "a field not listed in FLOATING opened a layer").toEqual([]);
+    }
+    const outside = layers().filter((layer) => !container.contains(layer)).map((layer) => layer.className);
+    expect(outside, "layers mounted outside the Form's popup container").toEqual([]);
+  });
+
+  /* Drawn whole: the Form hands its option to the field, and without one a list goes where it always went. */
+  const descriptor = {
+    schemaVersion: 1 as const,
+    key: "popup",
+    fields: [{
+      key: "kind",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+      label: { kind: "literal" as const, value: "Kind" },
+      options: OPTIONS.map((option) => ({ value: option.value, label: { kind: "literal" as const, value: option.label } })),
+    }],
+  };
+  async function openFormSelect(getPopupContainer?: () => HTMLElement) {
+    const view = mount(withTheme(
+      <PhiFormControl
+        descriptor={descriptor}
+        initialValues={{ kind: "1" }}
+        submitOnEnter={false}
+        onSubmit={() => undefined}
+        {...(getPopupContainer ? { getPopupContainer } : {})}
+      />,
+    ));
+    await waitFor(() => expect(view.container.querySelector(".ant-select-content")).not.toBeNull());
+    await act(async () => { openEveryLayer(view.container); });
+    return waitFor(() => {
+      const list = document.querySelector<HTMLElement>(".ant-select-dropdown");
+      expect(list).not.toBeNull();
+      return list!;
+    });
+  }
+
+  it("is PhiFormControl's getPopupContainer, handed to every field", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    expect(container.contains(await openFormSelect(() => container))).toBe(true);
+  });
+
+  it("is the document's end where the Form names none", async () => {
+    const list = await openFormSelect();
+    expect(list.closest(".phi-form-descriptor")).toBeNull();
+    expect(document.body.contains(list)).toBe(true);
   });
 });

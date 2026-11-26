@@ -54,6 +54,7 @@ export function PhiLinkTargetControl({
   area,
   disabled,
   size,
+  getPopupContainer,
   newTabRow,
   onChange,
 }: {
@@ -64,6 +65,8 @@ export function PhiLinkTargetControl({
   disabled?: boolean;
   /** The size of every control it draws, and of the new-tab switch's words; a Form's field passes its own. */
   size?: Exclude<PhiControlSize, "large">;
+  /** Where the Page list is mounted; the document's end where left out. A Form's field passes its own. */
+  getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   /** How the new-tab switch stands beside its words; the Inspector puts it in its own field row. */
   newTabRow?: (control: ReactNode) => ReactNode;
   /**
@@ -148,6 +151,7 @@ export function PhiLinkTargetControl({
       {mode === "page" ? (
         <PhiTreeSelectControl<PhiPageReferenceSelection>
           size={size}
+          getPopupContainer={getPopupContainer}
           value={target?.kind === "page" ? target.reference : null}
           options={options}
           placeholder={labels.pagePlaceholder}
