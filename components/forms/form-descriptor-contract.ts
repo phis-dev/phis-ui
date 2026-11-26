@@ -333,3 +333,27 @@ export function phiFormActionsGridColumn(
     stacked: phiFormGridRangesOverlap(label, control),
   }));
 }
+
+/**
+ * The template's columns for a field whose value is several labelled parts -- the address -- at one
+ * width, as the custom properties its parts read (`.phi-form-parts`, `styles/layout.css`).
+ *
+ * Such a field takes the whole row (`PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS`) and lays a grid of the
+ * same twenty-four tracks over it, so each part's label stands in the layout's label range and its input
+ * in the control range, beside it or above it exactly where a field of its own would. The field never
+ * says where its labels go: an address that drew its parts with the labels on top stood stacked in a
+ * one-column dialog whose every other field had its label beside it (owner, 2026-11-26).
+ */
+export function phiFormPartProperties(layout: PhiResolvedFormLayout, mode: PhiFormResponsiveMode) {
+  const label = layout.label[mode];
+  const control = layout.control[mode];
+  const stacked = phiFormGridRangesOverlap(label, control);
+  const followsLayout = phiFormFieldFollowsLayoutColumns({ placement: undefined, label, control, stacked });
+  return [
+    [`--phi-form-part-label-columns-${mode}`, phiFormLabelGridColumn(label, followsLayout)],
+    [`--phi-form-part-control-columns-${mode}`, phiFormControlGridColumn(control, followsLayout)],
+    [`--phi-form-part-label-height-${mode}`, stacked ? "auto" : "var(--phi-form-label-min-height)"],
+    [`--phi-form-part-label-pad-${mode}`, stacked ? "0px" : `var(--phi-form-label-gutter-${mode})`],
+    [`--phi-form-part-label-gap-${mode}`, stacked ? `calc(var(--phi-form-row-gap-${mode}) / 4)` : "0px"],
+  ] as const;
+}

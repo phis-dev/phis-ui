@@ -51,6 +51,16 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   flags: createPhiSharedFormProviderKey("field", "flags"),
 } as const;
 
+/**
+ * The field types whose value is several labelled parts, each drawn as a row of the Form's own template
+ * (`phiFormPartProperties`, `.phi-form-parts`). The Form gives such a field the whole row unless its
+ * placement says otherwise, and the parts' labels stand in the label column like every other field's;
+ * the field draws no label layout of its own.
+ */
+export const PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS: ReadonlySet<string> = new Set([
+  PHI_FORM_FIELD_PROVIDER_KEYS.address,
+]);
+
 export const PHI_AUTH_FORM_FIELD_PROVIDER_KEYS = {
   termsConsent: createPhiSharedFormProviderKey("field", "auth-terms-consent"),
 } as const;

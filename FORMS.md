@@ -359,6 +359,11 @@ type PhiFormFieldPlacementDescriptor = {
 - Alignment is logical: in RTL the label stands on the right without a separate setting.
 - A descriptor has no padding, width, or maximum width. The Form fills its slot; padding and width limits
   belong to the containing Layout.
+- A field whose value is several labelled parts (`PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS`, the `address`)
+  takes the whole row, 1-25, unless its placement says otherwise, and lays the same 24 tracks over it: its
+  parts stand on the layout's label and control ranges at each width, written by the Form as
+  `--phi-form-part-*` (`phiFormPartProperties`, `.phi-form-parts` in `styles/layout.css`). A placement of
+  its own narrows those tracks with it.
 
 ### Compound Table and Tree values
 
@@ -419,6 +424,21 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   provider for its field type is a wiring fault and still fails as "Missing field provider".
 - A field provider renders Phi Controls and forwards the controlled `value`/`checked` and `onChange` it is
   given; it never keeps a second value state and never renders a Widget or Layout.
+- **A field draws no label layout of its own.** A Form is built from descriptor fields, and where a
+  field's label stands -- beside its control from 377px of Form width, above it below that -- is the
+  Form's template (`PHI_FORM_DEFAULT_LAYOUT`, [Layout and placement](#layout-and-placement)), drawn by the
+  Form Widget. A field provider never draws a `<label>`, a caption above its input, an Ant Design
+  `Form`/`Form.Item`, `labelCol`/`wrapperCol` or a `layout="vertical"`, and never hands a Phi Control a
+  `label`. A field whose value is several labelled parts -- the `address` -- is listed in
+  `PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS`: the Form gives it the whole row and writes the template's
+  columns (`phiFormPartProperties`), and the field draws each part through `PhiFormFieldParts` and
+  `PhiFormFieldPart` (`components/forms/form-field-row.tsx`), so every part is a row of the same template
+  with its label in the label column. The address drew its parts with their labels on top once, and in a
+  one-column dialog whose every other field had its label beside it, it alone stood stacked (owner,
+  2026-11-26). The same holds for a dialog, a popover or a panel: words beside an input come from a
+  descriptor Form or the Inspector's rows, never from a layout of its own.
+  `scripts/validate-form-field-rows.mjs` (in `runtime-modules:check`) refuses each of those shapes; the
+  places that had one when it came stand in its temporary list until they are moved.
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
   `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `money`, `country`,
@@ -494,7 +514,10 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   `addressName`, `addressCompanyName`, `addressLine1`, `addressLine2`, `addressPostalCode`, `addressCity`,
   `addressRegion`, `addressCountry`, `addressNameRequired`, `addressLine1Required`, `addressCityRequired`,
   `addressCountryRequired`, and `addressTooLong` with `%1` the part's label and `%2` the most characters),
-  each one left out in English. Drawn by `PhiAddressControl`. The account's two address Forms are its first
+  each one left out in English. Drawn by `PhiAddressControl`, one row of the Form's template per part
+  (name, company, the two street lines, postal code, city, region, country) through `PhiFormFieldPart`:
+  the field takes the whole row and each part's label stands in the label column, beside its input or
+  above it exactly as the Form's other fields do. The account's two address Forms are its first
   users; a checkout, Accounting and Support place the same field instead of fields of their own.
 - `flags` is several yes-or-no answers held as one bit-flag number, the shape every yes-or-no state of a
   Core contract has (`components/forms/flags-field.ts`). Each option's `value` is its bit as a decimal

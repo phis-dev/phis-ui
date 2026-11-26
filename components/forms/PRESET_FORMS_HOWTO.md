@@ -467,6 +467,11 @@ Ant Design = primitive
 ```
 
 - A Form field provider renders a `Phi*Control`, never a CMS Widget.
+- A field provider draws no label layout: no `<label>`, no caption above its input, no Ant Design
+  `Form`/`Form.Item`, no `label` handed to a Phi Control. The Form Widget puts the field's label where the
+  template says. A value of several labelled parts draws each part through `PhiFormFieldPart`
+  (`components/forms/form-field-row.tsx`) and is listed in `PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS`
+  ([FORMS.md](../../FORMS.md), "A field draws no label layout of its own").
 - A Control receives `value`, `onChange`, disabled/read-only state, and presentation props. It must not
   create a second persistent state model.
 - Select-like fields use the generic options-provider ABI. Do not add field-specific option registries.
@@ -661,6 +666,7 @@ package preset itself.
 | The Page answers 500: `Preset Overlay "..." holds the one-column Form "..." at the full dialog width (PHI_DIALOG_WIDTH)` | Every Form in the dialog's body is one column -- two of them side by side on a Split Card still are -- and the dialog keeps the default width. Hand the Form to `dialog` as `body.form`, or state the width as the size in its `config` (`size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }`, or the wider one the body needs). The package's tests catch it with `checkPhiPresetTreeContract(tree, { page, forms })` from `@phis/ui/module/page-check`, run with every Form the package ships (THIRD_PARTY_MODULES.md, "Checking a Page preset"). |
 | The Page answers 500: `Preset Overlay "..." puts Layout "..." between its body and the Form "..."` | The dialog's Form stands in a Layout of the Preset's own -- one holding the Form alone, or one with a `padding` or `margin` (a `panel` creation preset has one). The body is the template and already insets the Form; a second inset leaves a Form of a one-column dialog under 377px, and its labels stack above the fields. Put the Form Widget in the body Layout itself (OVERLAYS.md, "The imperative exemption, and how narrow it is"). A Layout that groups two Forms without an inset passes. |
 | The Page answers 500: ``Preset Overlay "..." states `width`; an Overlay is sized like a block`` (or ``states `size` as one length``) | An Overlay is sized by the block's pairs, `size`, `minSize` and `maxSize`, each `{ width?, height? }` (OVERLAYS.md, "Geometry"). A dialog's `width: PHI_DIALOG_WIDTH_SINGLE_COLUMN` is `size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }`; a responsive `{ compact: "calc(100vw - 32px)", medium, wide }` is `size: { width: <wide> }`, since the Modal holds every width inside the viewport; a `vw` cap is `maxSize: { width: "90vw" }`; a Drawer's `size: 377` is `size: { width: 377 }` (or `{ height }` at the top or bottom). |
+| One field of a dialog stands stacked -- its labels above the inputs -- while every other field has its label beside it | The field's Control lays out its own labels instead of the template's rows: the address did, drawing a `<label>` over each part inside the control column. Draw each part through `PhiFormFieldPart` and list the field type in `PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS`; never a `<label>`, a caption or a Control's `label` in a field provider. `node scripts/validate-form-field-rows.mjs` names the place. |
 | Form validates but handler mode fails | Check active Form/handler Provider resolution, immutable Provider target and credential policy, server add-on/route, authorization, and response. |
 | Overlay closes before persistence succeeds | The workflow closes on the Save command instead of the correlated `submitSuccess` result. |
 | Signal mode sends no values | The Form lacks an emitted `submitValues` route or the receiver/controller capability does not accept the `formValues` schema. |
@@ -700,6 +706,9 @@ package preset itself.
   behind `/api/site/forms`, and revalidate/authorize all values there.
 - For signal mode, route `submitValues`, validation, and result feedback to the owning domain Controller.
 - Keep executable UI behind the module's lazy UI provider and use Phi Controls.
+- Build every form from descriptor fields: no label, caption or `label` prop of a field Control's own in a
+  field provider, a dialog, a popover or a panel; a value with labelled parts draws them through
+  `PhiFormFieldPart`.
 - Use the Core runtime Form controller unless the domain lifecycle is genuinely different.
 - Revalidate and authorize on the server; keep secrets and arbitrary endpoints out of descriptors.
 - Test descriptor parsing, catalog construction, missing-provider rejection, active-Area resolution,

@@ -43,6 +43,7 @@ import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_FIELD_UNAVAILABLE_DEFAULT_LABEL,
   PHI_FORM_FIELD_UNAVAILABLE_LABEL_KEY,
+  PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
 } from "../forms/form-provider-contract";
 import {
@@ -50,12 +51,15 @@ import {
   phiFormControlGridColumn,
   phiFormFieldFollowsLayoutColumns,
   phiFormLabelGridColumn,
+  phiFormPartProperties,
   resolvePhiFormGridPlacement,
   resolvePhiFormLayout,
   PHI_FORM_RESPONSIVE_MODES,
+  PHI_FORM_ROW_FULL,
   resolvePhiFormText,
   shouldPhiFormSubmitOnKeyDown,
 } from "../forms/form-descriptor-contract";
+import { PhiFormFieldLabelText } from "../forms/form-field-row";
 import { readPhiMoneyFieldCurrencyFieldKey } from "../forms/money-field-currency-key";
 import {
   collectFormOptionFlagFieldKeys,
@@ -114,6 +118,16 @@ export type PhiFormControlHandle = {
   submit(): void;
   reset(): void;
 };
+
+/*
+ * A field drawn as rows of labelled parts (the address) takes the whole row, so its parts' labels can
+ * stand in the label column the template keeps for every field. Left in the control column, its labels
+ * had nowhere to go but above their inputs. A placement the descriptor states still wins.
+ */
+function resolveFieldPlacement(field: PhiFormFieldDescriptor) {
+  return field.placement ??
+    (PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS.has(field.fieldProviderKey) ? { control: PHI_FORM_ROW_FULL } : undefined);
+}
 
 function resolveFieldRules(field: PhiFormFieldDescriptor) {
   return [...(field.validation ?? [])];
@@ -436,6 +450,10 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     medium: gapByToken[layout.columnGap.medium],
     wide: gapByToken[layout.columnGap.wide],
   } as const;
+  // The template's columns, for a field whose parts are rows of it (`phiFormPartProperties`).
+  const partProperties = useMemo(() => Object.fromEntries(
+    PHI_FORM_RESPONSIVE_MODES.flatMap((mode) => phiFormPartProperties(layout, mode)),
+  ), [layout]);
   const resolvedInitialValues = useMemo(
     () => ({
       ...Object.fromEntries(descriptor.fields.flatMap((field) =>
@@ -638,7 +656,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   const placementByMode = useMemo(() => {
     const entries = renderedFields.map((field) => ({
       key: field.key,
-      placement: field.placement,
+      placement: resolveFieldPlacement(field),
       inFlow: unavailableKeys.has(field.key) ||
         activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control",
       hasLabel: field.label != null && field.controlLabel == null,
@@ -692,6 +710,9 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         "--phi-form-column-gutter-medium": `${columnGapByMode.medium}px`,
         "--phi-form-column-gutter-wide": `${columnGapByMode.wide}px`,
         "--phi-form-label-min-height": `${token.controlHeight}px`,
+        "--phi-form-label-justify": layout.labelAlign === "end" ? "flex-end" : "flex-start",
+        "--phi-form-label-text-align": layout.labelAlign === "end" ? "end" : "start",
+        ...partProperties,
       } as CSSProperties}
       onValuesChange={(changedValues, allValues) => {
         onValuesChange?.(changedValues, allValues);
@@ -728,7 +749,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
             if (!placed) return [];
             const range = part === "label" ? placed.label : placed.control;
             const followsLayout = phiFormFieldFollowsLayoutColumns({
-              placement: field.placement,
+              placement: resolveFieldPlacement(field),
               label: placed.label,
               control: placed.control,
               stacked: placed.stacked,
@@ -865,12 +886,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                   textAlign: layout.labelAlign === "end" ? "end" : "start",
                 }}
               >
-                {required ? (
-                  <span aria-hidden style={{ color: token.colorError, marginInlineEnd: "0.25em" }}>
-                    *
-                  </span>
-                ) : null}
-                {renderedFieldLabel}
+                <PhiFormFieldLabelText required={required}>{renderedFieldLabel}</PhiFormFieldLabelText>
               </label>
             ) : null}
             <div

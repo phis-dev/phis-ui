@@ -385,6 +385,50 @@
 }
 
 /*
+ * A field whose value is several labelled parts (the address) stands on the whole row and lays the same
+ * twenty-four tracks over it, so each part is a row of the template: its label in the layout's label
+ * range, its input in the control range, beside or above it as every other field's is. The Form writes
+ * those ranges as `--phi-form-part-*` (`phiFormPartProperties`); a part is placed by its columns alone
+ * and the grid puts the next label on the next row. Outside a Form nothing is written and every part
+ * stacks.
+ */
+.phi-form-parts {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  column-gap: 0;
+  row-gap: 0;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.phi-form-part {
+  min-width: 0;
+}
+
+.phi-form-part--label {
+  display: flex;
+  align-items: center;
+  justify-content: var(--phi-form-label-justify, flex-start);
+  text-align: var(--phi-form-label-text-align, start);
+  grid-column: var(--phi-form-part-label-columns-compact, 1 / -1);
+  min-height: var(--phi-form-part-label-height-compact, auto);
+  padding-inline-end: var(--phi-form-part-label-pad-compact, 0px);
+  margin-block-end: var(--phi-form-part-label-gap-compact, 0px);
+  overflow-wrap: anywhere;
+}
+
+.phi-form-part--control {
+  grid-column: var(--phi-form-part-control-columns-compact, 1 / -1);
+  margin-block-end: var(--phi-form-row-gap-compact, 0px);
+}
+
+/* Higher than the width rules below, so the last part never keeps a gap at any width. */
+.phi-form-parts > .phi-form-part--control:last-child {
+  margin-block-end: 0;
+}
+
+/*
  * The same numbers as `PHI_FORM_RESPONSIVE_MIN_WIDTH`, off the container-breakpoint scale in
  * `theme/phi-container-breakpoints.ts`. A container query cannot read a custom property for its
  * threshold, so the literal stands here and the contract states it in TypeScript; if one side moves,
@@ -406,6 +450,18 @@
   .phi-form-descriptor-actions > .phi-form-cell {
     grid-column: var(--phi-form-actions-columns-medium);
   }
+
+  .phi-form-part--label {
+    grid-column: var(--phi-form-part-label-columns-medium, 1 / -1);
+    min-height: var(--phi-form-part-label-height-medium, auto);
+    padding-inline-end: var(--phi-form-part-label-pad-medium, 0px);
+    margin-block-end: var(--phi-form-part-label-gap-medium, 0px);
+  }
+
+  .phi-form-part--control {
+    grid-column: var(--phi-form-part-control-columns-medium, 1 / -1);
+    margin-block-end: var(--phi-form-row-gap-medium, 0px);
+  }
 }
 
 @container phi-form (min-width: 610px) {
@@ -423,6 +479,18 @@
 
   .phi-form-descriptor-actions > .phi-form-cell {
     grid-column: var(--phi-form-actions-columns-wide);
+  }
+
+  .phi-form-part--label {
+    grid-column: var(--phi-form-part-label-columns-wide, 1 / -1);
+    min-height: var(--phi-form-part-label-height-wide, auto);
+    padding-inline-end: var(--phi-form-part-label-pad-wide, 0px);
+    margin-block-end: var(--phi-form-part-label-gap-wide, 0px);
+  }
+
+  .phi-form-part--control {
+    grid-column: var(--phi-form-part-control-columns-wide, 1 / -1);
+    margin-block-end: var(--phi-form-row-gap-wide, 0px);
   }
 }
 

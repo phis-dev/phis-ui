@@ -448,6 +448,9 @@ last line is 25. This is CSS Grid's own counting and no other counting is used.
   statement about the field and not about the form.
 - The same ranges are declared per measured width. A set that is two columns at `wide` and one column
   at `compact` is the whole of what used to be a column count plus a label placement.
+- A field never lays out its own label. A field whose value has labelled parts (the address) takes the
+  whole row and draws each part as a row of these same tracks (`PhiFormFieldPart`, FORMS.md "A field draws
+  no label layout of its own"), so its parts' labels stand in the label column with everyone else's.
 
 ## Regions
 
