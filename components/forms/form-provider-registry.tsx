@@ -18,6 +18,13 @@ import type {
 } from "../../types/form-descriptor";
 import type { PhiControlOption } from "../controls/phi-control-options";
 import type { PhiAddonMediaLimits } from "../../types/server-capabilities";
+import type { PhiControlSize } from "../../types/control";
+
+/**
+ * How large a Form draws its fields: `medium`, the Controls' own default, or `small` for a picker, a
+ * popover or a panel of chrome (FORMS.md, "Size"). The Controls' size vocabulary, without `large`.
+ */
+export type PhiFormSize = Extract<PhiControlSize, "small" | "medium">;
 
 export type PhiFormFieldProviderProps = {
   /**
@@ -37,6 +44,12 @@ export type PhiFormFieldProviderProps = {
   onChange?: (...args: unknown[]) => void;
   disabled?: boolean;
   readOnly?: boolean;
+  /**
+   * The Form's size, handed to every field. A field draws each of its controls in it -- its inputs, its
+   * buttons, the words beside a box -- and never a size of its own: a `medium` input in a `small` Form
+   * stands out of every row around it. Held by `form-field-size.test.tsx` over every registered field.
+   */
+  size: PhiFormSize;
   /** Reports what has been typed. Absent where the field's provider is not searchable. */
   onSearch?: (search: string) => void;
   /** `false` where the provider answered the search itself, so the control must not filter it again. */

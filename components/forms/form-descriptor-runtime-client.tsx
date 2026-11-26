@@ -569,6 +569,7 @@ export function PhiFormDescriptorRuntimeClient({
         formConfig={widgetConfig?.formConfig}
         initialValues={startValues}
         submitOnEnter={widgetConfig?.submitOnEnter ?? inDialogBody}
+        size={widgetConfig?.controlSize}
         onFormReady={(activeForm) => {
           formRef.current = activeForm;
           if (pendingValuesRef.current) {

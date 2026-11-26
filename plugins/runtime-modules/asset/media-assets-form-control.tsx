@@ -83,6 +83,7 @@ export const PhiMediaAssetsFormControl: ComponentType<PhiFormFieldProviderProps>
   onChange,
   formContext,
   mediaLimits,
+  size,
 }) => {
   const { token } = usePhiConfig();
   const config = useMemo(
@@ -226,14 +227,15 @@ export const PhiMediaAssetsFormControl: ComponentType<PhiFormFieldProviderProps>
   const shown = orderPhiMediaAssetsFieldTiles(ids, tiles, unavailableName);
   const toolbar = locked ? null : (
     // The Form's own size, as every other field of it has; a field draws no smaller buttons of its own.
-    <PhiToolbarControl compact>
+    <PhiToolbarControl compact size={size}>
       <PhiButtonControl
         label={mediaLabels.upload.uploadToggleLabel}
+        size={size}
         type={uploadFolderPath ? "primary" : "default"}
         disabled={full && !uploadFolderPath}
         onClick={() => setUploadFolderPath((current) => current ? null : resolveFolderPath())}
       />
-      <PhiMediaPickerControl {...picker} disabled={full} />
+      <PhiMediaPickerControl {...picker} size={size} disabled={full} />
     </PhiToolbarControl>
   );
   // The Collection's own drag handles; the order dropped is the value's new order.

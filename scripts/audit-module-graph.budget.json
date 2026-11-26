@@ -28,63 +28,63 @@
       "clientBytes": 0
     },
     "./cms": {
-      "runtimeBytes": 2100912,
-      "clientBytes": 857384
+      "runtimeBytes": 2105443,
+      "clientBytes": 857585
     },
     "./cms/error-page": {
-      "runtimeBytes": 1869021,
-      "clientBytes": 752766
+      "runtimeBytes": 1873552,
+      "clientBytes": 752967
     },
     "./cms/plugins": {
-      "runtimeBytes": 716911,
+      "runtimeBytes": 720679,
       "clientBytes": 48036
     },
     "./cms/plugins/accounting": {
-      "runtimeBytes": 3001313,
-      "clientBytes": 466052
+      "runtimeBytes": 3015266,
+      "clientBytes": 466253
     },
     "./cms/plugins/admin": {
-      "runtimeBytes": 3532913,
-      "clientBytes": 466052
+      "runtimeBytes": 3550928,
+      "clientBytes": 466253
     },
     "./cms/plugins/app": {
-      "runtimeBytes": 3363315,
-      "clientBytes": 466052
+      "runtimeBytes": 3375428,
+      "clientBytes": 466253
     },
     "./cms/plugins/editor": {
-      "runtimeBytes": 3090002,
-      "clientBytes": 466052
+      "runtimeBytes": 3102115,
+      "clientBytes": 466253
     },
     "./cms/plugins/public": {
-      "runtimeBytes": 3304908,
-      "clientBytes": 466052
+      "runtimeBytes": 3317021,
+      "clientBytes": 466253
     },
     "./cms/request": {
-      "runtimeBytes": 872414,
+      "runtimeBytes": 874789,
       "clientBytes": 0
     },
     "./cms/root-layout": {
-      "runtimeBytes": 1926273,
-      "clientBytes": 811148
+      "runtimeBytes": 1930736,
+      "clientBytes": 811349
     },
     "./cms/root-page": {
-      "runtimeBytes": 1971550,
-      "clientBytes": 799114
+      "runtimeBytes": 1976081,
+      "clientBytes": 799315
     },
     "./cms/root-slot-page": {
-      "runtimeBytes": 1785355,
-      "clientBytes": 711016
+      "runtimeBytes": 1789818,
+      "clientBytes": 711217
     },
     "./constants": {
-      "runtimeBytes": 76072,
+      "runtimeBytes": 76273,
       "clientBytes": 0
     },
     "./controls": {
-      "runtimeBytes": 1710477,
-      "clientBytes": 1634853
+      "runtimeBytes": 1720976,
+      "clientBytes": 1645352
     },
     "./controls/config": {
-      "runtimeBytes": 68415,
+      "runtimeBytes": 68616,
       "clientBytes": 0
     },
     "./controls/date-time": {
@@ -92,19 +92,19 @@
       "clientBytes": 106027
     },
     "./core-widgets": {
-      "runtimeBytes": 28505,
+      "runtimeBytes": 28669,
       "clientBytes": 0
     },
     "./forms": {
-      "runtimeBytes": 188812,
+      "runtimeBytes": 191682,
       "clientBytes": 0
     },
     "./forms/client": {
-      "runtimeBytes": 1065458,
-      "clientBytes": 1064805
+      "runtimeBytes": 1075728,
+      "clientBytes": 1075075
     },
     "./helpers": {
-      "runtimeBytes": 374731,
+      "runtimeBytes": 377106,
       "clientBytes": 0
     },
     "./helpers/site-runtime": {
@@ -112,15 +112,15 @@
       "clientBytes": 0
     },
     "./layouts": {
-      "runtimeBytes": 467715,
-      "clientBytes": 331670
+      "runtimeBytes": 467916,
+      "clientBytes": 331871
     },
     "./media": {
-      "runtimeBytes": 1040874,
-      "clientBytes": 1022785
+      "runtimeBytes": 1041075,
+      "clientBytes": 1022986
     },
     "./module": {
-      "runtimeBytes": 180290,
+      "runtimeBytes": 181884,
       "clientBytes": 0
     },
     "./module/authoring-client": {
@@ -140,11 +140,11 @@
       "clientBytes": 0
     },
     "./module/page-check": {
-      "runtimeBytes": 499161,
+      "runtimeBytes": 502031,
       "clientBytes": 0
     },
     "./module/projection": {
-      "runtimeBytes": 187087,
+      "runtimeBytes": 188681,
       "clientBytes": 0
     },
     "./module/projection/authoring-client": {
@@ -160,7 +160,7 @@
       "clientBytes": 4144
     },
     "./module/references": {
-      "runtimeBytes": 648579,
+      "runtimeBytes": 650954,
       "clientBytes": 0
     },
     "./module/site-modules": {
@@ -184,56 +184,56 @@
       "clientBytes": 0
     },
     "./next/area-route": {
-      "runtimeBytes": 2144478,
-      "clientBytes": 861081
+      "runtimeBytes": 2149009,
+      "clientBytes": 861282
     },
     "./next/areas/accounting": {
-      "runtimeBytes": 3143535,
-      "clientBytes": 466052
+      "runtimeBytes": 3157488,
+      "clientBytes": 466253
     },
     "./next/areas/accounting-client": {
-      "runtimeBytes": 4909577,
-      "clientBytes": 4909577
+      "runtimeBytes": 4757381,
+      "clientBytes": 4757381
     },
     "./next/areas/admin": {
-      "runtimeBytes": 3675115,
-      "clientBytes": 466052
+      "runtimeBytes": 3693130,
+      "clientBytes": 466253
     },
     "./next/areas/admin-client": {
-      "runtimeBytes": 5168009,
-      "clientBytes": 5168009
+      "runtimeBytes": 5014108,
+      "clientBytes": 5014108
     },
     "./next/areas/app": {
-      "runtimeBytes": 3606877,
-      "clientBytes": 466052
+      "runtimeBytes": 3618990,
+      "clientBytes": 466253
     },
     "./next/areas/app-client": {
-      "runtimeBytes": 5034029,
-      "clientBytes": 5034029
+      "runtimeBytes": 4882568,
+      "clientBytes": 4882568
     },
     "./next/areas/builder": {
-      "runtimeBytes": 6529693,
-      "clientBytes": 2773159
+      "runtimeBytes": 6548074,
+      "clientBytes": 2777284
     },
     "./next/areas/builder-client": {
-      "runtimeBytes": 6178366,
-      "clientBytes": 6178366
+      "runtimeBytes": 6110750,
+      "clientBytes": 6110750
     },
     "./next/areas/editor": {
-      "runtimeBytes": 3232208,
-      "clientBytes": 466052
+      "runtimeBytes": 3244321,
+      "clientBytes": 466253
     },
     "./next/areas/editor-client": {
-      "runtimeBytes": 4948549,
-      "clientBytes": 4948549
+      "runtimeBytes": 4796353,
+      "clientBytes": 4796353
     },
     "./next/areas/public": {
-      "runtimeBytes": 3548488,
-      "clientBytes": 466052
+      "runtimeBytes": 3560601,
+      "clientBytes": 466253
     },
     "./next/areas/public-client": {
-      "runtimeBytes": 4968557,
-      "clientBytes": 4968557
+      "runtimeBytes": 4817096,
+      "clientBytes": 4817096
     },
     "./next/cache-handler": {
       "runtimeBytes": 3543,
@@ -248,8 +248,8 @@
       "clientBytes": 83534
     },
     "./next/overlay-zones": {
-      "runtimeBytes": 1777485,
-      "clientBytes": 707532
+      "runtimeBytes": 1781948,
+      "clientBytes": 707733
     },
     "./next/overlay-zones-client": {
       "runtimeBytes": 1553,
@@ -260,15 +260,15 @@
       "clientBytes": 0
     },
     "./next/root-error-page": {
-      "runtimeBytes": 1871347,
-      "clientBytes": 752766
+      "runtimeBytes": 1875878,
+      "clientBytes": 752967
     },
     "./next/root-route": {
-      "runtimeBytes": 1227049,
-      "clientBytes": 528074
+      "runtimeBytes": 1230817,
+      "clientBytes": 528275
     },
     "./next/route-handlers": {
-      "runtimeBytes": 1237920,
+      "runtimeBytes": 1249019,
       "clientBytes": 0
     },
     "./next/runtime-module-client-boundary": {
@@ -276,11 +276,11 @@
       "clientBytes": 29939
     },
     "./next/seo-routes": {
-      "runtimeBytes": 879995,
+      "runtimeBytes": 882370,
       "clientBytes": 0
     },
     "./next/site-bridge": {
-      "runtimeBytes": 958465,
+      "runtimeBytes": 962233,
       "clientBytes": 0
     },
     "./next/site-proxy": {
@@ -292,11 +292,11 @@
       "clientBytes": 611
     },
     "./plugins/registries/runtime-controller-core": {
-      "runtimeBytes": 56716,
+      "runtimeBytes": 56917,
       "clientBytes": 0
     },
     "./plugins/registries/runtime-controllers": {
-      "runtimeBytes": 58756,
+      "runtimeBytes": 58957,
       "clientBytes": 0
     },
     "./references": {
@@ -304,16 +304,16 @@
       "clientBytes": 0
     },
     "./root": {
-      "runtimeBytes": 794819,
-      "clientBytes": 528074
+      "runtimeBytes": 795020,
+      "clientBytes": 528275
     },
     "./runtime": {
-      "runtimeBytes": 136524,
-      "clientBytes": 130895
+      "runtimeBytes": 136725,
+      "clientBytes": 131096
     },
     "./runtime/authoring-client": {
-      "runtimeBytes": 1224031,
-      "clientBytes": 1224031
+      "runtimeBytes": 1225211,
+      "clientBytes": 1225211
     },
     "./runtime/authoring-manifest-client": {
       "runtimeBytes": 5170,
@@ -324,36 +324,36 @@
       "clientBytes": 11180
     },
     "./runtime/client-manifests/accounting": {
-      "runtimeBytes": 4893797,
-      "clientBytes": 4893417
+      "runtimeBytes": 4741601,
+      "clientBytes": 4741221
     },
     "./runtime/client-manifests/admin": {
-      "runtimeBytes": 5152289,
-      "clientBytes": 5151939
+      "runtimeBytes": 4998388,
+      "clientBytes": 4998038
     },
     "./runtime/client-manifests/app": {
-      "runtimeBytes": 5018333,
-      "clientBytes": 5017995
+      "runtimeBytes": 4866872,
+      "clientBytes": 4866534
     },
     "./runtime/client-manifests/builder": {
-      "runtimeBytes": 6160320,
-      "clientBytes": 6159815
+      "runtimeBytes": 6092704,
+      "clientBytes": 6092199
     },
     "./runtime/client-manifests/editor": {
-      "runtimeBytes": 4932817,
-      "clientBytes": 4932461
+      "runtimeBytes": 4780621,
+      "clientBytes": 4780265
     },
     "./runtime/client-manifests/public": {
-      "runtimeBytes": 4953476,
-      "clientBytes": 4952469
+      "runtimeBytes": 4802015,
+      "clientBytes": 4801008
     },
     "./runtime/controller-client": {
-      "runtimeBytes": 138053,
-      "clientBytes": 138053
+      "runtimeBytes": 138254,
+      "clientBytes": 138254
     },
     "./runtime/data-provider-client": {
-      "runtimeBytes": 1039007,
-      "clientBytes": 1039007
+      "runtimeBytes": 1040187,
+      "clientBytes": 1040187
     },
     "./runtime/media-source-client": {
       "runtimeBytes": 11429,
@@ -364,20 +364,20 @@
       "clientBytes": 7633
     },
     "./runtime/signal-client": {
-      "runtimeBytes": 515073,
-      "clientBytes": 515073
+      "runtimeBytes": 515274,
+      "clientBytes": 515274
     },
     "./runtime/user-state-client": {
       "runtimeBytes": 12629,
       "clientBytes": 12629
     },
     "./server-helpers": {
-      "runtimeBytes": 901277,
+      "runtimeBytes": 903652,
       "clientBytes": 0
     },
     "./shells": {
-      "runtimeBytes": 774456,
-      "clientBytes": 602032
+      "runtimeBytes": 774657,
+      "clientBytes": 602233
     },
     "./state": {
       "runtimeBytes": 8367,
@@ -388,16 +388,16 @@
       "clientBytes": 0
     },
     "./types": {
-      "runtimeBytes": 461553,
+      "runtimeBytes": 461754,
       "clientBytes": 0
     },
     "./widget-config": {
-      "runtimeBytes": 190568,
+      "runtimeBytes": 190769,
       "clientBytes": 0
     },
     "./widgets": {
-      "runtimeBytes": 1896937,
-      "clientBytes": 1181272
+      "runtimeBytes": 1900359,
+      "clientBytes": 1182452
     }
   }
 }

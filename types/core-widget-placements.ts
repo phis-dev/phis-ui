@@ -367,6 +367,8 @@ export type PhiFormWidgetPlacement = PhiWidgetPlacementBase & {
   formId?: PhiFormId | null;
   submit?: PhiCmsFormWidgetSubmitPlacement;
   submitOnEnter?: boolean;
+  /** `small` draws the fields, their labels and the submit small (FORMS.md, "Size"); `medium` where unstated. */
+  controlSize?: Exclude<PhiControlSize, "large">;
   card?:
     | (Pick<PhiCmsFormWidgetCardConfig, "presentation"> &
         Partial<Omit<PhiCmsFormWidgetCardConfig, "presentation">>)

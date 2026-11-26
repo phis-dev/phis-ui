@@ -24,6 +24,7 @@ import type {
   PhiFormFieldDescriptor,
 } from "../../types/form-descriptor";
 import { PHI_FORM_GRID_TRACKS } from "../../types/form-descriptor";
+import type { PhiSpacingToken } from "../../types/spacing";
 import {
   collectPhiRuntimeValueConditions,
   evaluatePhiRuntimeConditionExpression,
@@ -32,6 +33,7 @@ import type {
   PhiFormFieldProviderProps,
   PhiFormFieldTypeProvider,
   PhiFormProviderRegistry,
+  PhiFormSize,
 } from "../forms/form-provider-registry";
 import {
   extendPhiFormProviderRegistry,
@@ -56,6 +58,7 @@ import {
   resolvePhiFormLayout,
   PHI_FORM_RESPONSIVE_MODES,
   PHI_FORM_ROW_FULL,
+  PHI_FORM_SMALL_GAP_STEP,
   resolvePhiFormText,
   shouldPhiFormSubmitOnKeyDown,
 } from "../forms/form-descriptor-contract";
@@ -85,6 +88,12 @@ export type PhiFormControlProps = {
   submitOnEnter: boolean;
   disabled?: boolean;
   readOnly?: boolean;
+  /**
+   * How large every field is drawn, `medium` where unstated (FORMS.md, "Size"). `small` draws each
+   * field's controls small, its label in the small text size and the gaps between rows one spacing step
+   * down -- a picker or a popover built from descriptor fields, which stands among chrome.
+   */
+  size?: PhiFormSize;
   conditionControllerStates?: Readonly<Record<string, Record<string, unknown>>>;
   /**
    * The fields whose field type belongs to a Module that is not active in this Area. Each says so in the
@@ -231,6 +240,7 @@ function PhiResolvedFormFieldControl({
   formContext,
   formValues,
   mediaLimits,
+  size,
   onChosenOptionFlags,
 }: {
   /** Set by the Form Item this sits in, from the form's name and the field's key. */
@@ -251,7 +261,7 @@ function PhiResolvedFormFieldControl({
   placeholder?: string;
   disabled?: boolean;
   readOnly?: boolean;
-} & Pick<PhiFormFieldProviderProps, "value" | "checked" | "onChange" | "formContext" | "mediaLimits">) {
+} & Pick<PhiFormFieldProviderProps, "value" | "checked" | "onChange" | "formContext" | "mediaLimits" | "size">) {
   const staticOptions = useMemo(
     () => field.options?.map((option) => ({
       ...option,
@@ -347,6 +357,7 @@ function PhiResolvedFormFieldControl({
         checked={checked}
         onChange={onChange}
         formContext={formContext}
+        size={size}
         {...(formValues ? { formValues } : {})}
         {...(mediaLimits ? { mediaLimits } : {})}
       />
@@ -371,6 +382,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   submitOnEnter,
   disabled = false,
   readOnly = false,
+  size = "medium",
   conditionControllerStates = PHI_FORM_NO_CONTROLLER_STATES,
   unavailableFieldKeys,
   mediaLimits,
@@ -434,10 +446,15 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
    * be after hydration had run. What was delivered was never what was meant. A container query asks the
    * same question about the same element, in CSS, where the answer is already true at first paint.
    */
+  /*
+   * A small Form stands one spacing step closer, the way a small Card takes `paddingSM` for `padding`:
+   * its controls are a step lower, and the rows between them keep the same proportion to them.
+   */
+  const gapAt = (step: PhiSpacingToken) => gapByToken[size === "small" ? PHI_FORM_SMALL_GAP_STEP[step] : step];
   const rowGapByMode = {
-    compact: gapByToken[layout.gap.compact],
-    medium: gapByToken[layout.gap.medium],
-    wide: gapByToken[layout.gap.wide],
+    compact: gapAt(layout.gap.compact),
+    medium: gapAt(layout.gap.medium),
+    wide: gapAt(layout.gap.wide),
   } as const;
   /*
    * And the distance across, which is not the grid's `column-gap`: that one falls between every pair of
@@ -446,9 +463,9 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
    * the boundary between two columns pays it.
    */
   const columnGapByMode = {
-    compact: gapByToken[layout.columnGap.compact],
-    medium: gapByToken[layout.columnGap.medium],
-    wide: gapByToken[layout.columnGap.wide],
+    compact: gapAt(layout.columnGap.compact),
+    medium: gapAt(layout.columnGap.medium),
+    wide: gapAt(layout.columnGap.wide),
   } as const;
   // The template's columns, for a field whose parts are rows of it (`phiFormPartProperties`).
   const partProperties = useMemo(() => Object.fromEntries(
@@ -709,7 +726,10 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         "--phi-form-column-gutter-compact": `${columnGapByMode.compact}px`,
         "--phi-form-column-gutter-medium": `${columnGapByMode.medium}px`,
         "--phi-form-column-gutter-wide": `${columnGapByMode.wide}px`,
-        "--phi-form-label-min-height": `${token.controlHeight}px`,
+        // A label beside its control is as tall as the control, so the two read as one line.
+        "--phi-form-label-min-height": `${size === "small" ? token.controlHeightSM : token.controlHeight}px`,
+        // Written for a small Form alone: a medium one keeps the text it inherits, as it always has.
+        ...(size === "small" ? { "--phi-form-cell-label-font-size": `${token.fontSizeSM}px` } : {}),
         "--phi-form-label-justify": layout.labelAlign === "end" ? "flex-end" : "flex-start",
         "--phi-form-label-text-align": layout.labelAlign === "end" ? "end" : "start",
         ...partProperties,
@@ -922,6 +942,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                   disabled={disabled || submitting || readOnly || field.config?.disabled === true || fieldDisabled !== "not-matched"}
                   readOnly={readOnly}
                   formContext={fieldFormContext}
+                  size={size}
                   formValues={formValues}
                   mediaLimits={mediaLimits}
                   onChosenOptionFlags={field.optionsProvider ? optionFlagReporters.get(field.key) : undefined}

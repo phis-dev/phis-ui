@@ -115,6 +115,7 @@ export function PhiUploadFormControl({
   disabled,
   readOnly,
   formContext,
+  size,
 }: PhiFormFieldProviderProps) {
   const settings = useMemo(() => readUploadSettings(field.config), [field.config]);
   const uploadLabels = useMemo(() => readPhiFormUploadRefusalLabels(labels), [labels]);
@@ -218,7 +219,7 @@ export function PhiUploadFormControl({
               </PhiTypographyControl>
             </PhiFlexControl>
           ) : (
-            <PhiButtonControl label={triggerLabel} disabled={disabled || full} onClick={() => {}} />
+            <PhiButtonControl label={triggerLabel} size={size} disabled={disabled || full} onClick={() => {}} />
           )}
         </PhiFileDropControl>
       )}

@@ -86,6 +86,7 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
   onChange,
   formContext,
   mediaLimits,
+  size,
 }) => {
   const config = useMemo(() => readPhiMediaAssetFieldConfig(field.config), [field.config]);
   const assetId = readPhiMediaAssetFieldValue(value);
@@ -216,9 +217,9 @@ export const PhiMediaAssetFormControl: ComponentType<PhiFormFieldProviderProps> 
       )}
       {readOnly ? null : (
         <PhiFlexControl gap="small">
-          <PhiMediaPickerControl {...picker} disabled={locked} />
+          <PhiMediaPickerControl {...picker} size={size} disabled={locked} />
           {assetId == null ? null : (
-            <PhiButtonControl label={read("remove")} disabled={locked} onClick={() => onChange?.(null)} />
+            <PhiButtonControl label={read("remove")} size={size} disabled={locked} onClick={() => onChange?.(null)} />
           )}
         </PhiFlexControl>
       )}

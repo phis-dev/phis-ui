@@ -10,6 +10,7 @@ import {
 import { PHI_FORM_RECORD_TITLE_CAPABILITY } from "../../../../../components/forms/form-record-title";
 import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
+import { PHI_COMPACT_CONTROL_SIZE_FIELD } from "../../../../../components/widgets/config/control-signal-config";
 
 export const PHI_FORM_WIDGET_DEFINITION = {
   kind: "widget",
@@ -145,6 +146,8 @@ export const PHI_FORM_WIDGET_DEFINITION = {
       { value: "external", label: "External" },
     ] },
     { key: "submitOnEnter", type: "boolean", label: "Submit On Enter" },
+    // The Size every other Control's Inspector shows, without Large: a Form is drawn medium or small.
+    PHI_COMPACT_CONTROL_SIZE_FIELD,
     {
       key: "card.presentation",
       type: "choice",

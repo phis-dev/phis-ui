@@ -5,6 +5,7 @@ import { Flex, Typography } from "antd";
 import type { PhisMediaSourceItem } from "@phis/contracts/media-source";
 
 import type { PhiMediaAssetTile } from "../../types/media";
+import type { PhiControlSize } from "../../types/control";
 import { usePhiConfig } from "../root/phi-config-provider";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiButtonControl } from "./phi-button-control";
@@ -81,6 +82,8 @@ export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | 
   loading?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
+  /** The size of its own trigger, where no `trigger` is handed in; the library it opens is chrome and small. */
+  size?: PhiControlSize;
   /**
    * Where the picker opens, which the host decides: it knows where the room is. A panel at the window's
    * right, the Builder Inspector, says `left`, towards the canvas. Absent, it opens centred below: the
@@ -155,6 +158,7 @@ export function PhiMediaPickerControl({
   loading,
   disabled,
   readOnly,
+  size,
   placement = "bottom",
   showSearchBar = true,
   showFolderFilter = true,
@@ -445,6 +449,7 @@ export function PhiMediaPickerControl({
             block
             icon={<PhiIcon name="picture" size="inherit" />}
             label={labels?.trigger ?? "Select media"}
+            size={size}
             disabled={locked}
             onClick={picker.openPicker}
           />

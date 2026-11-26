@@ -23,7 +23,7 @@ export const PHI_AUTH_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
      * before/after pair. The target comes from the Widget's config, because it is the placement that
      * knows which Area's terms these are and in which language's path they live.
      */
-    Control: ({ field, checked, onChange, disabled, labels, formConfig }) => {
+    Control: ({ field, checked, onChange, disabled, labels, formConfig, size }) => {
       const text = readText(field.config?.text);
       const linkLabel = readText(field.config?.linkLabel);
       const href = readText(field.config?.href);
@@ -42,6 +42,7 @@ export const PHI_AUTH_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
 
       return (
         <PhiCheckboxControl
+          size={size}
           checked={checked}
           disabled={disabled}
           label={(

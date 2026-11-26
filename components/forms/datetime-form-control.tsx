@@ -45,6 +45,7 @@ export function PhiDateTimeFormControl({
   placeholder,
   disabled,
   readOnly,
+  size,
 }: PhiFormFieldProviderProps) {
   const timeZone = typeof field.config?.timeZone === "string" && field.config.timeZone.trim()
     ? field.config.timeZone.trim()
@@ -59,6 +60,7 @@ export function PhiDateTimeFormControl({
       showTime
       timeZone={timeZone}
       allowClear
+      controlSize={size}
       placeholder={placeholder}
       disabled={disabled}
       readOnly={readOnly}

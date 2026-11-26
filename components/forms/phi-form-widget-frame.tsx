@@ -23,6 +23,7 @@ import { PhiButtonControl } from "../controls/phi-button-control";
 import { PhiCardControl } from "../controls/phi-card-control";
 import { PhiLink } from "../navigation/phi-link";
 import type { PhiCmsFormWidgetCardConfig } from "../../types/core-widget-placements";
+import type { PhiFormSize } from "./form-provider-registry";
 import {
   PHI_FORM_ACTIONS_COLUMNS_PROPERTY,
   PHI_FORM_RESPONSIVE_MODES,
@@ -154,6 +155,8 @@ export type PhiFormWidgetFrameProps = {
    * frame is the element both are inside, so this is where the answer has to arrive.
    */
   layout?: PhiFormLayoutDescriptor;
+  /** The placement's size (FORMS.md, "Size"): a small Form's submit is small and stands a step closer. */
+  size?: PhiFormSize;
   children: ReactNode;
 };
 
@@ -187,7 +190,7 @@ function resolvePhiFormBoxChrome(card: PhiCmsFormWidgetCardConfig | null | undef
  * column a Form Layout decides -- that column is a custom property both of them read.
  */
 export function PhiFormWidgetFrame(
-  { submit, card, maxFormWidth, links, layout, children }: PhiFormWidgetFrameProps,
+  { submit, card, maxFormWidth, links, layout, size = "medium", children }: PhiFormWidgetFrameProps,
 ) {
   const [registration, setRegistration] = useState<PhiFormWidgetSubmitRegistration | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -226,6 +229,7 @@ export function PhiFormWidgetFrame(
       >
         <PhiButtonControl
           type="primary"
+          size={size}
           label={submit.label}
           loading={submitting}
           onClick={registration.submit}
@@ -309,7 +313,7 @@ export function PhiFormWidgetFrame(
     <div
       style={{
         display: "grid",
-        gap: PHI_SPACE.sm,
+        gap: size === "small" ? PHI_SPACE.xs : PHI_SPACE.sm,
         width: "100%",
         minWidth: 0,
         containerType: "inline-size",

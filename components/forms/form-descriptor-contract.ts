@@ -9,6 +9,7 @@ import {
   type PhiFormResponsiveMode,
   type PhiResolvedFormLayout,
 } from "@phis/contracts/forms";
+import type { PhiSpacingToken } from "../../types/spacing";
 import {
   PHI_CONTAINER_BREAKPOINT_COL3,
   PHI_CONTAINER_BREAKPOINT_CONTENT,
@@ -43,6 +44,23 @@ export {
   type PhiResolvedFormLayout,
   type PhiResolvedFormResponsiveGridRange,
 } from "@phis/contracts/forms";
+
+/**
+ * The spacing step a `small` Form takes for each step its layout names: one step down the scale, the
+ * way a small Card's inset is `paddingSM` where a medium one's is `padding`. `none` and `xxs` stay --
+ * there is no step below them, and a gap of nothing would run one field's control into the next label.
+ */
+export const PHI_FORM_SMALL_GAP_STEP: Readonly<Record<PhiSpacingToken, PhiSpacingToken>> = {
+  none: "none",
+  xxs: "xxs",
+  xs: "xxs",
+  sm: "xs",
+  base: "sm",
+  md: "base",
+  lg: "md",
+  xl: "lg",
+  xxl: "xl",
+};
 
 export function shouldPhiFormSubmitOnKeyDown(input: {
   key: string;

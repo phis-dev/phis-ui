@@ -96,8 +96,9 @@ function phiSharedValidationRule(
 export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
   fieldTypes: [
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.text, {
-      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly }) => (
+      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly, size }) => (
         <PhiTextControl
+          size={size}
           id={id}
           value={typeof value === "string" ? value : ""}
           inputType={field.config?.inputType === "search" ? "search" : "text"}
@@ -113,8 +114,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       ),
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.email, {
-      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly }) => (
+      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly, size }) => (
         <PhiTextControl
+          size={size}
           id={id}
           value={typeof value === "string" ? value : ""}
           inputType="email"
@@ -129,8 +131,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       ),
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.password, {
-      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly }) => (
+      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly, size }) => (
         <PhiTextControl
+          size={size}
           id={id}
           presentation="password"
           value={typeof value === "string" ? value : ""}
@@ -145,8 +148,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       ),
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.textarea, {
-      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly }) => (
+      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly, size }) => (
         <PhiTextControl
+          size={size}
           id={id}
           presentation="textarea"
           value={typeof value === "string" ? value : ""}
@@ -162,8 +166,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       ),
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.hidden, {
-      Control: ({ id, value, onChange }) => (
+      Control: ({ id, value, onChange, size }) => (
         <PhiTextControl
+          size={size}
           id={id}
           presentation="hidden"
           value={typeof value === "string" ? value : ""}
@@ -173,8 +178,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       valuePropName: "value",
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.checkbox, {
-      Control: ({ checked, controlLabel, onChange, disabled }) => (
+      Control: ({ checked, controlLabel, onChange, disabled, size }) => (
         <PhiCheckboxControl
+          size={size}
           checked={checked}
           label={controlLabel}
           disabled={disabled}
@@ -187,8 +193,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       Control: PhiLazySelectFormControl,
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.honeypot, {
-      Control: ({ id, value, onChange, disabled }) => (
+      Control: ({ id, value, onChange, disabled, size }) => (
         <PhiTextControl
+          size={size}
           id={id}
           presentation="hidden"
           tabIndex={-1}
@@ -200,8 +207,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       ),
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.url, {
-      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly }) => (
+      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly, size }) => (
         <PhiTextControl
+          size={size}
           id={id}
           value={typeof value === "string" ? value : ""}
           inputType="url"
@@ -214,8 +222,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       ),
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.tel, {
-      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly }) => (
+      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly, size }) => (
         <PhiTextControl
+          size={size}
           id={id}
           value={typeof value === "string" ? value : ""}
           inputType="phone"
@@ -237,8 +246,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       Control: PhiLazyMultiSelectFormControl,
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.checkboxGroup, {
-      Control: ({ value, onChange, options, disabled, readOnly }) => (
+      Control: ({ value, onChange, options, disabled, readOnly, size }) => (
         <PhiCheckboxGroupControl
+          size={size}
           value={Array.isArray(value) ? value.map(String) : []}
           disabled={disabled}
           readOnly={readOnly}
@@ -248,8 +258,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       ),
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.switch, {
-      Control: ({ id, checked, controlLabel, onChange, disabled, readOnly }) => (
+      Control: ({ id, checked, controlLabel, onChange, disabled, readOnly, size }) => (
         <PhiSwitchControl
+          size={size}
           id={id}
           checked={checked}
           label={controlLabel}

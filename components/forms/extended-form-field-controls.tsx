@@ -49,7 +49,10 @@ function readPhiNumberFieldPrefix(prefix: unknown, labels: PhiFormFieldProviderP
  * without a field of either kind. The registry points here through a lazy Control instead.
  */
 
-export const PhiSliderFormControl: ComponentType<PhiFormFieldProviderProps> = ({ field, value, onChange, disabled, readOnly }) => {
+/*
+ * The slider's rail and handle have one size in Ant Design; a small Form draws the number beside it small.
+ */
+export const PhiSliderFormControl: ComponentType<PhiFormFieldProviderProps> = ({ field, value, onChange, disabled, readOnly, size }) => {
   const numericValue = typeof value === "number" ? value : undefined;
   const min = typeof field.config?.min === "number" ? field.config.min : undefined;
   const max = typeof field.config?.max === "number" ? field.config.max : undefined;
@@ -78,6 +81,7 @@ export const PhiSliderFormControl: ComponentType<PhiFormFieldProviderProps> = ({
   return field.config?.showInput === true ? (
     <div style={{ display: "grid", gridTemplateColumns: "minmax(96px, 1fr) minmax(0, 2fr)", gap: "var(--phi-padding-sm)", alignItems: "center", minWidth: 0 }}>
       <PhiNumberControl
+        size={size}
         value={numericValue ?? null}
         min={min}
         max={max}
@@ -93,8 +97,9 @@ export const PhiSliderFormControl: ComponentType<PhiFormFieldProviderProps> = ({
   ) : slider;
 };
 
-export const PhiCascaderFormControl: ComponentType<PhiFormFieldProviderProps> = ({ field, value, onChange, options, placeholder, disabled, readOnly }) => (
+export const PhiCascaderFormControl: ComponentType<PhiFormFieldProviderProps> = ({ field, value, onChange, options, placeholder, disabled, readOnly, size }) => (
   <PhiCascaderControl
+    size={size}
     value={typeof value === "string" ? value : undefined}
     placeholder={placeholder}
     disabled={disabled}
@@ -110,10 +115,11 @@ export const PhiCascaderFormControl: ComponentType<PhiFormFieldProviderProps> = 
 );
 
 export const PhiNumberFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, placeholder, disabled, readOnly, labels,
+  id, field, value, onChange, placeholder, disabled, readOnly, labels, size,
 }) => (
   <PhiNumberControl
     id={id}
+    size={size}
     value={typeof value === "number" ? value : null}
     disabled={disabled}
     readOnly={readOnly}
@@ -134,19 +140,20 @@ export const PhiNumberFormControl: ComponentType<PhiFormFieldProviderProps> = ({
  * handler, validator or API payload learns that a unit was ever involved.
  */
 export const PhiStorageSizeFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, value, onChange, placeholder, disabled, readOnly,
+  id, value, onChange, placeholder, disabled, readOnly, size,
 }) => {
-  const size = phiBytesToStorageSize(value);
+  const megabytes = phiBytesToStorageSize(value);
   return (
     <PhiNumberControl
       id={id}
-      value={size}
+      size={size}
+      value={megabytes}
       /*
        * A unit belongs to a value, so an empty field has none: the field says what it means by being
        * empty -- "Unlimited", or whatever its placeholder states -- and a lone "MB" in front of that
        * reads like the start of an answer nobody gave.
        */
-      prefix={size == null ? undefined : PHI_STORAGE_SIZE_UNIT_LABEL}
+      prefix={megabytes == null ? undefined : PHI_STORAGE_SIZE_UNIT_LABEL}
       min={0}
       step={1}
       disabled={disabled}
@@ -164,7 +171,7 @@ export const PhiStorageSizeFormControl: ComponentType<PhiFormFieldProviderProps>
  * contract's money and nothing else. The shapes and the config are `money-field.ts`.
  */
 export const PhiMoneyFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, label, placeholder, disabled, readOnly, options, formValues,
+  id, field, value, onChange, label, placeholder, disabled, readOnly, options, formValues, size,
 }) => {
   const locale = usePhiIntlLocale();
   const config = readPhiMoneyFieldConfig(field.config, { hasOptionsProvider: field.optionsProvider !== undefined });
@@ -186,6 +193,7 @@ export const PhiMoneyFormControl: ComponentType<PhiFormFieldProviderProps> = ({
     return (
       <PhiMoneyControl
         id={id}
+        size={size}
         value={stale ? null : readPhiMoneyFieldAmount(value, currency)?.minor ?? null}
         currency={currency}
         locale={locale}
@@ -208,6 +216,7 @@ export const PhiMoneyFormControl: ComponentType<PhiFormFieldProviderProps> = ({
           key={entry}
           // The field's label names the first input; each one after it is named by the label and its currency.
           id={index === 0 ? id : undefined}
+          size={size}
           ariaLabel={index === 0 ? undefined : [label, entry].filter(Boolean).join(" ")}
           value={amounts?.[entry] ?? null}
           currency={entry}

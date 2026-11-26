@@ -13,6 +13,7 @@ import {
 import { PhiFormFieldPart, PhiFormFieldParts } from "../forms/form-field-row";
 import { PhiCountrySelectControl } from "./phi-country-select-control";
 import { PhiTextControl } from "./phi-text-control";
+import type { PhiControlSize } from "../../types/control";
 
 export type PhiAddressControlLabels = Record<PhiAddressPart, string>;
 
@@ -25,6 +26,8 @@ export type PhiAddressControlProps = {
   errors?: Partial<Record<PhiAddressPart, string>>;
   disabled?: boolean;
   readOnly?: boolean;
+  /** The size every part's input is drawn in; its Form's (`PhiFormFieldProviderProps.size`). */
+  size?: PhiControlSize;
   onChange?: (next: PhisSiteAddressInput) => void;
   /** A part was left, so whoever validates may now say what is wrong with it. */
   onPartBlur?: (part: PhiAddressPart) => void;
@@ -56,6 +59,7 @@ export function PhiAddressControl({
   errors,
   disabled,
   readOnly,
+  size,
   onChange,
   onPartBlur,
 }: PhiAddressControlProps) {
@@ -76,6 +80,7 @@ export function PhiAddressControl({
           {part === "country" ? (
             <PhiCountrySelectControl
               id={partId(part)}
+              size={size}
               value={value.country}
               disabled={disabled}
               readOnly={readOnly}
@@ -85,6 +90,7 @@ export function PhiAddressControl({
           ) : (
             <PhiTextControl
               id={partId(part)}
+              size={size}
               value={value[part] ?? ""}
               disabled={disabled}
               readOnly={readOnly}

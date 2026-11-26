@@ -17,6 +17,11 @@ import {
   type PhiCmsWidgetConfigBase,
 } from "../widgets/config/parser-primitives";
 import { PHI_LAYOUT } from "../../theme/phi-tokens";
+import { parsePhiControlPresentationConfig } from "../widgets/config/control-signal-config";
+import type { PhiFormSize } from "./form-provider-registry";
+
+/** The sizes a Form is drawn in: the Controls' vocabulary without `large` (FORMS.md, "Size"). */
+const PHI_FORM_SIZES = ["small", "medium"] as const satisfies readonly PhiFormSize[];
 
 /*
  * The parsed placement of a Form, and the parser that answers it.
@@ -54,6 +59,11 @@ export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
    */
   maxFormWidth: number | string;
   feedback: PhiCmsFormWidgetFeedbackConfig | null;
+  /**
+   * How large the Form draws its fields, its labels and its submit: `medium`, or `small` for a Form that
+   * stands among chrome. The Controls' `controlSize`, answered `medium` where the placement says nothing.
+   */
+  controlSize: PhiFormSize;
   links: readonly PhiCmsFormWidgetLinkConfig[];
   formConfig: Record<string, unknown>;
   execution: {
@@ -171,6 +181,7 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
       title: typeof card.title === "string" && card.title.trim() ? card.title.trim() : null,
       padding: cardPadding,
     },
+    controlSize: parsePhiControlPresentationConfig(rawConfig, PHI_FORM_SIZES).controlSize ?? "medium",
     // Absent means silent, so a Form that says nothing about feedback keeps reporting where it stands.
     feedback: rawConfig.feedback == null ? null : {
       mode: feedback.mode === "notification" ? "notification" : "message",

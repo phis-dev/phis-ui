@@ -20,9 +20,10 @@ import type { PhiFormFieldProviderProps } from "./form-provider-registry";
  * a new one (the CDN upload's Name). The select then takes what is typed, offering the options as it does.
  */
 export const PhiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, options, placeholder, disabled, readOnly, onSearch, filterOptionsLocally,
+  id, field, value, onChange, options, placeholder, disabled, readOnly, onSearch, filterOptionsLocally, size,
 }) => (
   <PhiSelectControl
+    size={size}
     id={id}
     value={typeof value === "string" ? value : undefined}
     placeholder={placeholder}
@@ -39,9 +40,10 @@ export const PhiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
 );
 
 export const PhiMultiSelectFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, options, placeholder, disabled, readOnly,
+  id, field, value, onChange, options, placeholder, disabled, readOnly, size,
 }) => (
   <PhiMultiSelectControl
+    size={size}
     id={id}
     value={Array.isArray(value) ? value.map(String) : []}
     placeholder={placeholder}
@@ -55,9 +57,10 @@ export const PhiMultiSelectFormControl: ComponentType<PhiFormFieldProviderProps>
 );
 
 export const PhiSegmentedFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  value, onChange, options, disabled, readOnly,
+  value, onChange, options, disabled, readOnly, size,
 }) => (
   <PhiSegmentedControl
+    size={size}
     value={typeof value === "string" ? value : undefined}
     disabled={disabled}
     readOnly={readOnly}

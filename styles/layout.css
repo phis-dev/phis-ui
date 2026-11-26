@@ -366,6 +366,8 @@
   min-height: var(--phi-form-label-slot-height-compact);
   padding-inline-end: var(--phi-form-label-pad-compact);
   overflow-wrap: anywhere;
+  /* A small Form writes its labels in the small text size; a medium one writes nothing and inherits. */
+  font-size: var(--phi-form-cell-label-font-size, inherit);
 }
 
 .phi-form-cell--control {
@@ -416,6 +418,7 @@
   padding-inline-end: var(--phi-form-part-label-pad-compact, 0px);
   margin-block-end: var(--phi-form-part-label-gap-compact, 0px);
   overflow-wrap: anywhere;
+  font-size: var(--phi-form-cell-label-font-size, inherit);
 }
 
 .phi-form-part--control {

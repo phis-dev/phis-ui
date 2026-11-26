@@ -22,9 +22,10 @@ import { readPhiFormAddressLabels, type PhiFormAddressLabels } from "./structure
  */
 
 export const PhiCountryFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, placeholder, disabled, readOnly,
+  id, field, value, onChange, placeholder, disabled, readOnly, size,
 }) => (
   <PhiCountrySelectControl
+    size={size}
     id={id}
     value={typeof value === "string" ? value : null}
     placeholder={placeholder}
@@ -54,7 +55,7 @@ function describeProblem(problem: PhiAddressProblem, labels: PhiFormAddressLabel
  * it has been left.
  */
 export const PhiAddressFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  id, field, value, onChange, labels, disabled, readOnly, formContext,
+  id, field, value, onChange, labels, disabled, readOnly, formContext, size,
 }) => {
   const address = readPhiAddressFieldValue(value);
   const words = useMemo(() => readPhiFormAddressLabels(labels), [labels]);
@@ -81,6 +82,7 @@ export const PhiAddressFormControl: ComponentType<PhiFormFieldProviderProps> = (
   return (
     <PhiAddressControl
       id={id}
+      size={size}
       value={address}
       labels={Object.fromEntries(PHI_ADDRESS_PARTS.map((part) => [part, words[part]])) as Record<PhiAddressPart, string>}
       errors={errors}
@@ -94,7 +96,7 @@ export const PhiAddressFormControl: ComponentType<PhiFormFieldProviderProps> = (
 
 /** Several yes-or-no answers as one bit-flag number (`flags-field.ts`). */
 export const PhiFlagsFormControl: ComponentType<PhiFormFieldProviderProps> = ({
-  field, value, onChange, options, disabled, readOnly,
+  field, value, onChange, options, disabled, readOnly, size,
 }) => {
   const offered = useMemo(() => options ?? [], [options]);
   const config = useMemo(() => readPhiFlagsFieldConfig(field.config, offered), [field.config, offered]);
@@ -103,6 +105,7 @@ export const PhiFlagsFormControl: ComponentType<PhiFormFieldProviderProps> = ({
   return (
     <PhiCheckboxGroupControl
       vertical
+      size={size}
       value={checked}
       disabled={disabled}
       readOnly={readOnly}

@@ -148,6 +148,7 @@ export async function PhiFormWidget({
       maxFormWidth: config?.maxFormWidth ?? null,
       links: resolvedLinks,
       layout: resolvedForm.definition.descriptor.layout,
+      ...(config?.controlSize ? { size: config.controlSize } : {}),
       children: node,
     };
     const framed = (

@@ -2,6 +2,8 @@
 
 import { Checkbox, Flex } from "antd";
 
+import type { PhiControlSize } from "../../types/control";
+import { usePhiConfig } from "../root/phi-config-provider";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiControlOptionContent } from "./phi-control-option-content";
 
@@ -13,6 +15,8 @@ export type PhiCheckboxGroupControlProps<TValue extends string | number = string
   disabled?: boolean;
   readOnly?: boolean;
   vertical?: boolean;
+  /** As `PhiCheckboxControl`: a `small` group writes its options in the small text size. */
+  size?: PhiControlSize;
   onChange?: (value: TValue[]) => void;
 };
 
@@ -23,8 +27,10 @@ export function PhiCheckboxGroupControl<TValue extends string | number = string>
   disabled,
   readOnly,
   vertical,
+  size,
   onChange,
 }: PhiCheckboxGroupControlProps<TValue>) {
+  const { token } = usePhiConfig();
   return (
     <Checkbox.Group
       role="group"
@@ -37,7 +43,11 @@ export function PhiCheckboxGroupControl<TValue extends string | number = string>
       <Flex vertical={vertical} gap="small" wrap={vertical ? false : "wrap"}>
         {options.map((option) => (
           <Checkbox key={option.value} value={option.value} disabled={option.disabled}>
-            <PhiControlOptionContent option={option} presentation="option" />
+            {size === "small" ? (
+              <span style={{ fontSize: token.fontSizeSM }}>
+                <PhiControlOptionContent option={option} presentation="option" />
+              </span>
+            ) : <PhiControlOptionContent option={option} presentation="option" />}
           </Checkbox>
         ))}
       </Flex>

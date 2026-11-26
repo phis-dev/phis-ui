@@ -15,6 +15,8 @@ import {
   type PhiPageReference,
 } from "../../../../types/references";
 import type { PhiTreeOption } from "../../../../types/tree";
+import type { PhiControlSize } from "../../../../types/control";
+import { usePhiConfig } from "../../../root/phi-config-provider";
 import type { PhiPageReferenceSelection } from "./phi-page-reference-picker";
 
 type PhiLinkTargetMode = "none" | "page" | "external";
@@ -51,12 +53,8 @@ export function PhiLinkTargetControl({
   labels,
   area,
   disabled,
-  newTabRow = (control) => (
-    <PhiFlexControl align="center" gap={8}>
-      {control}
-      <span>{labels.newTab}</span>
-    </PhiFlexControl>
-  ),
+  size,
+  newTabRow,
   onChange,
 }: {
   value: unknown;
@@ -64,6 +62,8 @@ export function PhiLinkTargetControl({
   labels: PhiLinkTargetControlLabels;
   area?: PhiCmsAreaKey;
   disabled?: boolean;
+  /** The size of every control it draws, and of the new-tab switch's words; a Form's field passes its own. */
+  size?: Exclude<PhiControlSize, "large">;
   /** How the new-tab switch stands beside its words; the Inspector puts it in its own field row. */
   newTabRow?: (control: ReactNode) => ReactNode;
   /**
@@ -72,6 +72,13 @@ export function PhiLinkTargetControl({
    */
   onChange?: (next: PhiLinkTarget | undefined, none?: boolean) => void;
 }) {
+  const { token } = usePhiConfig();
+  const renderNewTabRow = newTabRow ?? ((control: ReactNode) => (
+    <PhiFlexControl align="center" gap={8}>
+      {control}
+      <span style={size === "small" ? { fontSize: token.fontSizeSM } : undefined}>{labels.newTab}</span>
+    </PhiFlexControl>
+  ));
   const target = readPhiLinkTarget(value);
   const [mode, setMode] = useState<PhiLinkTargetMode>(target?.kind ?? "none");
   /*
@@ -126,6 +133,7 @@ export function PhiLinkTargetControl({
   return (
     <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
       <PhiSegmentedControl<PhiLinkTargetMode>
+        size={size}
         value={mode}
         block
         disabled={disabled || !onChange}
@@ -139,6 +147,7 @@ export function PhiLinkTargetControl({
 
       {mode === "page" ? (
         <PhiTreeSelectControl<PhiPageReferenceSelection>
+          size={size}
           value={target?.kind === "page" ? target.reference : null}
           options={options}
           placeholder={labels.pagePlaceholder}
@@ -153,6 +162,7 @@ export function PhiLinkTargetControl({
 
       {mode === "external" ? (
         <PhiTextControl
+          size={size}
           value={draftHref}
           inputType="url"
           placeholder={labels.externalPlaceholder}
@@ -172,8 +182,9 @@ export function PhiLinkTargetControl({
         * Only for an address elsewhere. A Page of the Site opens where the reader is, by the client
         * router -- a new tab would leave the Site's own navigation for a second copy of it.
         */}
-      {mode === "external" ? newTabRow(
+      {mode === "external" ? renderNewTabRow(
         <PhiSwitchControl
+          size={size}
           checked={newTab}
           disabled={disabled || !onChange}
           onChange={(checked) => {
