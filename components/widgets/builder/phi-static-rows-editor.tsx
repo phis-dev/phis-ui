@@ -25,6 +25,7 @@ import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiCollectionHeaderControl } from "../../controls/phi-collection-header-control";
 import { PhiToolbarControl } from "../../controls/phi-toolbar-control";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_INSPECTOR_TABLE_CONTROL_PROPS } from "../../../helpers/cms-inspector-drawer";
 
 /*
  * Rows a Widget keeps in its own config, edited in a table in a dialog: static options, static timeline
@@ -267,6 +268,8 @@ function PhiStaticRowsTable<TRow extends PhiStaticRowsRecord>({
         )}
       />
       <PhiTableBindingControl
+        // An inspector's Table, in the dialog its field opens: lines only (BUILDER.md "Inspector contract").
+        {...PHI_INSPECTOR_TABLE_CONTROL_PROPS}
         rows={binding.rows} fields={binding.resource?.fields ?? []} columns={columns}
         rowIdentityPath={ROW_ID} columnOrder={[...spec.columns.map((column) => column.key), "actions"]}
         sortingMode="none" sorts={[]} pagination={false} size="small" emptyText={labels.empty}

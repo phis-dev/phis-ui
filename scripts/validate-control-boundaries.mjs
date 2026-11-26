@@ -702,6 +702,9 @@ const antdComponentVariableAllowance = new Map([
   ["--phi-table-footer-bg", {
     reason: "Table's own token. The Table Control's stylesheet follows the component it is drawing.",
   }],
+  ["--phi-table-header-bg", {
+    reason: "Table's own token. A Table that states its Surface sets its header fill to that ground (TABLES.md \"Surface\").",
+  }],
   ["--phi-cascader-dropdown-height", {
     reason: "Cascader's own token. The root stylesheet sizes the popup by what the component sizes itself by.",
   }],

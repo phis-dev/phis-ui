@@ -13,6 +13,7 @@ import { PHI_BUILDER_EFFECTS_SECTIONS } from "./effects-form-values";
 import type { PhiFormLabelSetLoader } from "../../../components/forms/form-resolution";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../components/widgets/label-sets/runtime-options";
 import { phiFormLabel as label } from "../../../components/forms/form-descriptor-text";
+import { PHI_INSPECTOR_TABLE_CONTROL_PROPS } from "../../../helpers/cms-inspector-drawer";
 
 export const PHI_BUILDER_PAGE_META_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "builder/page-meta");
 const PHI_BUILDER_PAGE_META_FORM_LABEL_SET_KEY = "@phis/ui/modules/builder/labels/page-meta" as const;
@@ -337,7 +338,8 @@ const effectsDescriptors = {
           },
           remove: { enabled: true, label: label("removeTransition", "Remove transition") },
           reorder: true,
-          bordered: true,
+          // An inspector's Table: lines only (BUILDER.md "Inspector contract").
+          ...PHI_INSPECTOR_TABLE_CONTROL_PROPS,
           emptyText: label("table.emptyTransitions", "No transitions configured."),
           layout: { mode: "auto", overflowX: "auto" },
         },
@@ -469,7 +471,8 @@ const effectsDescriptors = {
           },
           remove: { enabled: true, label: label("removeViewportEffect", "Remove viewport effect") },
           reorder: true,
-          bordered: true,
+          // An inspector's Table: lines only (BUILDER.md "Inspector contract").
+          ...PHI_INSPECTOR_TABLE_CONTROL_PROPS,
           emptyText: label("table.emptyViewportEffects", "No viewport effects configured."),
           layout: { mode: "auto", overflowX: "auto" },
         },

@@ -38,6 +38,8 @@ import {
   resolvePhiRuntimeConditionControllerRequirements,
 } from "../../../../../types/runtime-condition";
 import { isPhiRecord } from "../../../../../helpers/is-record";
+import type { PhiSurface } from "../../../../../types/surface";
+import { isPhiTableSurfaceDrawable, type PhiTableSurface } from "../../../../../components/tables/phi-table-surface";
 
 const PHI_TABLE_DISABLED_CONDITION_CONFIG_FIELDS: PhiCmsConfigField[] = [
   { key: "source", type: "choice", label: "Source", options: [
@@ -489,6 +491,20 @@ function readBindingField(reader: PhiConfigReader) {
   };
 }
 
+/**
+ * The Table's ground, in the Surface vocabulary (TABLES.md "Surface"): `null` is None and is kept -- the
+ * strict reader takes `null` for absent, and absent is the Table's own ground -- and a stated Surface has
+ * to be one the Table can draw.
+ */
+function readTableSurface(presentation: PhiConfigReader): PhiTableSurface | undefined {
+  if (presentation.record.surface === null) return null;
+  return presentation.value(
+    "surface",
+    "null or a Surface of one ground colour, with no line, depth or mode",
+    (value) => isPhiRecord(value) && isPhiTableSurfaceDrawable(value as PhiSurface) ? value as PhiSurface : undefined,
+  );
+}
+
 export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiTableWidgetConfig {
   const root = createPhiConfigReader(config);
   const section = (reader: PhiConfigReader, key: string) =>
@@ -549,6 +565,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
         description: emptyState.string("description"),
       },
       borders: presentation.boolean("borders"),
+      surface: readTableSurface(presentation),
       header: presentation.boolean("header"),
       stickyHeader: presentation.boolean("stickyHeader"),
       footer: presentation.object("footer", readTableFooter),

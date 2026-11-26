@@ -611,6 +611,24 @@ open state is transient Collapsible state. The Collapsible Body roots use `sm` o
 padding; the Header Flex roots use `lg` inline-start padding. None of these come from Drawer adapter
 padding.
 
+### Tables in an inspector
+
+A Table inside an inspector -- the Region, Layout and Widget Inspector Drawers, the Asset inspector, the
+dialogs and Forms they open (owner, 2026-11-25) -- is lines only: it stands on the inspector's ground with
+no Surface of its own (`surface: null`, the Surface switch's None), so neither its box nor its header,
+footer or summary row paints a fill; it has no outer frame; the lines between its rows stay. Its header
+does not stick, because a header without a ground would let the rows show through it.
+
+This is one template, not a setting per Table (`helpers/cms-inspector-drawer.ts`):
+`PHI_INSPECTOR_TABLE_PRESENTATION` is a Table Widget's `presentation` in an inspector tree (the Signal
+wiring routes), `PHI_INSPECTOR_TABLE_CONTROL_PROPS` the props of a `PhiTableControl` an inspector client
+draws (the Signals section's capability list, the static rows, options and timeline editors) and the config
+of a Form table field in an inspector Form (the Effects editor's transitions and viewport effects). A
+Table adds what is its own -- columns, layout, footer -- after the template. The overlay-form validator
+(`scripts/validate-overlay-form-contracts.ts`) holds every Table Widget of the inspector trees, every Table
+the Builder's inspector clients draw, and every table field of the inspector Forms to it. What a Table's
+`surface` can be is TABLES.md "Surface".
+
 ### Selection and state
 
 The active selection is the source of truth.

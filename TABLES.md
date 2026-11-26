@@ -272,6 +272,29 @@ and neither does a filter key a Controller or another Widget sets by signal that
 adjust. A Table whose emptiness says something of its own -- "Select a key to see its devices." -- says it
 in its `title` or `description`.
 
+### Surface
+
+A Table's ground is said in the Surface vocabulary every box uses (`types/surface.ts`, LAYOUTING.md
+"Surface"): `presentation.surface` on the Table Widget, `surface` on `PhiTableControl`, `surface` in a Form
+table field's config. A Table draws the part of a Surface a table can carry -- its ground --
+(`components/tables/phi-table-surface.ts`):
+
+- left out, the Table's own ground: the Theme's container ground under the rows, the header and footer
+  fills over it. The default, and what every Table without the key keeps;
+- `null`, the Surface switch's None: no ground at all. The Table's box, its header, its footer, a summary
+  row, a sticky header and a fixed column paint nothing, and the Table is its row lines on whatever it
+  stands on;
+- a Surface whose ground is one colour and that states nothing else -- no line, no depth, no mode, no
+  ground per mode; `PHI_SURFACE_WASH` is one. The whole Table stands on that colour, header and footer
+  included.
+
+Row hover and row selection keep their fills: they answer the pointer and are not the ground. A line, a
+shadow or a picture is a box around the Table, not its ground, and is refused as a config error; a Table
+that wants one stands in a Layout or a Widget slot that draws it. The outer frame stays
+`presentation.borders` (`bordered`), and neither key reaches the Widget's header or tools. A Table in an
+inspector is lines only and takes the one template for it (BUILDER.md "Tables in an inspector"). There is
+no Inspector field for the key yet: the Surface Control offers looks a Table cannot draw.
+
 ### Footer and summary
 
 Table footer and column summary are separate native Table presentation contracts:

@@ -13,6 +13,7 @@ import type {
 } from "./signals";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
 import type { PhiLinkTarget } from "./references";
+import type { PhiTableSurface } from "../components/tables/phi-table-surface";
 import { isPhiRecord } from "../helpers/is-record";
 import { isPhiTableQueryValue, readRowIdentities } from "./table-signal-values";
 
@@ -463,6 +464,11 @@ export type PhiTableWidgetPresentation = PhiControlPresentationConfig & {
   };
   /** Lines around and between the cells. */
   borders?: boolean;
+  /**
+   * The Table's ground, from the Surface vocabulary (TABLES.md "Surface"): absent the Table's own, `null`
+   * none -- the row lines on whatever the Table stands on -- or a Surface of one ground colour.
+   */
+  surface?: PhiTableSurface;
   /** The header row; shown unless this says `false`. */
   header?: boolean;
   /** Whether the header row stays at the top while the rows scroll under it; on unless this says `false`. */

@@ -38,7 +38,7 @@ import { getPhiSignalsWidgetLabels } from "../../../../components/widgets/label-
 import type { PhiInspectorWidgetLabels } from "../../../../components/widgets/label-types/inspector";
 import { PHI_DIALOG_BODY_CONFIG, PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
-import { PHI_INSPECTOR_DRAWER_BODY_INSET } from "../../../../helpers/cms-inspector-drawer";
+import { PHI_INSPECTOR_DRAWER_BODY_INSET, PHI_INSPECTOR_TABLE_PRESENTATION } from "../../../../helpers/cms-inspector-drawer";
 
 const PHI_BUILDER_INSPECTOR_SECTIONS = {
   region: [
@@ -584,6 +584,8 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           },
           initialQuery: { page: 1, pageSize: 20, filters: { direction: "emit" } },
           presentation: {
+            // An inspector's Table: lines only (BUILDER.md "Inspector contract").
+            ...PHI_INSPECTOR_TABLE_PRESENTATION,
             layout: { mode: "auto", overflowX: "auto" },
             columns: [
               { key: "capabilityId", fieldKey: "capabilityId", title: signalsLabels.routes.capability, renderer: "code", sizing: { mode: "content" } },

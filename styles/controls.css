@@ -647,6 +647,32 @@ h5.phi-typography, .phi-typography h5 {
   background: var(--phi-table-footer-bg, var(--phi-color-fill-alter));
 }
 
+/*
+ * A Table that states its Surface stands on that ground and on nothing of its own
+ * (`components/tables/phi-table-surface.ts`): the Table's box, its header, its footer, a summary row, the
+ * sticky header and a fixed column all take `--phi-table-surface-ground` -- `transparent` for "None", so
+ * only the row lines are left. The header and footer fills are Table variables and are set here, on the
+ * Table and on every element inside it that states the Table's variables again: a nested Theme scope does
+ * that on the wrapper and on the loading container by `.<scope>.ant-table-css-var`, which a single class
+ * here would tie with and lose to. The container ground is not a Table variable -- the Controls in the
+ * cells read it too -- so the elements that paint it are named. Row hover and selection keep their own
+ * fills: they answer the pointer, they are not the ground.
+ */
+.phi-table-control.phi-table-control--surface[class~="ant-table-wrapper"],
+.phi-table-control.phi-table-control--surface [class~="ant-table-css-var"] {
+  --phi-table-header-bg: var(--phi-table-surface-ground);
+  --phi-table-footer-bg: var(--phi-table-surface-ground);
+}
+
+.phi-table-control.phi-table-control--surface :is(
+  [class~="ant-table"],
+  [class~="ant-table-sticky-holder"],
+  [class~="ant-table-cell-fix"],
+  [class~="ant-table-placeholder"]:hover > td
+) {
+  background: var(--phi-table-surface-ground);
+}
+
 .phi-table-control [class~="ant-table-pagination"][class~="ant-pagination"] {
   margin-block: var(--phi-padding-sm) 0 !important;
 }

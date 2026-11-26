@@ -21,6 +21,8 @@ import { readPhiDotPath as readPath } from "../../helpers/dot-path";
 import { movePhiTableBindingRows } from "../../helpers/table-binding";
 import { PhiIcon } from "../shell/phi-icon";
 import { readPhiFormTableFieldText as readTableFieldText } from "./table-field-text";
+import { isPhiTableSurfaceDrawable, type PhiTableSurface } from "../tables/phi-table-surface";
+import type { PhiSurface } from "../../types/surface";
 
 type RecordValue = Record<string, unknown>;
 
@@ -124,6 +126,18 @@ function applyMove(rows: RecordValue[], identityPath: string, parentPath: string
   return moved.map((row) => String(readPath(row, identityPath)) === String(movedIdentity)
     ? setPath(row, parentPath, parentIdentity)
     : row);
+}
+
+/**
+ * A table field's `surface`: the Table's ground (`components/tables/phi-table-surface.ts`). Left out, the
+ * Table's own; `null`, none -- an inspector's Form says so through `PHI_INSPECTOR_TABLE_CONTROL_PROPS`.
+ * A Surface the Table cannot draw is a mistake in the descriptor and is said as one.
+ */
+function readTableFieldSurface(value: unknown, fieldKey: string): PhiTableSurface | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (isPhiRecord(value) && isPhiTableSurfaceDrawable(value as PhiSurface)) return value as PhiSurface;
+  throw new Error(`The table field "${fieldKey}" states a surface a Table cannot draw: null, or one colour of ground and nothing else.`);
 }
 
 export function PhiCompoundTableFormControl({
@@ -255,6 +269,8 @@ export function PhiCompoundTableFormControl({
         sortingMode="none"
         sorts={[]}
         bordered={config.bordered === true}
+        surface={readTableFieldSurface(config.surface, field.key)}
+        stickyHeader={config.stickyHeader === true}
         striped={config.striped === true}
         size="small"
         emptyText={emptyText}

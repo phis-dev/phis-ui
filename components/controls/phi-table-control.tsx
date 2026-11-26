@@ -50,6 +50,7 @@ import type { PhiCalendarAdapterKey, PhiTemporalSelection } from "../../types/ca
 import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../types/calendar-keys";
 import { PHI_VISUAL_ANCHOR_PART_ATTRIBUTE } from "../../types/visual-anchors";
 import { PHI_TABLE_LOADING_ROWS, PHI_TABLE_LOADING_ROWS_MAX } from "../../constants/table-loading";
+import { resolvePhiTableSurfaceGround, type PhiTableSurface } from "../tables/phi-table-surface";
 import type {
   PhiTableColumnEditorControl,
   PhiTableProviderFieldType,
@@ -366,6 +367,12 @@ export type PhiTableControlProps<TRow extends Record<string, unknown>> = {
    */
   loadingRows?: number;
   bordered?: boolean;
+  /**
+   * The Table's ground, from the Surface vocabulary (`components/tables/phi-table-surface.ts`). Absent is
+   * the Table's own ground; `null` is none -- the rows' lines and nothing under them, header and footer
+   * included -- which is what an inspector's Table is (`PHI_INSPECTOR_TABLE_CONTROL_PROPS`).
+   */
+  surface?: PhiTableSurface;
   striped?: boolean;
   showHeader?: boolean;
   /**
@@ -783,6 +790,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
   loading = false,
   loadingRows: loadingRowCount = PHI_TABLE_LOADING_ROWS,
   bordered,
+  surface,
   striped = false,
   stickyHeader = false,
   showHeader,
@@ -1598,10 +1606,15 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
         // No rows, nothing measured: the sticky header's fixed layout would have no widths to fix.
         !loading && dataSource.length === 0 ? "phi-table-control--empty" : null,
         loading ? "phi-table-control--loading" : null,
+        surface !== undefined ? "phi-table-control--surface" : null,
       ]
         .filter(Boolean)
         .join(" ")}
-      style={{ "--phi-table-striped-row-background": token.colorFillAlter } as CSSProperties}
+      style={{
+        "--phi-table-striped-row-background": token.colorFillAlter,
+        // A stated Surface is the Table's only ground (`styles/controls.css`, "A Table that states its Surface").
+        ...(surface !== undefined ? { "--phi-table-surface-ground": resolvePhiTableSurfaceGround(surface) } : {}),
+      } as CSSProperties}
       rowKey={(row) => loading
         ? `__phi_table_loading_${String((row as Record<PropertyKey, unknown>)[PHI_TABLE_LOADING_ROW])}`
         : String(readIdentity(row, rowIdentityPath))}

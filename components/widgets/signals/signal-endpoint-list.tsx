@@ -3,6 +3,7 @@
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTagControl } from "../../controls/phi-tag-control";
 import { PhiTableControl, type PhiTableControlColumn } from "../../controls/phi-table-control";
+import { PHI_INSPECTOR_TABLE_CONTROL_PROPS } from "../../../helpers/cms-inspector-drawer";
 
 import type {
   PhiSignalInputCapability,
@@ -95,6 +96,8 @@ export function PhiSignalCapabilityList({
 
   return (
     <PhiTableControl
+      // An inspector's Table: lines only (BUILDER.md "Inspector contract").
+      {...PHI_INSPECTOR_TABLE_CONTROL_PROPS}
       rows={dataSource}
       rowIdentityPath="key"
       size="small"

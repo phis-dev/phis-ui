@@ -14,3 +14,27 @@ export const PHI_INSPECTOR_DRAWER_BODY_INSET = {
   padding: 0,
   innerPadding: PHI_SPACE.sm,
 } as const;
+
+/*
+ * What a Table inside an inspector is, said once (owner, 2026-11-25): lines only. It stands on the
+ * inspector's own ground -- no Surface (`surface: null`, the Surface switch's "None"), so neither its box
+ * nor its header, footer or summary row paints a fill -- and it has no outer frame; the lines between its
+ * rows stay. Its header does not stick: a header without a ground of its own would let the rows show
+ * through it.
+ *
+ * Every Table an inspector shows takes it -- a Table Widget in an inspector tree as its `presentation`, a
+ * `PhiTableControl` an inspector client draws as its props, a Form's table field as its config -- and adds
+ * only what is its own. `scripts/validate-overlay-form-contracts.ts` holds each of them to it.
+ */
+export const PHI_INSPECTOR_TABLE_PRESENTATION = {
+  surface: null,
+  borders: false,
+  stickyHeader: false,
+} as const;
+
+/** `PHI_INSPECTOR_TABLE_PRESENTATION` as `PhiTableControl` props, and as a Form table field's config. */
+export const PHI_INSPECTOR_TABLE_CONTROL_PROPS = {
+  surface: PHI_INSPECTOR_TABLE_PRESENTATION.surface,
+  bordered: PHI_INSPECTOR_TABLE_PRESENTATION.borders,
+  stickyHeader: PHI_INSPECTOR_TABLE_PRESENTATION.stickyHeader,
+} as const;

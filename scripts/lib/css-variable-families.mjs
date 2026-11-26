@@ -62,6 +62,7 @@ export const PHI_HAND_SET_CSS_VARIABLE_FAMILIES = Object.freeze([
   "surface",
   "table-sticky-top",
   "table-striped-row-background",
+  "table-surface-ground",
   "three-column",
   "tree-drag-handle-color",
   "tree-striped-row-background",

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 
 import { parsePhiFormDescriptor, phiFormGridRangesOverlap, resolvePhiFormFieldRanges, resolvePhiFormLayout, shouldPhiFormSubmitOnKeyDown } from "../components/forms/form-descriptor-contract";
 import { PHI_FORM_FIELD_PROVIDER_KEYS, PHI_FORM_VALIDATION_PROVIDER_KEYS, PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS, PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS } from "../components/forms/form-provider-contract";
@@ -41,7 +41,7 @@ import {
 } from "../plugins/runtime-modules/asset/metadata-form";
 import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "../plugins/runtime-modules/asset/form-providers";
 import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
-import { PHI_INSPECTOR_DRAWER_BODY_INSET } from "../helpers/cms-inspector-drawer";
+import { PHI_INSPECTOR_DRAWER_BODY_INSET, PHI_INSPECTOR_TABLE_CONTROL_PROPS, PHI_INSPECTOR_TABLE_PRESENTATION } from "../helpers/cms-inspector-drawer";
 import { PHI_SPACE } from "../theme/antd-css-var-contract";
 
 const controllerAddress = createPhiControllerSignalAddress("@test/pkg/modules/user-management/controller", "users", "default");
@@ -393,6 +393,43 @@ assert.doesNotMatch(builderPresetSource, /MaskPassesPointer/u);
 assert.deepEqual(PHI_INSPECTOR_DRAWER_BODY_INSET, { padding: 0, innerPadding: PHI_SPACE.sm });
 assert.match(builderPresetSource, /\.\.\.PHI_INSPECTOR_DRAWER_BODY_INSET/u);
 assert.match(assetMediaPagePresetSource, /\.\.\.PHI_INSPECTOR_DRAWER_BODY_INSET/u);
+// Every Table an inspector shows is lines only: no ground, no outer frame, no sticky header (BUILDER.md
+// "Inspector contract"). A Table Widget in an inspector tree takes it as its presentation, a Table an
+// inspector client draws as its props, a Form table field in an inspector Form as its config.
+assert.deepEqual(PHI_INSPECTOR_TABLE_PRESENTATION, { surface: null, borders: false, stickyHeader: false });
+assert.deepEqual(PHI_INSPECTOR_TABLE_CONTROL_PROPS, { surface: null, bordered: false, stickyHeader: false });
+for (const [name, source] of [
+  ["phi-builder-inspector-area-overlay-tree.server.ts", builderOverlayPresetSource],
+  ["phi-default-builder-media-page-tree.ts", assetMediaPagePresetSource],
+] as const) {
+  // Each Table Widget's node runs from its `typeKey` to the next node's.
+  const tableNodes = source.split(/(?=typeKey: ")/u).filter((node) => node.startsWith('typeKey: "table"'));
+  for (const node of tableNodes) {
+    assert.match(node, /presentation: \{\s*(?:\/\/[^\n]*\n\s*)*\.\.\.PHI_INSPECTOR_TABLE_PRESENTATION,/u, `${name}: an inspector Table Widget takes PHI_INSPECTOR_TABLE_PRESENTATION`);
+  }
+}
+for (const relativePath of [
+  "../components/widgets/signals/signal-endpoint-list.tsx",
+  "../components/widgets/builder/phi-static-rows-editor.tsx",
+  ...(await readdir(new URL("../plugins/runtime-modules/builder/clients/", import.meta.url)))
+    .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"))
+    .map((file) => `../plugins/runtime-modules/builder/clients/${file}`),
+]) {
+  const source = await readFile(new URL(relativePath, import.meta.url), "utf8");
+  // Each Table it draws, from the element's name to its first `>`: the spread comes before any prop.
+  const drawn = source.split(/<PhiTable(?:Binding)?Control\b/u).slice(1);
+  for (const props of drawn) {
+    assert.match(props, /^[^>]*?\{\.\.\.PHI_INSPECTOR_TABLE_CONTROL_PROPS\}/su, `${relativePath}: an inspector Table takes PHI_INSPECTOR_TABLE_CONTROL_PROPS`);
+  }
+}
+{
+  const inspectorFormSource = await readFile(new URL("../plugins/runtime-modules/builder/page-meta-form.ts", import.meta.url), "utf8");
+  const tableFields = inspectorFormSource.split(/(?=fieldProviderKey: )/u).filter((field) => field.startsWith("fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.table,"));
+  assert.ok(tableFields.length > 0);
+  for (const field of tableFields) {
+    assert.match(field, /\.\.\.PHI_INSPECTOR_TABLE_CONTROL_PROPS,/u, "page-meta-form.ts: an inspector Form's table field takes PHI_INSPECTOR_TABLE_CONTROL_PROPS");
+  }
+}
 assert.match(builderPresetSource, /defaultOpenSlotKeys: \["slot_0"\]/u);
 assert.match(
   builderPresetSource,

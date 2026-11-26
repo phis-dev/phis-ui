@@ -312,8 +312,8 @@
       "clientBytes": 130813
     },
     "./runtime/authoring-client": {
-      "runtimeBytes": 1215498,
-      "clientBytes": 1215498
+      "runtimeBytes": 1223933,
+      "clientBytes": 1223933
     },
     "./runtime/authoring-manifest-client": {
       "runtimeBytes": 5170,
