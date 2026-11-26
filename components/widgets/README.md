@@ -190,6 +190,9 @@ exports complete Widgets only.
   delegates provider resolution and request state to it.
 - Form field providers and Inspector editors use Controls directly and never mount a Widget with
   signaling disabled.
+- What stands in a card's heading (`PhiCardControl`'s `toolbar`) is compact: its buttons are
+  `size="small"`, as the conversation's Reply is (owner, 2026-11-26). The heading names the card, and an
+  action at the medium size made the bar taller than its title.
 - Canonical input Controls include `PhiTextControl`, `PhiNumberControl`, `PhiSliderControl`,
   `PhiRateControl`, `PhiSelectControl`, `PhiMultiSelectControl`, `PhiSegmentedControl`,
   `PhiSwitchControl`, `PhiCheckboxControl`, `PhiCheckboxGroupControl`, `PhiCascaderControl`,

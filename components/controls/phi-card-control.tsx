@@ -30,7 +30,9 @@ import { usePhiConfig } from "../root/phi-config-provider";
  *
  * `toolbar` sits where Ant Design put its `extra`, under the name this house already uses for it in
  * `PhiCollectionHeaderControl`. A toolbar without a `title` still draws the heading bar, as the primitive
- * this replaced did.
+ * this replaced did. **What stands in a card's heading is compact** (owner, 2026-11-26): its buttons are
+ * `size="small"`, because the heading names the card and its actions belong to that line rather than
+ * standing over it -- a medium Reply made the conversation's heading bar taller than its title needed.
  *
  * **A card is a box, not a layout.** Anything that arranges what is inside it belongs to the caller's own
  * element, which is why there is no body style: a Widget that wants its parts on a grid puts the grid in
@@ -44,7 +46,7 @@ import { usePhiConfig } from "../root/phi-config-provider";
 export type PhiCardControlProps = {
   /** A heading in a bar of its own above the body, with a rule under it. */
   title?: ReactNode;
-  /** What belongs to the heading rather than to the body -- an action, usually. */
+  /** What belongs to the heading rather than to the body -- an action, usually, and a compact one (`size="small"`). */
   toolbar?: ReactNode;
   /** An opening image, drawn across the full width above the body. */
   cover?: ReactNode;

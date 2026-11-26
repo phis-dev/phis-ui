@@ -642,9 +642,10 @@ export function PhiThreadConversationView({
       {/*
         * A section of the Page, headed as every section is -- a Table's or a Collection's title is the body
         * text, strong -- so the heading bar is the Card's small one; the body keeps the Card's ordinary
-        * padding. The Reply is a button of its own size: it is what the reader came to press. As wide as
-        * its slot (`fill-inline`) wherever it stands, the Builder canvas included, as the Table and the
-        * Record are.
+        * padding. The Reply is compact, as every action in a card's heading is (`PhiCardControl`, owner
+        * 2026-11-26): at the medium size it made the heading bar taller than the title it stands beside.
+        * As wide as its slot (`fill-inline`) wherever it stands, the Builder canvas included, as the Table
+        * and the Record are.
         */}
       <PhiCardControl
         size="small"
@@ -653,6 +654,7 @@ export function PhiThreadConversationView({
         toolbar={config?.reply && !archived && !locked ? (
           <PhiButtonControl
             label={config?.replyLabel ?? labels.replyLabel}
+            size="small"
             icon={<PhiIcon name="antd:message-outlined" size="inherit" />}
             onClick={onReply}
           />
