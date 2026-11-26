@@ -13,6 +13,7 @@ import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_KEY } from "./form-providers";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 import { phiFormLabel as label, phiFormRequired as required } from "../../../components/forms/form-descriptor-text";
+import { PHI_ASSET_INSPECTOR_FORM_LAYOUT } from "../../../components/media/asset-inspector-form-layout";
 
 export const PHI_ASSET_METADATA_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/metadata");
 export const PHI_ASSET_FOLDER_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/folder-create");
@@ -61,24 +62,8 @@ export const PHI_ASSET_METADATA_FORM_DESCRIPTOR = {
       label: label("focalRectLabel", "Focal rectangle"),
     },
   ],
-  /*
-   * Tracks of its own, against the house columns: this Form stands in the Asset inspector Drawer, 377px
-   * less the Collapsible's inset, which is `compact` -- where the default stacks its labels -- and an
-   * inspector keeps its labels beside the fields, as the Variants row above it does.
-   */
-  layout: {
-    gap: { compact: "sm", medium: "base" },
-    label: {
-      compact: { start: 1, end: 9 },
-      medium: { start: 1, end: 9 },
-      wide: { start: 1, end: 7 },
-    },
-    control: {
-      compact: { start: 9, end: 25 },
-      medium: { start: 9, end: 25 },
-      wide: { start: 7, end: 25 },
-    },
-  },
+  // The Asset inspector's tracks, which the Variants choice above it shares.
+  layout: PHI_ASSET_INSPECTOR_FORM_LAYOUT,
 } as const satisfies PhiFormDescriptor;
 
 export const PHI_ASSET_FOLDER_FORM_DESCRIPTOR = {

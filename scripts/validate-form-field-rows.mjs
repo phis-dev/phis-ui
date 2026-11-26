@@ -47,8 +47,6 @@ const TEMPLATE_FORM_FILES = new Set(["components/controls/phi-form-control.tsx"]
 const TEMPORARY_EXCEPTIONS = new Map([
   // Surface control (Inspector composite): "background per mode" switch with its own label.
   ["components/controls/phi-surface-control.tsx", { "control-label": 1 }],
-  // Asset Inspector section: the variants select under the Asset name, not an Inspector row.
-  ["components/media/phi-asset-inspector-section.tsx", { "control-label": 1 }],
   // Table: a filter's inline label, and the label of a select or cascader tool.
   ["plugins/runtime-modules/core/widgets/table/client.tsx", { "control-label": 3 }],
   // Theme brand controls (colours, surfaces, identity, social, campaign preview).

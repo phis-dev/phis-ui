@@ -3,7 +3,7 @@
 
 import { resolvePhiMediaAssetTypeLabel } from "./asset-type-label";
 import NextImage from "next/image";
-import type { CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import {
   PhiImageAssetVariantKeyName,
@@ -13,8 +13,12 @@ import {
 } from "../../constants/media";
 import type { PhiImageAssetVariantKeyValue, PhiMediaAsset } from "../../types/media";
 import { PhiButtonControl } from "../controls/phi-button-control";
-import { PhiSelectControl } from "../controls/phi-select-control";
+import { PhiFormControl, type PhiFormControlFormInstance } from "../controls/phi-form-control";
 import { PhiTagControl } from "../controls/phi-tag-control";
+import { createPhiFormLiteralText } from "../forms/form-descriptor-contract";
+import { PHI_FORM_FIELD_PROVIDER_KEYS } from "../forms/form-provider-contract";
+import { PHI_FORM_DESCRIPTOR_SCHEMA_VERSION, type PhiFormDescriptor } from "../../types/form-descriptor";
+import { PHI_ASSET_INSPECTOR_FORM_LAYOUT } from "./asset-inspector-form-layout";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiMediaKindIcon } from "./phi-media-kind-icon";
 import { resolvePhiMediaAssetDisplayDimensions } from "./phi-image-preview-data";
@@ -89,6 +93,66 @@ function resolvePreviewFrame(
     label: width && height ? `${width} × ${height}` : resolvePhiMediaAssetTypeLabel(asset.kind, asset.contentType, asset.originalName),
     kindLabel: resolvePhiMediaAssetTypeLabel(asset.kind, asset.contentType, asset.originalName),
   };
+}
+
+/* The variant shown is applied as it is chosen, so the Form has no submit. */
+function submitNothing() {}
+
+/**
+ * Which variant of the image the preview shows: a Form of one descriptor field on the Asset inspector's
+ * tracks, the ones of the metadata Form below it, so its label stands in the same column as every other
+ * label of the inspector. It follows the selection while it is mounted -- another Asset, or the store
+ * going back to the original -- which a touched field would otherwise not.
+ */
+function PhiAssetVariantForm({
+  labels,
+  selectedVariantKey,
+  onVariantKeyChange,
+}: {
+  labels: PhiAssetModuleLabels;
+  selectedVariantKey: PhiImageAssetVariantKeyValue | null;
+  onVariantKeyChange: (value: PhiImageAssetVariantKeyValue | null) => void;
+}) {
+  const descriptor = useMemo<PhiFormDescriptor>(() => ({
+    schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
+    key: "asset-inspector-variant",
+    layout: PHI_ASSET_INSPECTOR_FORM_LAYOUT,
+    fields: [{
+      key: "variant",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+      label: createPhiFormLiteralText(labels.inspector.variantsLabel),
+      options: [
+        { value: "original", label: createPhiFormLiteralText(labels.inspector.originalVariantLabel) },
+        ...Object.entries(PhiImageAssetVariantKeyName).map(([value, variantName]) => ({
+          value,
+          label: createPhiFormLiteralText(
+            labels.inspector[PHI_ASSET_VARIANT_LABEL_KEYS[variantName as keyof typeof PHI_ASSET_VARIANT_LABEL_KEYS]],
+          ),
+        })),
+      ],
+    }],
+  }), [labels.inspector]);
+  const variant = selectedVariantKey == null ? "original" : String(selectedVariantKey);
+  const formRef = useRef<PhiFormControlFormInstance | null>(null);
+  const onFormReady = useCallback((form: PhiFormControlFormInstance) => {
+    formRef.current = form;
+  }, []);
+  useEffect(() => {
+    formRef.current?.setFieldsValue({ variant });
+  }, [variant]);
+  return (
+    <PhiFormControl
+      descriptor={descriptor}
+      submitOnEnter={false}
+      initialValues={{ variant }}
+      onFormReady={onFormReady}
+      onSubmit={submitNothing}
+      onValuesChange={(changed) => {
+        if (typeof changed.variant !== "string") return;
+        onVariantKeyChange(changed.variant === "original" ? null : Number(changed.variant) as PhiImageAssetVariantKeyValue);
+      }}
+    />
+  );
 }
 
 function resolveOverlayTagStyle(background: string, color: string, borderColor: string) {
@@ -182,15 +246,7 @@ export function PhiAssetInspectorSection({
    */
   const unoptimizedPreview = !isPhiMediaAssetOriginalOptimizable(asset);
   return (
-    <PhiFlexControl
-      vertical
-      gap="small"
-      style={{
-        width: "100%",
-        minWidth: 0,
-        "--phi-labeled-control-label-width": "33.333333%",
-      } as CSSProperties}
-    >
+    <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
       <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 3", overflow: "hidden", borderRadius: "var(--phi-border-radius-lg)", background: "var(--phi-color-fill-tertiary)" }}>
         {asset.kind === PhiMediaKind.Image ? (
           isOriginalSelection ? (
@@ -307,18 +363,10 @@ export function PhiAssetInspectorSection({
       </div>
       <PhiTypographyControl strong ellipsis>{asset.originalName}</PhiTypographyControl>
       {asset.kind === PhiMediaKind.Image && onVariantKeyChange ? (
-        <PhiSelectControl
-          label={labels.inspector.variantsLabel}
-          value={selectedVariantKey == null ? "original" : String(selectedVariantKey)}
-          options={[
-            { value: "original", label: labels.inspector.originalVariantLabel },
-            ...Object.entries(PhiImageAssetVariantKeyName).map(([value, variantName]) => ({
-              value,
-              label: labels.inspector[PHI_ASSET_VARIANT_LABEL_KEYS[variantName as keyof typeof PHI_ASSET_VARIANT_LABEL_KEYS]],
-            })),
-          ]}
-          onChange={(value) => onVariantKeyChange(value === "original" ? null : Number(value) as PhiImageAssetVariantKeyValue)}
-          style={{ width: "100%" }}
+        <PhiAssetVariantForm
+          labels={labels}
+          selectedVariantKey={selectedVariantKey}
+          onVariantKeyChange={onVariantKeyChange}
         />
       ) : null}
     </PhiFlexControl>
