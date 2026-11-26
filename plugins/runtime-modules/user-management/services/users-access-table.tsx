@@ -19,6 +19,7 @@ import {
   PhiTableProviderError,
   type PhiTableProviderMutationRequest,
   type PhiTableProviderQueryRequest,
+  type PhiTableProviderRecordRequest,
 } from "../../../../types/table-widget";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
 import {
@@ -29,6 +30,7 @@ import {
 /** Core's Site Admin routes for `users:v1` access (phis-server `/api/site/admin/users-access`). */
 export const PHI_USERS_ACCESS_PATH = "/api/site/admin/users-access";
 const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Customer data access" };
+const RETENTION_RECORD_ID = "retention";
 // The Page names the same size; the route takes up to 100.
 const LOG_PAGE_SIZE = 25;
 
@@ -68,7 +70,7 @@ export function toPhiUsersAccessLogRow(row: Record<string, unknown>, index: numb
 const backgroundAsked = new Map<string, string[]>();
 
 async function readAccess(signal: AbortSignal | undefined) {
-  return readPhiTableProviderResponse<{ addons?: unknown }>(
+  return readPhiTableProviderResponse<{ retentionDays?: unknown; addons?: unknown }>(
     await fetch(PHI_USERS_ACCESS_PATH, createPhiTableProviderRequestInit(signal)),
     RESPONSE_OPTIONS,
   );
@@ -103,6 +105,22 @@ async function queryUsersAccess({ resourceKey, query, signal }: PhiTableProvider
     return { rows: readPhiTableRows(result?.items).map((row, index) => toPhiUsersAccessLogRow(row, index, page)) };
   }
   throw new PhiTableProviderError("resource-not-found", `Unknown customer data access resource "${resourceKey}".`);
+}
+
+/**
+ * The retention Form's record: the days Core keeps an access log entry, from the same
+ * `GET /api/site/admin/users-access` the Add-ons Table reads, as the Form's one field. Read in the browser,
+ * so the viewer's session goes along and a Maintainer's refusal is the Form's, not the Page's.
+ */
+async function readUsersAccessRecord({ resourceKey, rowIdentity, signal }: PhiTableProviderRecordRequest) {
+  if (resourceKey !== RESOURCES.retention || rowIdentity != null) {
+    throw new PhiTableProviderError("resource-not-found", `Unknown customer data access record "${resourceKey}".`);
+  }
+  const days = (await readAccess(signal))?.retentionDays;
+  if (typeof days !== "number" || !Number.isSafeInteger(days)) {
+    throw new PhiTableProviderError("invalid-response", "The access log retention is invalid.");
+  }
+  return { id: RETENTION_RECORD_ID, days };
 }
 
 /** The address of one Add-on's grant; the id is one segment, so its `@` and `/` are encoded. */
@@ -147,6 +165,7 @@ export const PHI_USER_MANAGEMENT_USERS_ACCESS_TABLE_PROVIDER_REGISTRATION = {
   key: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.usersAccess,
   resources,
   query: queryUsersAccess,
+  readRecord: readUsersAccessRecord,
   mutate: mutateUsersAccess,
 } satisfies PhiTableProviderRegistration;
 

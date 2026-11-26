@@ -33,9 +33,8 @@ file (THREADS.md section 10) leave open:
   and of the Add-ons that read people would be options Providers of their own.
 - A grant gives an Add-on everything it asks in the background; granting a part of it (the route takes any
   non-empty part) has no dialog yet.
-- A Maintainer opening Settings -> Customer data by its address is refused while the page is built (the
-  retention Form's read is the Admin route); the page does not yet answer that inside itself, as the
-  customer file does.
+- A Maintainer opening Settings -> Customer data by its address sees the Tables' and the retention Form's
+  refusals; the page does not yet answer that inside itself, as the customer file does.
 - Core's Site member picker (`PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers`) names no held value off the
   page it answers (the route takes no ids), so a Form that opens with a person already chosen shows the id
   until it is found.

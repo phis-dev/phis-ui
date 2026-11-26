@@ -1,5 +1,3 @@
-import { cookies } from "next/headers";
-
 import {
   PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS,
   PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
@@ -12,7 +10,6 @@ import { buildPhiSettingsPageShellTree } from "../../../../components/regions/pr
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 import { getPhiAdminUsersAccessLabels } from "./admin-users-access-label-set";
 import { PHI_USER_MANAGEMENT_FORM_IDS } from "../forms";
-import { readPhiUsersAccessRetentionDays } from "../users-access-retention";
 
 const REGION_CONTENT_ID = -487;
 
@@ -25,13 +22,14 @@ const REGION_CONTENT_ID = -487;
  *   what it asks; withdrawing ends it. A manifest asking for more later keeps the old grant until granted
  *   again, which is what `Awaiting` shows.
  * - **Retention**, the days the log keeps an entry: one value, so an ordinary Form with one number field and
- *   its Save (`PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention`, `PUT .../users-access/retention`), opened
- *   on the number Core holds, which this builder reads with the viewer's session.
+ *   its Save (`PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention`, `PUT .../users-access/retention`). It
+ *   reads the number Core holds as its record from the Provider's `retention` resource when it mounts, as
+ *   the Locales settings Form does. This builder reads nothing: it also runs with no request at all, when
+ *   the Presets' texts are collected.
  * - **Access log**, newest first, narrowed by a person's subject and an Add-on.
  *
  * Core answers these routes to a Site Admin only, and the Settings entry is offered to them alone; a
- * Maintainer who opens the address is refused by the routes, the retention read while the page is built
- * first among them.
+ * Maintainer who opens the address is refused by the routes, and the Tables and the Form say so.
  */
 export async function buildPhiDefaultAdminUsersAccessPageTree({
   page,
@@ -40,10 +38,7 @@ export async function buildPhiDefaultAdminUsersAccessPageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const [labels, retentionDays] = await Promise.all([
-    getPhiAdminUsersAccessLabels(buildPhiWidgetLabelTranslatorOptions(runtime)),
-    readPhiUsersAccessRetentionDays({ siteKey: runtime.site.key, cookieHeader: (await cookies()).toString() }),
-  ]);
+  const labels = await getPhiAdminUsersAccessLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
   const fieldTags = {
     renderer: "tags" as const,
     sizing: { mode: "content" as const },
@@ -125,7 +120,9 @@ export async function buildPhiDefaultAdminUsersAccessPageTree({
           nodeKey: "widgetRetentionForm",
           formId: PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention,
           label: labels.widgets.retention,
-          initialValues: { days: retentionDays },
+          configOverrides: {
+            source: { providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.usersAccess, resourceKey: RESOURCES.retention },
+          },
         }],
       },
       {

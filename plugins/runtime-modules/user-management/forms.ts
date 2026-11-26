@@ -226,7 +226,8 @@ function descriptor(
 /**
  * How many days the `users:v1` access log keeps an entry (Admin -> Settings, phis-server
  * `PUT /api/site/admin/users-access/retention`, which takes `{ days }` and nothing else). One value, so one
- * field and the Form's Save; the Page reads the current number and hands it in as the initial value.
+ * field and the Form's Save; the placement binds it to the customer data access Provider's `retention`
+ * record, which the Form reads when it mounts and again after it saved.
  *
  * The bounds are the route's: a whole number from 1 to 3650 (`PHIS_USERS_ACCESS_LOG_MAX_DAYS`). They are a
  * rule rather than the Control's `min`/`max`, because a Control with bounds puts a number out of range back

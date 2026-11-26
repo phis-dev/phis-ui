@@ -108,8 +108,9 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
    * What this Site lets Add-ons read of people with nobody acting (`users:v1` background access) and the
    * access log (phis-server `/api/site/admin/users-access`, Site Admin only; Core refuses everybody else
    * whatever a Table offers). A grant is the Admin's decision per Add-on and Site, so the Table grants what
-   * the manifest asks, or withdraws it; it never widens it. How long the log is kept is one value and a
-   * Form of its own (`PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention`), not a row here.
+   * the manifest asks, or withdraws it; it never widens it. How long the log is kept is one value: the
+   * retention Form (`PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention`) reads it here as its one record
+   * and saves it through its own handler.
    */
   {
     key: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.usersAccess,
@@ -118,7 +119,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     executionMode: "live",
     authoringMode: "none",
     title: "Customer data access",
-    description: "Which Add-ons read people in the background, and the access log.",
+    description: "Which Add-ons read people in the background, how long the access log is kept, and the log.",
     resources: [
       {
         resourceKey: PHI_USER_MANAGEMENT_USERS_ACCESS_RESOURCE_KEYS.addons,
@@ -157,6 +158,22 @@ export const PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
             disabledWhen: { source: "row", valuePath: "hasGrant", operator: "falsy" },
           },
         ],
+      },
+      {
+        /*
+         * The record the retention Form opens on, read in the browser with the viewer's session when the
+         * Form mounts and again after it saved -- never while the Page is built, which also happens with
+         * nobody asking (text collection, translation). No Table lists it: the Form writes it.
+         */
+        resourceKey: PHI_USER_MANAGEMENT_USERS_ACCESS_RESOURCE_KEYS.retention,
+        title: "Access log retention",
+        rowIdentityPath: "id",
+        recordRead: true,
+        fields: [
+          { key: "id", title: "ID", type: "string", required: true },
+          { key: "days", title: "Days kept", type: "number", required: true },
+        ],
+        query: { search: false, filterFields: [], sorting: "none", pagination: "none" },
       },
       {
         resourceKey: PHI_USER_MANAGEMENT_USERS_ACCESS_RESOURCE_KEYS.log,

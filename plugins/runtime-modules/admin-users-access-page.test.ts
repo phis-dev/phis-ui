@@ -1,9 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-vi.mock("next/headers", () => ({
-  cookies: async () => ({ toString: () => "phis_session=admin" }),
-}));
 vi.mock("../../helpers/phis-server-credentials", () => ({
   readPhiServerApiCredentials: () => ({ apiBaseUrl: "https://core.test", internalToken: "token" }),
 }));
@@ -19,6 +16,7 @@ import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./user-ma
 import {
   PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS,
   PHI_USER_MANAGEMENT_USERS_ACCESS_PAGE_PRESET_KEY,
+  PHI_USER_MANAGEMENT_USERS_ACCESS_RESOURCE_KEYS,
 } from "./user-management/ids";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES } from "./user-management/presets";
 import {
@@ -30,6 +28,7 @@ import { PHI_FORM_FIELD_PROVIDER_KEYS, PHI_FORM_VALIDATION_PROVIDER_KEYS } from 
 import {
   buildPhiUsersAccessGrantPath,
   buildPhiUsersAccessLogParams,
+  PHI_USER_MANAGEMENT_USERS_ACCESS_TABLE_PROVIDER_REGISTRATION,
   toPhiUsersAccessAddonRow,
   toPhiUsersAccessLogRow,
 } from "./user-management/services/users-access-table";
@@ -57,9 +56,28 @@ const PAGE = {
 
 const route = PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES.find((entry) => entry.presetKey === PHI_USER_MANAGEMENT_USERS_ACCESS_PAGE_PRESET_KEY)!;
 
-/** Core's answer to the page's one read, the retention, as `GET /api/site/admin/users-access` gives it. */
+/** Core's answer to `GET /api/site/admin/users-access`, which the retention Form reads as its record. */
 function answerRetention(retentionDays: unknown) {
   const fetchMock = vi.fn(async () => new Response(JSON.stringify({ retentionDays, addons: [] }), { status: 200 }));
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+function readRetentionRecord() {
+  return PHI_USER_MANAGEMENT_USERS_ACCESS_TABLE_PROVIDER_REGISTRATION.readRecord({
+    resourceKey: PHI_USER_MANAGEMENT_USERS_ACCESS_RESOURCE_KEYS.retention,
+    rowIdentity: null,
+    locale: "en",
+    timeZone: "UTC",
+    signal: new AbortController().signal,
+  });
+}
+
+/** Nothing the Page builder may call: it also runs with no request, when the Presets' texts are collected. */
+function refuseCore() {
+  const fetchMock = vi.fn(async (input: unknown) => {
+    throw new Error(`no Core while the page is built: ${String(input)}`);
+  });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
@@ -83,7 +101,7 @@ describe("the customer data access page", () => {
   });
 
   it("holds to the preset contract and binds its two Tables to the Provider's resources", async () => {
-    answerRetention(90);
+    refuseCore();
     const tree = await loadTree();
     expect(checkPhiPresetTreeContract(tree, { page: PAGE, forms: PHI_USER_MANAGEMENT_RUNTIME_MODULE_FORMS })).toEqual([]);
     expect(checkPhiPresetTables(tree, { dataProviders: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS })).toEqual([]);
@@ -98,27 +116,44 @@ describe("the customer data access page", () => {
     }
   });
 
-  it("sets the retention with a Form opened on the number Core holds, read with the viewer's session", async () => {
-    const fetchMock = answerRetention(90);
+  it("is built without asking Core anything, and its retention Form reads its record when it mounts", async () => {
+    const fetchMock = refuseCore();
     const tree = await loadTree();
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("https://core.test/api/site/admin/users-access");
-    expect(new Headers(init.headers).get("cookie")).toBe("phis_session=admin");
+    expect(fetchMock).not.toHaveBeenCalled();
 
     const forms = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/form"));
     expect(forms).toHaveLength(1);
-    expect(forms[0]!.config).toMatchObject({
+    const [form] = forms;
+    expect(form!.config).toMatchObject({
       formId: PHI_USER_MANAGEMENT_FORM_IDS.usersAccessRetention,
-      formConfig: { initialValues: { days: 90 } },
+      source: {
+        providerKey: PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.usersAccess,
+        resourceKey: PHI_USER_MANAGEMENT_USERS_ACCESS_RESOURCE_KEYS.retention,
+      },
       submit: "inline",
       execution: { mode: "handler" },
       feedback: { mode: "message" },
     });
+    // A single-record Form: no open action to wait for, and no value of the build's own to start from.
+    expect(form!.config).not.toHaveProperty("openActionKey");
+    expect(form!.config.formConfig).not.toHaveProperty("initialValues");
+    const resource = PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS
+      .find((entry) => entry.key === PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS.usersAccess)!
+      .resources!.find((entry) => entry.resourceKey === PHI_USER_MANAGEMENT_USERS_ACCESS_RESOURCE_KEYS.retention)!;
+    expect(resource.recordRead).toBe(true);
   });
 
-  it("refuses to open the page on a retention Core does not answer", async () => {
+  it("reads the retention record from Core's Admin route with the viewer's session, the number as the field", async () => {
+    const fetchMock = answerRetention(90);
+    await expect(readRetentionRecord()).resolves.toEqual({ id: "retention", days: 90 });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/site/admin/users-access");
+    expect(init.credentials).toBe("include");
+  });
+
+  it("refuses a retention Core does not answer as a number, in the Form rather than the Page", async () => {
     answerRetention(null);
-    await expect(loadTree()).rejects.toThrow("The access log retention is invalid.");
+    await expect(readRetentionRecord()).rejects.toThrow("The access log retention is invalid.");
   });
 
   it("states the retention as one whole number of days from 1 to 3650, saved by Core's retention route", () => {
