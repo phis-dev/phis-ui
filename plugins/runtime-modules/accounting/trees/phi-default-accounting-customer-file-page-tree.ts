@@ -6,7 +6,7 @@ import type { PhiBlockRuntime } from "../../../../types";
 import { canPhiViewerAccess } from "../../../../types/access";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalReceiver, type PhiSignalValueSchema } from "../../../../types/signals";
 import { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../constants/thread-library-provider-keys";
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../constants/core-data-provider-keys";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS, PHI_SITE_MEMBER_SEARCH_MIN_CHARS } from "../../../../constants/core-data-provider-keys";
 import { PhisThreadKind } from "../../../../constants/threads";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
 import { buildPhiThreadMessageFormConfig } from "../../../../components/forms/thread-message-language";
@@ -326,7 +326,7 @@ export async function buildPhiDefaultAccountingCustomerFilePageTree({
           optionsProvider: {
             providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers,
             loadMode: "server",
-            search: { enabled: true, minChars: 2 },
+            search: { enabled: true, minChars: PHI_SITE_MEMBER_SEARCH_MIN_CHARS },
           },
           signalRoutes: {
             emits: [

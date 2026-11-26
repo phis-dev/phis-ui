@@ -73,4 +73,4 @@ export * from "./constants/media-library-provider-keys";
 // The address tiles, for any Module whose Collection's items are addresses of a Site's book (COLLECTIONS.md).
 export * from "./constants/site-address";
 export * from "./constants/module-identity";
-export { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "./constants/core-data-provider-keys";
+export { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS, PHI_SITE_MEMBER_SEARCH_MIN_CHARS } from "./constants/core-data-provider-keys";

@@ -218,7 +218,9 @@ errors: {
   Form. It asks phis-server's `GET /api/site/members` with what is typed (`q`, matched on the name, the
   e-mail addresses and, for a query that is a telephone number, the business and mobile numbers' digits) and offers the first page of matches, each option the user id as text and the name
   the person is shown under (`#<id>` without one; never an address). Declare the search on the field, as
-  the route answers it: `loadMode: "server"`, `search: { enabled: true, minChars }`. Core lets the holders
+  the route answers it: `loadMode: "server"`, `search: { enabled: true, minChars:
+  PHI_SITE_MEMBER_SEARCH_MIN_CHARS }` -- three characters, from the same import as the key, because on a
+  Site of many thousand members two are a page of people nobody was looking for (owner, 2026-11-26). Core lets the holders
   of the Site access `accounting` or `support` ask (Admin, Maintainer, Accountant, Supporter) -- the staff
   `entitlements:v1` names a member to -- and anybody else's load fails, so the field warns and offers
   nothing. The handler receives the id as text (`{ "userId": "42" }`), as a select holds it. The Groups
@@ -233,7 +235,7 @@ errors: {
     optionsProvider: {
       providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers,
       loadMode: "server",
-      search: { enabled: true, minChars: 2 },
+      search: { enabled: true, minChars: PHI_SITE_MEMBER_SEARCH_MIN_CHARS },
     },
     validation: required("personRequired", "Choose a person."),
   }

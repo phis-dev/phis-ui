@@ -31,3 +31,11 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS = {
    */
   siteMembers: createPhiSharedRuntimeDataProviderKey("options", "core-site-members"),
 } as const;
+
+/**
+ * How many characters Core's Site member picker (`siteMembers`) waits for before it asks: three. A
+ * Site of many thousand members answers two characters with a page of people nobody was looking for,
+ * and the route reads every one of them to find it (owner, 2026-11-26). Every field on the picker states
+ * it -- `search: { enabled: true, minChars: PHI_SITE_MEMBER_SEARCH_MIN_CHARS }` -- in a Module too.
+ */
+export const PHI_SITE_MEMBER_SEARCH_MIN_CHARS = 3;

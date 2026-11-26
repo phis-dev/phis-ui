@@ -8,7 +8,7 @@ vi.mock("../../helpers/phis-server-credentials", () => ({
 import { PHI_CORE_ROLE_PROVIDER_ID, PhiBaseRole } from "@phis/contracts/access";
 import { PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
 import { PhisThreadKind, PhisThreadStatus } from "../../constants/threads";
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-provider-keys";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS, PHI_SITE_MEMBER_SEARCH_MIN_CHARS } from "../../constants/core-data-provider-keys";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../../types/access";
 import type { PhiCmsPageNode } from "../../types/cms";
 import { checkPhiPresetTables } from "../../helpers/preset-table-check";
@@ -117,6 +117,9 @@ describe("the customer file page", () => {
       allowClear: true,
       optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteMembers, loadMode: "server", search: { enabled: true } },
     });
+    // Three characters before it asks, the member picker's own number (owner, 2026-11-26).
+    expect((picker.config.optionsProvider as { search: { minChars: number } }).search.minChars).toBe(PHI_SITE_MEMBER_SEARCH_MIN_CHARS);
+    expect(PHI_SITE_MEMBER_SEARCH_MIN_CHARS).toBe(3);
     expect(picker.config.controlSize).toBeUndefined();
     // Room to type: a width of its own, in pixels, since the Flex slot is as wide as what it holds.
     expect(picker.config.size).toEqual({ width: { compact: 300, medium: 377, wide: 466 } });
