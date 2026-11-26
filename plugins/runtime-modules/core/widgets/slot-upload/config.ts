@@ -84,7 +84,7 @@ export const PHI_SLOT_UPLOAD_WIDGET_DEFINITION = {
   iconFamily: "media",
   fields: [
     { key: "label", type: "string", label: "Label", description: "What the field is called where it stands." },
-    { key: "addon", type: "string", label: "Add-on" },
+    { key: "addon", type: "string", label: "Add-on", placeholder: "@scope/name" },
     { key: "table", type: "string", label: "Table" },
     { key: "slot", type: "string", label: "Slot" },
     { key: "ownerParam", type: "string", label: "Row parameter" },

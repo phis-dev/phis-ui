@@ -55,8 +55,6 @@ const TEMPORARY_EXCEPTIONS = new Map([
   ["components/widgets/client/html-editor-image-node.tsx", { "control-label": 3 }],
   // CDN upload dialog body (`renderFields`): name, version, file name, OS, architecture.
   ["plugins/runtime-modules/cdn/widgets/upload/client.tsx", { "control-label": 5 }],
-  // Slot upload authoring tools: Add-on, Table, Slot.
-  ["plugins/runtime-modules/core/widgets/slot-upload/authoring.tsx", { "control-label": 3 }],
   // Table: a filter's inline label, and the label of a select or cascader tool.
   ["plugins/runtime-modules/core/widgets/table/client.tsx", { "control-label": 3 }],
   // Theme brand controls (colours, surfaces, identity, social, campaign preview).

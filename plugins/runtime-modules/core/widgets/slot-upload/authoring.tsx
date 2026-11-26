@@ -1,6 +1,5 @@
 "use client";
 
-import { PhiTextControl } from "../../../../../controls";
 import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 
 import { PHI_SLOT_UPLOAD_WIDGET_DEFINITION, type PhiSlotUploadWidgetConfig } from "./config";
@@ -8,7 +7,7 @@ import { PhiSlotUploadWidgetClient } from "./client";
 import { PHI_SLOT_UPLOAD_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/slot-upload";
 
 /**
- * What an author states: where the file goes. What it takes is not among the fields, because the slot
+ * What an author states -- Add-on, table and slot -- is an Inspector field of the definition. What it takes is not among the fields, because the slot
  * declares that and Core answers with it -- offering it here would be offering a way to disagree.
  */
 export const PHI_SLOT_UPLOAD_WIDGET_BUILDER_PLUGIN:
@@ -17,33 +16,4 @@ PhiCmsBuilderWidgetPlugin<PhiSlotUploadWidgetConfig> = {
   renderEditor: ({ config }) => (
     <PhiSlotUploadWidgetClient config={config} labels={PHI_SLOT_UPLOAD_WIDGET_DEFAULT_LABELS} />
   ),
-  renderEditorTools: ({ config, authoring }) => {
-    const updateConfig = authoring?.updateConfig;
-    if (!updateConfig) {
-      return null;
-    }
-    return (
-      <>
-        <PhiTextControl
-          label="Add-on"
-          value={config.addon ?? ""}
-          onChange={(addon) => updateConfig({ ...config, addon: addon ?? undefined })}
-          allowClear
-          placeholder="@scope/name"
-        />
-        <PhiTextControl
-          label="Table"
-          value={config.table ?? ""}
-          onChange={(table) => updateConfig({ ...config, table: table ?? undefined })}
-          allowClear
-        />
-        <PhiTextControl
-          label="Slot"
-          value={config.slot ?? ""}
-          onChange={(slot) => updateConfig({ ...config, slot: slot ?? undefined })}
-          allowClear
-        />
-      </>
-    );
-  },
 };
