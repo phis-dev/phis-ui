@@ -50,7 +50,7 @@ import {
   withPhiBackgroundPatternInkDirection,
   resolvePhiBackgroundPatternLiveLayer,
 } from "../widgets/config/background-pattern-live";
-import { PhiImageAssetVariantKeyName } from "../../constants/media";
+import { PHI_IMAGE_VARIANT_OPTIONS } from "../widgets/config/image-variant-options";
 import type { PhiImageAssetVariantKeyValue, PhiMediaAssetTile } from "../../types/media";
 import { normalizeMediaFocalRect } from "../media/focal-rect";
 import {
@@ -198,10 +198,7 @@ function withoutPhiBackgroundImageSource(
 
 const BACKGROUND_IMAGE_VARIANT_OPTIONS: DefaultOptionType[] = [
   { value: "__original__", label: "original" },
-  ...Object.entries(PhiImageAssetVariantKeyName).map(([value, label]) => ({
-    value: Number(value) as PhiImageAssetVariantKeyValue,
-    label,
-  })),
+  ...PHI_IMAGE_VARIANT_OPTIONS,
 ];
 
 function toPickerValue(background: PhiCmsBackgroundWidgetConfig | null | undefined): string {
