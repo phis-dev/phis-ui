@@ -12,6 +12,7 @@ import { PhiConfirmControl } from "../../../../../components/controls/phi-confir
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
+import { PHI_LAYOUT_GAP } from "../../../../../theme/antd-css-var-contract";
 import { readPhiJsonError, requestPhiJson } from "../../../../../helpers/client-json-request";
 import type { PhiAuthWorkflowBodyLabels } from "../../../../../components/widgets/label-types/auth-workflow";
 import {
@@ -167,9 +168,14 @@ export function PhiAuthSecurityWidgetClient({
   }
 
   return (
-    <PhiFlexControl vertical gap="large" style={{ padding }}>
+    /*
+     * The parts stand the Theme's Layout gap apart (`PHI_LAYOUT_GAP`, 13 unless the Theme says otherwise),
+     * the step a Layout that states no gap of its own takes. `large` was Ant Design's `paddingLG`, 55 on
+     * this scale, and the paragraph's own margin came on top of it (owner, 2026-11-26).
+     */
+    <PhiFlexControl vertical gap={PHI_LAYOUT_GAP} style={{ padding }}>
       {/* No heading: the Settings panel this stands in is titled with what it is. */}
-      <PhiTypographyControl presentation="paragraph" type="secondary">
+      <PhiTypographyControl presentation="paragraph" type="secondary" style={{ marginBottom: 0 }}>
         {labels.intro}
       </PhiTypographyControl>
       {error ? <PhiAlertControl level="error" showIcon title={error} dismissible onDismiss={() => setError(null)} /> : null}
