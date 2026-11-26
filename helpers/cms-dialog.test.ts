@@ -31,7 +31,7 @@ import {
 } from "./cms-dialog";
 import { createPhiCmsPresetNodes } from "./cms-preset-nodes";
 
-/* A dialog is as wide as its Form needs: one column narrow, columns from `medium` at the reading measure, columns only at `wide` wider. */
+/* A dialog is as wide as its Form needs: one column narrow, columns as wide as they need. */
 
 const text = (value: string) => ({ kind: "literal", value }) as const;
 const field = (key: string, placement?: PhiFormDescriptor["fields"][number]["placement"]) => ({
@@ -106,7 +106,7 @@ describe("isPhiFormSingleColumn", () => {
 
   it("chooses the dialog's width from it", () => {
     expect(resolvePhiDialogFormGeometry(ONE_COLUMN)).toEqual({ size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN } });
-    expect(resolvePhiDialogFormGeometry(TWO_COLUMNS)).toEqual({ size: { width: PHI_DIALOG_WIDTH } });
+    expect(resolvePhiDialogFormGeometry(TWO_COLUMNS)).toEqual({ size: { width: PHI_CONTAINER_BREAKPOINT_REGION }, maxSize: { width: "90vw" } });
   });
 });
 
@@ -143,12 +143,14 @@ describe("resolvePhiFormColumnStep", () => {
 });
 
 /*
- * A Form whose columns stand only at `wide` stood in one column in every dialog `dialog` made for it:
- * `PHI_DIALOG_WIDTH` is 610 around the body's inset, the Form 568 inside it, under the 610 its columns
- * need. phis-products and the Shop stated `size: { width: 980 }, maxSize: { width: "90vw" }` by hand.
+ * A Form of columns had `PHI_DIALOG_WIDTH`: 610 around the body's inset, the Form 568 inside it. One whose
+ * columns stand only at `wide` stood in one column there every time, and one whose halves stand from
+ * `medium` -- the Shop's listing -- gave each label about 85px, where a long word broke inside it.
+ * phis-products stated `size: { width: 980 }, maxSize: { width: "90vw" }` by hand.
  */
-describe("a dialog for a Form whose columns stand at `wide`", () => {
+describe("a dialog for a Form of columns", () => {
   it("is wide enough for them, and no wider than the window allows", () => {
+    expect(resolvePhiDialogFormGeometry(TWO_COLUMNS)).toEqual(resolvePhiDialogFormGeometry(WIDE_TWO_COLUMNS));
     expect(resolvePhiDialogFormGeometry(WIDE_TWO_COLUMNS)).toEqual({
       size: { width: PHI_CONTAINER_BREAKPOINT_REGION },
       maxSize: { width: "90vw" },
@@ -171,7 +173,7 @@ describe("a dialog for a Form whose columns stand at `wide`", () => {
 
   it("is not capped back to the reading measure by its Form: the Form's own cap grows with its columns", () => {
     expect(resolvePhiFormHouseMaxWidth(ONE_COLUMN)).toBe(PHI_LAYOUT.contentMax);
-    expect(resolvePhiFormHouseMaxWidth(TWO_COLUMNS)).toBe(PHI_LAYOUT.contentMax);
+    expect(resolvePhiFormHouseMaxWidth(TWO_COLUMNS)).toBe(2 * PHI_LAYOUT.contentMax);
     expect(resolvePhiFormHouseMaxWidth(WIDE_TWO_COLUMNS)).toBe(2 * PHI_LAYOUT.contentMax);
     expect(resolvePhiFormHouseMaxWidth(WIDE_THREE_COLUMNS)).toBe(3 * PHI_LAYOUT.contentMax);
     // The Form fills the body of the widest dialog it is given.
@@ -258,7 +260,7 @@ function dialogTree(input: { form?: PhiFormDescriptor; config?: Record<string, u
 describe("dialog on createPhiCmsPresetNodes", () => {
   it("states the width of the Form it is handed as its size, and the reading measure without one", () => {
     expect(dialogTree({ form: ONE_COLUMN }).overlays[0]!.config.size).toEqual({ width: PHI_DIALOG_WIDTH_SINGLE_COLUMN });
-    expect(dialogTree({ form: TWO_COLUMNS }).overlays[0]!.config.size).toEqual({ width: PHI_DIALOG_WIDTH });
+    expect(dialogTree({ form: TWO_COLUMNS }).overlays[0]!.config.size).toEqual({ width: PHI_CONTAINER_BREAKPOINT_REGION });
     expect(dialogTree({}).overlays[0]!.config.size).toEqual({ width: PHI_DIALOG_WIDTH });
     expect("width" in dialogTree({}).overlays[0]!.config).toBe(false);
   });
@@ -272,7 +274,7 @@ describe("dialog on createPhiCmsPresetNodes", () => {
     const config = dialogTree({ form: WIDE_TWO_COLUMNS }).overlays[0]!.config;
     expect(config.size).toEqual({ width: PHI_CONTAINER_BREAKPOINT_REGION });
     expect(config.maxSize).toEqual({ width: "90vw" });
-    expect(dialogTree({ form: TWO_COLUMNS }).overlays[0]!.config).not.toHaveProperty("maxSize");
+    expect(dialogTree({ form: ONE_COLUMN }).overlays[0]!.config).not.toHaveProperty("maxSize");
     const limit = { width: "80vw" };
     expect(dialogTree({ form: WIDE_TWO_COLUMNS, config: { maxSize: limit } }).overlays[0]!.config.maxSize).toBe(limit);
   });
@@ -288,16 +290,18 @@ describe("the descriptor compiler's dialog width", () => {
       .toThrow(/one-column Form .* PHI_DIALOG_WIDTH_SINGLE_COLUMN/u);
   });
 
-  it("refuses a Form whose columns stand only at `wide` at the default width", () => {
+  it("refuses a Form of columns at the default width", () => {
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, forms(WIDE_TWO_COLUMNS)))
-      .toThrow(/columns stand only at `wide`.*PHI_DIALOG_WIDTH/u);
+      .toThrow(/of several columns .*PHI_DIALOG_WIDTH/u);
+    expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, forms(TWO_COLUMNS)))
+      .toThrow(/of several columns .*PHI_DIALOG_WIDTH/u);
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({ form: WIDE_TWO_COLUMNS }), page, forms(WIDE_TWO_COLUMNS)))
       .not.toThrow();
   });
 
-  it("passes the width `dialog` chose, a Form of two columns, a stated width and a Form it cannot see", () => {
+  it("passes the width `dialog` chose, a stated width and a Form it cannot see", () => {
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({ form: ONE_COLUMN }), page, forms(ONE_COLUMN))).not.toThrow();
-    expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, forms(TWO_COLUMNS))).not.toThrow();
+    expect(() => assertPhiCmsPresetTreeContract(dialogTree({ form: TWO_COLUMNS }), page, forms(TWO_COLUMNS))).not.toThrow();
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({ config: { size: { width: 720 } } }), page, forms(ONE_COLUMN)))
       .not.toThrow();
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, new Map())).not.toThrow();
@@ -335,11 +339,11 @@ describe("checkPhiPresetTreeContract", () => {
       .toThrow(findings[0]!.message);
   });
 
-  it("finds nothing where the width is stated, a Form has two columns, or no Form is handed over", () => {
+  it("finds nothing where the width is stated or no Form is handed over, and a Form of columns at the default", () => {
     expect(checkPhiPresetTreeContract(twoFormDialog({ width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }), { page, forms: definitions(ONE_COLUMN) }))
       .toEqual([]);
     expect(checkPhiPresetTreeContract(twoFormDialog({ width: 960 }), { page, forms: definitions(ONE_COLUMN) })).toEqual([]);
-    expect(checkPhiPresetTreeContract(twoFormDialog(), { page, forms: definitions(TWO_COLUMNS) })).toEqual([]);
+    expect(checkPhiPresetTreeContract(twoFormDialog(), { page, forms: definitions(TWO_COLUMNS) })).toHaveLength(1);
     expect(checkPhiPresetTreeContract(twoFormDialog(), { page })).toEqual([]);
   });
 

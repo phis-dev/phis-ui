@@ -354,18 +354,23 @@
 }
 
 /*
- * A label breaks inside a word rather than run past its cell. The cell keeps to its tracks (`min-width:
- * 0`), but the label's words are a flex item of their own, which is never narrower than its longest
- * word: in the label column of a one-column dialog -- then a third of 377px, ten twenty-fourths now --
- * "Type the Area key to confirm" left the input a few pixels, and a longer word of a translation ran
- * under the input.
+ * A label breaks between its words, and inside a word only where that one word is wider than the whole
+ * column (owner, 2026-11-26). The cell keeps to its tracks (`min-width: 0`), but the label's words are a
+ * flex item of their own, which is never narrower than its longest word: in the label column of a
+ * one-column dialog "Type the Area key to confirm" left the input a few pixels, and a longer word of a
+ * translation ran under the input. So the words' item may shrink (`min-width: 0`) and `break-word`
+ * breaks a word only as the last way to keep it in the column. `anywhere` stood here, which breaks the
+ * same way but also lets the item's minimum fall to one letter, and it never stopped a label from
+ * breaking mid-word where its column was too narrow -- that is the column's width, which the dialog's
+ * width decides (OVERLAYS.md, "Structured dialogs"). No syllables (`hyphens`): a label column is narrow
+ * by nature, and running text's hyphenation cut its words where they would have fit on the next line.
  */
 .phi-form-cell--label {
   display: flex;
   align-items: center;
   min-height: var(--phi-form-label-slot-height-compact);
   padding-inline-end: var(--phi-form-label-pad-compact);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   /* A small Form writes its labels in the small text size; a medium one writes nothing and inherits. */
   font-size: var(--phi-form-cell-label-font-size, inherit);
 }
@@ -417,8 +422,16 @@
   min-height: var(--phi-form-part-label-height-compact, auto);
   padding-inline-end: var(--phi-form-part-label-pad-compact, 0px);
   margin-block-end: var(--phi-form-part-label-gap-compact, 0px);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   font-size: var(--phi-form-cell-label-font-size, inherit);
+}
+
+/*
+ * The words of a label, which may be narrower than their longest word so that word can break (above):
+ * the label's own item, and inside it the boxes a required mark or a hint puts its words in.
+ */
+:is(.phi-form-cell--label, .phi-form-part--label) :is(span, div) {
+  min-width: 0;
 }
 
 .phi-form-part--control {

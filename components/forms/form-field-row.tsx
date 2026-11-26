@@ -18,10 +18,16 @@ import { usePhiConfig } from "../root/phi-config-provider";
 /** A label's words with the required marker in front, wrapping as one run of text. */
 export function PhiFormFieldLabelText({ required, children }: { required?: boolean; children: ReactNode }) {
   const { token } = usePhiConfig();
+  /*
+   * The mark and the words side by side, the words wrapping in their own box: a label with a hint is an
+   * inline box, and between the mark and an inline box a line may break, so in a narrow label column the
+   * mark stood alone on a line above "Web address" (owner, 2026-11-26).
+   */
+  if (!required) return <span>{children}</span>;
   return (
-    <span>
-      {required ? <span aria-hidden style={{ color: token.colorError, marginInlineEnd: "0.25em" }}>*</span> : null}
-      {children}
+    <span style={{ display: "inline-flex", alignItems: "baseline" }}>
+      <span aria-hidden style={{ color: token.colorError, marginInlineEnd: "0.25em" }}>*</span>
+      <span>{children}</span>
     </span>
   );
 }

@@ -440,13 +440,12 @@ export function resolvePhiFormColumnStep(
 /**
  * How wide a Form may get where its placement states no `maxFormWidth` (FORMS.md, "Form Widget").
  *
- * The reading measure, `contentMax`, for a Form of one column and for one whose columns stand from
- * `medium`: there 610 already holds them, and it is exactly where the Form turns `wide`. A Form that
- * gains its columns only at `wide` is given the reading measure for each of them -- capped at 610 it would
- * reach `wide` only at its very edge, and in a dialog wide enough for its columns it would stand as a
- * strip of 610 in the middle of the body.
+ * The reading measure, `contentMax`, for a Form of one column. A Form of columns is given the reading
+ * measure for each of them: capped at 610, a Form whose columns stand only at `wide` reached them only at
+ * its very edge, and in the dialog made wide enough for its columns any such Form stood as a strip of 610
+ * in the middle of the body.
  */
 export function resolvePhiFormHouseMaxWidth(descriptor: PhiFormDescriptor): number {
   const step = resolvePhiFormColumnStep(descriptor);
-  return step?.mode === "wide" ? step.columns * PHI_LAYOUT.contentMax : PHI_LAYOUT.contentMax;
+  return step == null ? PHI_LAYOUT.contentMax : step.columns * PHI_LAYOUT.contentMax;
 }

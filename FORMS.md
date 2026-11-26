@@ -358,9 +358,14 @@ type PhiFormFieldPlacementDescriptor = {
   third of the width, the same column the Login states for itself. Medium -- 377 to 609px, where the Form
   of a one-column dialog stands -- they take ten tracks of twenty-four, since a third of 377px broke two-word
   labels such as "Installation key" over two lines (owner, 2026-11-25, on trial).
-- A label longer than its column wraps, and breaks inside a word where a word alone is wider
-  (`overflow-wrap: anywhere` on `.phi-form-cell--label`): in a one-column dialog the column is ten
-  twenty-fourths of 377px, and a long word of a translation used to run under the input. Keep such labels short and say
+- A label longer than its column wraps between its words, and breaks inside a word only where that word
+  alone is wider than the column (`overflow-wrap: break-word` on `.phi-form-cell--label` and
+  `.phi-form-part--label`, whose words may shrink below their longest word); it is never hyphenated, since
+  a label column is narrow by nature and syllable breaks cut words that would have fit on the next line.
+  `anywhere` stood there until 2026-11-26: it breaks no differently, and the labels of the Shop's listing
+  Form broke inside their words because their columns were about 85px, not because of it -- a dialog of
+  columns is wide enough for them now (OVERLAYS.md, "Structured dialogs"). In a one-column dialog the
+  column is ten twenty-fourths of 377px, and a long word of a translation used to run under the input. Keep such labels short and say
   the rest in the dialog's text -- the width rule (OVERLAYS.md, "Geometry") decides the dialog's width
   only, not what fits in its label column.
 - A field's `label` and `control` are column ranges, not content. What a placement states is read per
@@ -382,8 +387,8 @@ type PhiFormFieldPlacementDescriptor = {
 - Fields are placed in declaration order; a field goes on the current row while its tracks are free.
 - How many columns a Form has at a width is read off the same rows (`resolvePhiFormColumnCount`): a row's
   fields and each free run of tracks as wide as its narrowest field, so a field at 1-13 alone is a Form of
-  two columns and one at 1-9 of three. The smallest width at which a Form has the most columns it has --
-  `medium` for the `PHI_FORM_SIDE_*_HALF` pairs, `wide` for a Form that keeps one column below 610px --
+  two columns and one at 1-9 of three. How many columns a Form has at its widest -- from `medium` already
+  for the `PHI_FORM_SIDE_*_HALF` pairs, only at `wide` for a Form that keeps one column below 610px --
   decides how wide a dialog is made for it (OVERLAYS.md, "Structured dialogs") and how far its own cap
   reaches ([Form Widget](#form-widget)).
 - Falling back is the descriptor's, step by step, and measured on the Form, never the viewport: a Form
@@ -1003,7 +1008,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `openActionKey` | The action key that opens a record -- a Table's row action or a Collection View's item action -- default `edit`. |
 | `titleFromRecord` | Optional `{ template, field }`: a title made of the record the `source` reads, announced on `recordTitle`. See below. |
 | `signalRoutes` | The Widget's routes. |
-| `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Defaults to `PHI_LAYOUT.contentMax`, or more for a Form whose columns stand only at `wide`; see below. |
+| `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Defaults to `PHI_LAYOUT.contentMax`, or that for each column of a Form of columns; see below. |
 | block geometry | `maxSize`, `minSize`, `size`, `surface` -- read from the node like any other Widget. They measure the block the slot frame draws, which is the box *around* the Form's own. |
 
 - **A Form is capped at the reading measure unless the placement says otherwise.** `maxFormWidth` is
@@ -1017,10 +1022,9 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   a node that states nothing (`widgetBlockDefaultsByType`). A Widget field of its own reaches a Preset
   placement no other way; that is the same gap that once left every Preset-placed Form uncapped. The
   parser leaves an unstated cap `null` and the Widget answers it from the Form it resolved
-  (`resolvePhiFormHouseMaxWidth`): the reading measure for a Form of one column or of columns from
-  `medium`, and the reading measure for each column for a Form whose columns stand only at `wide` (1220
-  for two, 1830 for three). Capped at 610, such a Form reached `wide` only at its very edge, and in the
-  dialog made wide enough for its columns it stood as a strip of 610 in the middle of the body
+  (`resolvePhiFormHouseMaxWidth`): the reading measure for a Form of one column, and the reading measure for each column for a Form of columns (1220 for two, 1830 for three). Capped at
+  610, a Form whose columns stand only at `wide` reached them only at its very edge, and in the dialog made
+  wide enough for its columns any such Form stood as a strip of 610 in the middle of the body
   (owner, 2026-11-26). The Builder still writes 610 into a node it creates, before any Form is chosen; a
   stated cap is the placement's and wins. A placement that means something else names a length
   and wins -- `contentMaxNarrow` for a column of Controls with no label beside them, the Page's width

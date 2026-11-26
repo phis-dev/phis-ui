@@ -571,25 +571,25 @@ of one column takes `PHI_DIALOG_WIDTH_SINGLE_COLUMN`: `contentMaxNarrow` -- the 
 puts its labels beside its fields (`PHI_FORM_RESPONSIVE_MIN_WIDTH.medium`) -- plus the body's `base` inset
 on both sides, so the Form keeps that width inside the body. At that width the Form is `medium`, where
 `PHI_FORM_DEFAULT_LAYOUT` gives a side label ten tracks of twenty-four and the control fourteen; a third,
-the `wide` column, broke two-word labels there (FORMS.md, "Layout and placement"). A Form whose columns
-stand from `medium` keeps `PHI_DIALOG_WIDTH`, the reading measure `contentMax`: it leaves the Form 568px
-inside the body, well inside `medium`. A table, a preview or an editor states a wider width of its own,
-and a viewport limit as `maxSize` where it has one. Each is one length: on a phone the Modal holds it
+the `wide` column, broke two-word labels there (FORMS.md, "Layout and placement"). A dialog with no Form
+keeps `PHI_DIALOG_WIDTH`, the reading measure `contentMax`. A table, a preview or an editor states a wider
+width of its own, and a viewport limit as `maxSize` where it has one. Each is one length: on a phone the Modal holds it
 inside the viewport ([Geometry](#geometry)). A Form is one column when no field, at `medium` or `wide`,
 leaves part of its row free -- a field whose label and control together do not span the whole grid
 leaves room for a second one beside it, and that is two columns (`isPhiFormSingleColumn`).
 
-A Form whose columns stand only at `wide` -- fields side by side from 610px of Form, one column below, as
-the product Form of phis-products places them -- stood in one column in every dialog of
-`PHI_DIALOG_WIDTH`, because the body's inset left it 568px; Modules stated a dialog of their own around it
-(owner, 2026-11-26). Such a dialog takes the room its columns need instead:
+A Form of columns took `PHI_DIALOG_WIDTH` once, and the body's inset left it 568px (owner, 2026-11-26):
+one whose fields stand side by side only from `wide` -- 610px of Form, as the product Form of phis-products
+places them -- stood in one column there every time, and one whose halves stand from `medium` -- the
+`PHI_FORM_SIDE_*_HALF` pairs of the Shop's listing Form -- gave each label about 85px, where a label of
+one long word broke inside it. Modules stated a dialog of their own around them. A dialog takes the room
+the columns need instead, at whichever width the Form has them:
 
 | The Form's columns (`resolvePhiFormColumnStep`) | `size` | `maxSize` |
 | --- | --- | --- |
 | one at every width | `PHI_DIALOG_WIDTH_SINGLE_COLUMN` | -- |
-| from `medium` | `PHI_DIALOG_WIDTH` (610) | -- |
-| two, only at `wide` | 987 (`PHI_CONTAINER_BREAKPOINT_REGION`) | `90vw` |
-| three or more, only at `wide` | 1220 (`PHI_LAYOUT.pageMax`) | `90vw` |
+| two, from `medium` or only at `wide` | 987 (`PHI_CONTAINER_BREAKPOINT_REGION`) | `90vw` |
+| three or more | 1220 (`PHI_LAYOUT.pageMax`) | `90vw` |
 
 987 leaves the Form 945px inside the house inset -- two columns of the 377 at which a label stands beside
 its field, with room between them -- and still more than 610 inside the largest inset a Theme sets. The
@@ -599,7 +599,8 @@ as its narrowest field (`resolvePhiFormColumnCount`), so a field at 1-13 alone i
 cap grows with the same columns (FORMS.md, "Form Widget"). Where the window is narrower, the Modal
 narrows and so does the Form, and the Form lays itself out by its own width, never the viewport: under
 610px it is `medium` and its fields stand as its descriptor places them there -- one column for a Form
-whose columns stand only at `wide`. Three columns fall back to two and to one only where the descriptor
+whose columns stand only at `wide`, the halves for the `PHI_FORM_SIDE_*_HALF` pairs, which fall to one
+column only under 377px. Three columns fall back to two and to one only where the descriptor
 says so per step (`wide` three, `medium` two, `compact` one); the steps are 377 and 610 of Form, so three
 columns already stand from 610 -- about 200px each -- and a step of their own above that is a contract
 extension that is not there (FORMS.md, "Layout and placement").
@@ -610,7 +611,8 @@ above where it has one (`resolvePhiDialogFormGeometry`); handed none, it keeps `
 `size` or `maxSize` in its `config` is the caller's own and always wins, whole. The descriptor compiler
 checks the result against the Forms the active Modules ship: a modal whose `size` is exactly
 `{ width: PHI_DIALOG_WIDTH }` and whose body holds only Forms of one column is refused, and so is one that
-holds a Form whose columns stand only at `wide`, which that width leaves in one column. Any other stated width passes, and a Form the compiler cannot see -- one stored on the Site -- is
+holds a Form of columns, which that width is too narrow for: a dialog that holds a Form takes the Form's
+width. Any other stated width passes, and a Form the compiler cannot see -- one stored on the Site -- is
 not judged. A Module runs the same rules in its own tests with `checkPhiPresetTreeContract` and its own
 Forms (`@phis/ui/module/page-check`; THIRD_PARTY_MODULES.md, "Checking a Page preset").
 

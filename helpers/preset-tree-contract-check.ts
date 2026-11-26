@@ -362,10 +362,9 @@ function checkOverlayGeometry(
 
 /*
  * A dialog is as wide as its Form needs (`helpers/cms-dialog.ts`): one column takes
- * `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, columns from `medium` keep `PHI_DIALOG_WIDTH`, columns only at `wide`
- * take the room they need, each as the width of the Overlay's `size`. What is refused is the one width a
- * Preset did not choose -- the default -- holding nothing but Forms of one column, or a Form whose columns
- * it cannot reach. Any other width was stated, by a caller that knows what else the body holds; a
+ * `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, columns take the room they need, each as the width of the Overlay's
+ * `size`. What is refused is the one width a Preset did not choose -- the default -- holding a Form at all:
+ * nothing but Forms of one column, or a Form of columns it is too narrow for. Any other width was stated, by a caller that knows what else the body holds; a
  * Form the caller cannot see is not judged.
  */
 function checkDialogWidth(
@@ -397,12 +396,12 @@ function checkDialogWidth(
       "(PHI_DIALOG_WIDTH). Hand the Form to `dialog` as `body.form`, or state `size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }`.",
     );
   }
-  const wideColumns = descriptors.findIndex((descriptor) => descriptor != null && resolvePhiFormColumnStep(descriptor)?.mode === "wide");
-  if (wideColumns >= 0) {
+  const withColumns = descriptors.findIndex((descriptor) => descriptor != null && resolvePhiFormColumnStep(descriptor) != null);
+  if (withColumns >= 0) {
     report(
       overlay.id,
-      `Preset Overlay "${overlay.id}" holds the Form "${String(formIds[wideColumns])}", whose columns stand only at \`wide\`, ` +
-      "at the reading measure (PHI_DIALOG_WIDTH), which leaves it one column. Hand the Form to `dialog` as `body.form`.",
+      `Preset Overlay "${overlay.id}" holds the Form "${String(formIds[withColumns])}" of several columns ` +
+      "at the reading measure (PHI_DIALOG_WIDTH), which is too narrow for them. Hand the Form to `dialog` as `body.form`.",
     );
   }
 }

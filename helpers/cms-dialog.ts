@@ -23,8 +23,8 @@ import { PHI_LAYOUT } from "../theme/phi-tokens";
  * - The actions are one compact group, labelled, at the medium size: a dialog asks one question and its
  *   answers belong together.
  * - The width is as wide as its Form needs: the narrowest width that keeps a Form's labels beside its
- *   fields for one of one column, the reading measure for one whose columns stand from `medium`, and the
- *   room its columns need for one that has them only at `wide`. A table or an editor states a wider one. It is the width of the Overlay's `size`, a block's length (OVERLAYS.md, "Presentation config"),
+ *   fields for one of one column, and the room its columns need for one that has columns. A table or an
+ *   editor states a wider one; a dialog with no Form takes the reading measure. It is the width of the Overlay's `size`, a block's length (OVERLAYS.md, "Presentation config"),
  *   and the Modal holds it inside the viewport itself, so a phone gets the full width less the gutter
  *   without a second value.
  */
@@ -51,8 +51,8 @@ export const PHI_DIALOG_COMMANDS_CONFIG = {
 } as const;
 
 /**
- * A dialog's width where it names none and its Form has two columns from `medium`: the reading measure,
- * which is also where such a Form's own cap lies, so a Form fills the dialog it opens in. A wider one -- a table, a preview
+ * A dialog's width where it names none and holds no Form it was handed: the reading measure. A dialog
+ * with a Form takes the Form's width (`resolvePhiDialogFormGeometry`); a wider one -- a table, a preview
  * -- says so, and takes its width from the same sequence (`PHI_LAYOUT`). A dialog states it as
  * `size: { width: PHI_DIALOG_WIDTH }`.
  */
@@ -71,12 +71,14 @@ export const PHI_DIALOG_WIDTH_SINGLE_COLUMN =
   `calc(${PHI_LAYOUT.contentMaxNarrow}px + 2 * ${PHI_DIALOG_BODY_CONFIG.padding})`;
 
 /**
- * A dialog's width where its Form gains its columns only at `wide`, by how many it has there.
+ * A dialog's width where its Form has columns, by how many it has.
  *
- * `PHI_DIALOG_WIDTH` holds a Form whose columns stand from `medium`: inside the body's inset it leaves the
- * Form 568px, well inside `medium`. A Form that places its fields side by side only from `wide` -- 610px of
- * Form -- stood in one column there, every time, and the Modules that wrote such Forms stated a dialog of
- * their own around each one (owner, 2026-11-26). So the dialog takes the width the columns need:
+ * The reading measure was the width of a Form of two columns, and it was too narrow for either kind
+ * (owner, 2026-11-26). Inside the body's inset it leaves the Form 568px: a Form that places its fields side
+ * by side only from `wide` -- 610px of Form -- stood in one column there every time, and one whose halves
+ * stand from `medium` (the `PHI_FORM_SIDE_*_HALF` pairs, the Shop's listing) gave each label about 85px,
+ * where a label of one long word broke inside it. The Modules that met it stated a dialog of their own.
+ * So the dialog takes the width the columns need, and the Form stands `wide` in it:
  * - two: 987, the step of the house sequence after the reading measure (`PHI_CONTAINER_BREAKPOINT_REGION`),
  *   which leaves the Form 945 -- two columns of the 377 at which a label stands beside its field, and
  *   room between them;
@@ -86,12 +88,12 @@ export const PHI_DIALOG_WIDTH_SINGLE_COLUMN =
  * less and lays itself out for what it has: under 610px it is `medium`, and its columns fall back to
  * what it states there (FORMS.md, "Layout and placement").
  */
-const PHI_DIALOG_WIDTH_WIDE_COLUMNS = {
+const PHI_DIALOG_WIDTH_COLUMNS = {
   two: PHI_CONTAINER_BREAKPOINT_REGION,
   three: PHI_LAYOUT.pageMax,
 } as const;
 
-/** The share of the window a dialog sized for a Form's `wide` columns never exceeds. */
+/** The share of the window a dialog sized for a Form's columns never exceeds. */
 const PHI_DIALOG_MAX_WIDTH = "90vw";
 
 /**
@@ -112,9 +114,8 @@ export function isPhiFormSingleColumn(descriptor: PhiFormDescriptor) {
 /**
  * The geometry a dialog takes for the Form in its body, as the Overlay's `size` and `maxSize` pairs.
  *
- * One column: `PHI_DIALOG_WIDTH_SINGLE_COLUMN`. Columns from `medium`: `PHI_DIALOG_WIDTH`. Columns only
- * from `wide`: the width they need (`PHI_DIALOG_WIDTH_WIDE_COLUMNS`), no more than `PHI_DIALOG_MAX_WIDTH`
- * of the window. The Form itself is not capped below it: its own cap, where its placement states none,
+ * One column: `PHI_DIALOG_WIDTH_SINGLE_COLUMN`. Columns, at either width that has them: the width they
+ * need (`PHI_DIALOG_WIDTH_COLUMNS`), no more than `PHI_DIALOG_MAX_WIDTH` of the window. The Form itself is not capped below it: its own cap, where its placement states none,
  * grows with the same columns (`resolvePhiFormHouseMaxWidth`).
  */
 export function resolvePhiDialogFormGeometry(descriptor: PhiFormDescriptor): {
@@ -123,9 +124,8 @@ export function resolvePhiDialogFormGeometry(descriptor: PhiFormDescriptor): {
 } {
   const step = resolvePhiFormColumnStep(descriptor);
   if (step == null) return { size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN } };
-  if (step.mode === "medium") return { size: { width: PHI_DIALOG_WIDTH } };
   return {
-    size: { width: step.columns >= 3 ? PHI_DIALOG_WIDTH_WIDE_COLUMNS.three : PHI_DIALOG_WIDTH_WIDE_COLUMNS.two },
+    size: { width: step.columns >= 3 ? PHI_DIALOG_WIDTH_COLUMNS.three : PHI_DIALOG_WIDTH_COLUMNS.two },
     maxSize: { width: PHI_DIALOG_MAX_WIDTH },
   };
 }
