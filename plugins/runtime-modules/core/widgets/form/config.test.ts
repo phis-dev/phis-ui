@@ -32,10 +32,11 @@ describe("the Form Widget's cap", () => {
     expect(PHI_FORM_WIDGET_DEFINITION.defaultConfig).not.toHaveProperty("maxSize");
   });
 
-  it("is answered by the parser as well, for the placement that states nothing", () => {
+  it("is left to the Widget by the parser, for the placement that states nothing", () => {
     // Only a Widget's block base is merged under a node at render, so a Widget field that only
-    // `defaultConfig` states reaches the Builder and the Inspector and no Preset placement at all.
-    expect(parsePhiFormWidgetConfig({}).maxFormWidth).toBe(PHI_LAYOUT.contentMax);
+    // `defaultConfig` states reaches the Builder and the Inspector and no Preset placement at all. The
+    // Widget answers it from the Form it draws (`resolvePhiFormHouseMaxWidth`), which the parser does not know.
+    expect(parsePhiFormWidgetConfig({}).maxFormWidth).toBeNull();
   });
 
   it("carries the placement's own measure through", () => {
@@ -55,8 +56,8 @@ describe("the Form Widget's cap", () => {
   });
 
   it("leaves an emptied cap to the house measure", () => {
-    expect(parsePhiFormWidgetConfig({ maxFormWidth: "" }).maxFormWidth).toBe(PHI_LAYOUT.contentMax);
-    expect(parsePhiFormWidgetConfig({ maxFormWidth: null }).maxFormWidth).toBe(PHI_LAYOUT.contentMax);
+    expect(parsePhiFormWidgetConfig({ maxFormWidth: "" }).maxFormWidth).toBeNull();
+    expect(parsePhiFormWidgetConfig({ maxFormWidth: null }).maxFormWidth).toBeNull();
   });
 
   it("carries the placement's own geometry through as well", () => {

@@ -380,6 +380,17 @@ type PhiFormFieldPlacementDescriptor = {
   stacked Form uses full-width ranges. `components/forms/form-descriptor-contract.ts` exports named
   ranges for the common cases (`PHI_FORM_STACKED_LAYOUT`, `PHI_FORM_SIDE_START_HALF`, and others).
 - Fields are placed in declaration order; a field goes on the current row while its tracks are free.
+- How many columns a Form has at a width is read off the same rows (`resolvePhiFormColumnCount`): a row's
+  fields and each free run of tracks as wide as its narrowest field, so a field at 1-13 alone is a Form of
+  two columns and one at 1-9 of three. The smallest width at which a Form has the most columns it has --
+  `medium` for the `PHI_FORM_SIDE_*_HALF` pairs, `wide` for a Form that keeps one column below 610px --
+  decides how wide a dialog is made for it (OVERLAYS.md, "Structured dialogs") and how far its own cap
+  reaches ([Form Widget](#form-widget)).
+- Falling back is the descriptor's, step by step, and measured on the Form, never the viewport: a Form
+  in a dialog the window narrows turns `medium` under 610px and stands as it is placed there. Three
+  columns at `wide`, two at `medium` and one at `compact` is written with the steps there are; but three
+  columns then stand from 610px, about 200px each, and a step for them above that -- a fourth mode from
+  987px, say -- is not in the contract (`PhiResponsiveValue` has `compact`, `medium` and `wide` only).
 - `gap` uses the spacing tokens `none`, `xxs`, `xs`, `sm`, `base`, `md`, `lg`, `xl`, `xxl`. It is the
   spacing between one row of fields and the next, and half of it is the gutter between a label and the
   control beside it.
@@ -992,7 +1003,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `openActionKey` | The action key that opens a record -- a Table's row action or a Collection View's item action -- default `edit`. |
 | `titleFromRecord` | Optional `{ template, field }`: a title made of the record the `source` reads, announced on `recordTitle`. See below. |
 | `signalRoutes` | The Widget's routes. |
-| `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Defaults to `PHI_LAYOUT.contentMax`; see below. |
+| `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Defaults to `PHI_LAYOUT.contentMax`, or more for a Form whose columns stand only at `wide`; see below. |
 | block geometry | `maxSize`, `minSize`, `size`, `surface` -- read from the node like any other Widget. They measure the block the slot frame draws, which is the box *around* the Form's own. |
 
 - **A Form is capped at the reading measure unless the placement says otherwise.** `maxFormWidth` is
@@ -1002,10 +1013,16 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   so capping never demotes the layout. A cap is also not a size -- it leaves the slot policy
   `fill-inline` and the Layout in charge of placing the Form. It is declared in `defaultConfig` for the
   Builder, which writes it into the node it creates, and for the Inspector, which shows it under the node
-  it edits -- and answered again by the parser for the render path, because only a Widget's *block base*
-  is merged under a node that states nothing (`widgetBlockDefaultsByType`). A Widget field of its own
-  reaches a Preset placement no other way; that is the same gap that once left every Preset-placed Form
-  uncapped. Both sides name the one constant. A placement that means something else names a length
+  it edits -- and answered again on the render path, because only a Widget's *block base* is merged under
+  a node that states nothing (`widgetBlockDefaultsByType`). A Widget field of its own reaches a Preset
+  placement no other way; that is the same gap that once left every Preset-placed Form uncapped. The
+  parser leaves an unstated cap `null` and the Widget answers it from the Form it resolved
+  (`resolvePhiFormHouseMaxWidth`): the reading measure for a Form of one column or of columns from
+  `medium`, and the reading measure for each column for a Form whose columns stand only at `wide` (1220
+  for two, 1830 for three). Capped at 610, such a Form reached `wide` only at its very edge, and in the
+  dialog made wide enough for its columns it stood as a strip of 610 in the middle of the body
+  (owner, 2026-11-26). The Builder still writes 610 into a node it creates, before any Form is chosen; a
+  stated cap is the placement's and wins. A placement that means something else names a length
   and wins -- `contentMaxNarrow` for a column of Controls with no label beside them, the Page's width
   (`PHI_PAGE.max`) for a Form read across, `100%` for a Form that takes its slot, such as a reply under a conversation that
   runs the page. "No ceiling" is spelled `100%`, because that is what every other block says.

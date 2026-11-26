@@ -1,10 +1,12 @@
 import type {
+  PhiFormDescriptor,
   PhiFormFieldPlacementDescriptor,
   PhiFormGridRange,
 } from "@phis/contracts/forms";
 import {
   PHI_FORM_GRID_LAST_LINE,
   assertPhiFormGridRange,
+  resolvePhiFormLayout,
   statedPhiFormGridRange,
   type PhiFormResponsiveMode,
   type PhiResolvedFormLayout,
@@ -14,6 +16,7 @@ import {
   PHI_CONTAINER_BREAKPOINT_COL3,
   PHI_CONTAINER_BREAKPOINT_CONTENT,
 } from "../../theme/phi-container-breakpoints";
+import { PHI_LAYOUT } from "../../theme/phi-tokens";
 
 /*
  * What a descriptor may say, and the parser that decides it, are `@phis/contracts/forms`: phis-server
@@ -374,4 +377,76 @@ export function phiFormPartProperties(layout: PhiResolvedFormLayout, mode: PhiFo
     [`--phi-form-part-label-pad-${mode}`, stacked ? "0px" : `var(--phi-form-label-gutter-${mode})`],
     [`--phi-form-part-label-gap-${mode}`, stacked ? `calc(var(--phi-form-row-gap-${mode}) / 4)` : "0px"],
   ] as const;
+}
+
+/**
+ * How many columns a Form's fields stand in at one measured width.
+ *
+ * Read off the descriptor alone, row by row the way `resolvePhiFormGridPlacement` fills them: a field
+ * goes on the current row while its tracks are free. A row counts the fields in it and the room it leaves
+ * for more of them -- each free run of tracks as wide as the row's narrowest field is one more column, so
+ * a field at 1-13 with nothing beside it is a Form of two columns, as `isPhiFormSingleColumn` has always
+ * read it, and a field at 1-9 one of three. A gap narrower than that is no column. A field takes the
+ * layout's label column into its extent even where it draws no label, as it does on the grid
+ * (`labelSlot`), and a hidden field counts as a row of its own; neither can add a column.
+ */
+export function resolvePhiFormColumnCount(descriptor: PhiFormDescriptor, mode: PhiFormResponsiveMode) {
+  const layout = resolvePhiFormLayout(descriptor.layout);
+  let most = 1;
+  let row: PhiFormGridRange[] = [];
+  const close = () => {
+    if (row.length === 0) return;
+    const sorted = [...row].sort((a, b) => a.start - b.start);
+    const narrowest = Math.min(...sorted.map((range) => range.end - range.start));
+    let free = 0;
+    let line = 1;
+    for (const range of [...sorted, { start: PHI_FORM_GRID_LAST_LINE, end: PHI_FORM_GRID_LAST_LINE }]) {
+      free += Math.floor(Math.max(0, range.start - line) / narrowest);
+      line = Math.max(line, range.end);
+    }
+    most = Math.max(most, row.length + free);
+    row = [];
+  };
+  for (const field of descriptor.fields) {
+    const ranges = resolvePhiFormFieldRanges(layout, field.placement, mode, `fields.${field.key}`);
+    const extent = resolvePhiFormFieldExtent(ranges.label, ranges.control);
+    if (row.some((other) => phiFormGridRangesOverlap(extent, other))) close();
+    row.push(extent);
+  }
+  close();
+  return most;
+}
+
+/**
+ * The width at which a Form stands in the most columns it has, and how many those are; null for a Form
+ * of one column at every width.
+ *
+ * The smallest such width, since from there on the Form has them: a Form whose halves stand side by side
+ * from `medium` has its columns at 377px of Form, one that places them only at `wide` needs 610. That is
+ * what a dialog's width and the Form's own cap are worked out for (`resolvePhiDialogFormGeometry`,
+ * `resolvePhiFormHouseMaxWidth`). `compact` has no columns that count: below 377px a label stands above
+ * its field, and a Form that puts two fields side by side there still has them wider up.
+ */
+export function resolvePhiFormColumnStep(
+  descriptor: PhiFormDescriptor,
+): { mode: Exclude<PhiFormResponsiveMode, "compact">; columns: number } | null {
+  const medium = resolvePhiFormColumnCount(descriptor, "medium");
+  const wide = resolvePhiFormColumnCount(descriptor, "wide");
+  const columns = Math.max(medium, wide);
+  if (columns < 2) return null;
+  return { mode: medium >= wide ? "medium" : "wide", columns };
+}
+
+/**
+ * How wide a Form may get where its placement states no `maxFormWidth` (FORMS.md, "Form Widget").
+ *
+ * The reading measure, `contentMax`, for a Form of one column and for one whose columns stand from
+ * `medium`: there 610 already holds them, and it is exactly where the Form turns `wide`. A Form that
+ * gains its columns only at `wide` is given the reading measure for each of them -- capped at 610 it would
+ * reach `wide` only at its very edge, and in a dialog wide enough for its columns it would stand as a
+ * strip of 610 in the middle of the body.
+ */
+export function resolvePhiFormHouseMaxWidth(descriptor: PhiFormDescriptor): number {
+  const step = resolvePhiFormColumnStep(descriptor);
+  return step?.mode === "wide" ? step.columns * PHI_LAYOUT.contentMax : PHI_LAYOUT.contentMax;
 }

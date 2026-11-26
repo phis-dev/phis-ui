@@ -15,7 +15,7 @@ import type { PhiFormId } from "../../types/form-id";
 import { readPhiFormFieldProviderModules } from "./form-field-provider-modules";
 import { resolvePhiFormMediaLimits } from "./form-media-limits";
 import type { PhiCmsFormWidgetConfig } from "./form-widget-config";
-import { resolvePhiFormText } from "./form-descriptor-contract";
+import { resolvePhiFormHouseMaxWidth, resolvePhiFormText } from "./form-descriptor-contract";
 import { PHI_FORM_DEFAULT_SUBMIT_LABEL } from "../../types/form-descriptor";
 import {
   readPhiRuntimeConditionValue,
@@ -145,7 +145,8 @@ export async function PhiFormWidget({
     const frameProps: PhiFormWidgetFrameProps = {
       submit,
       card: config?.card ?? null,
-      maxFormWidth: config?.maxFormWidth ?? null,
+      // The placement's cap, or the house measure for this Form's columns (FORMS.md, "Form Widget").
+      maxFormWidth: config?.maxFormWidth ?? resolvePhiFormHouseMaxWidth(resolvedForm.definition.descriptor),
       links: resolvedLinks,
       layout: resolvedForm.definition.descriptor.layout,
       ...(config?.controlSize ? { size: config.controlSize } : {}),

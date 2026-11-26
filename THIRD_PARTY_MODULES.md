@@ -1669,17 +1669,21 @@ whose body or actions say otherwise. A dialog whose content runs to its edges --
 -- takes `PHI_DIALOG_BLEED_BODY_CONFIG` instead: the same ground, no inset, and its content draws no corner.
 
 A dialog is as wide as its Form needs, and an Overlay states its width as a block does, as its `size`
-(OVERLAYS.md, "Geometry"): one column takes `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, two columns keep
-`PHI_DIALOG_WIDTH`, a table or an editor states a wider width -- `size: { width: 980 }`, with
-`maxSize: { width: "90vw" }` where it should never take more of the window than that. Both constants are
+(OVERLAYS.md, "Geometry"): one column takes `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, columns from `medium` keep
+`PHI_DIALOG_WIDTH`, and columns only at `wide` take the room they need -- 987 for two, 1220 for three, with
+`maxSize: { width: "90vw" }` -- which `dialog` works out itself from the Form (`resolvePhiDialogFormGeometry`);
+the Form's own cap follows its columns, so it states no `maxFormWidth` for that. A table or an editor
+states a wider width -- `size: { width: 980 }`, with `maxSize: { width: "90vw" }` where it should never
+take more of the window than that. Both constants are
 one length; the Modal holds any width inside the viewport itself, so a dialog states no phone width. Hand
 the Form your dialog holds to `dialog` as `body.form` -- its definition from your `forms`, or
 `{ descriptor }` -- and it picks the width itself; without it, `dialog` takes `PHI_DIALOG_WIDTH`. Where
 the Form is not yours to hand over (Core's Reply Form, say), state
 `size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }` in `config`. There is no `width` on an Overlay: the
 descriptor compiler refuses one, and a `size`, `minSize` or `maxSize` written as one bare length. It
-refuses a modal at `size: { width: PHI_DIALOG_WIDTH }` whose Forms are all one column (OVERLAYS.md, "The
-imperative exemption, and how narrow it is"), and on a live Site either refusal is a 500 for the whole
+refuses a modal at `size: { width: PHI_DIALOG_WIDTH }` whose Forms are all one column, or that holds a Form
+whose columns stand only at `wide` (OVERLAYS.md, "The imperative exemption, and how narrow it is"), and on a
+live Site either refusal is a 500 for the whole
 Page. Two Forms of one column side by side
 on a Split Card are still all one column: state the width the body needs. Run
 `checkPhiPresetTreeContract` with your own Forms in your tests
@@ -2401,8 +2405,8 @@ the compiler refuses, and the Page answers 500. The rules: every node carries a 
 in the tree; the base page layout node is the canonical one; an Overlay's actions Footer is the canonical
 Flex preset; an Overlay states its geometry as the block's pairs, never as `width` or one bare length; a
 modal's body and actions are the dialog's (`PHI_DIALOG_BODY_CONFIG`, `PHI_DIALOG_COMMANDS_CONFIG`); and a
-modal at `size: { width: PHI_DIALOG_WIDTH }` holds not only Forms of one column
-([Dialogs](#dialogs)); a Form's or a record Widget's `titleFromRecord` has a `source`, is routed to an
+modal at `size: { width: PHI_DIALOG_WIDTH }` holds not only Forms of one column, and no Form whose columns
+stand only at `wide` ([Dialogs](#dialogs)); a Form's or a record Widget's `titleFromRecord` has a `source`, is routed to an
 Overlay that hears it on `title`, and on a Form names one of the Form's fields. `page` is the Page row the test handed `loadTree`: a tree whose Page or Regions
 belong to another is reported. `forms` are your Module's Form definitions (`definePhiRuntimeModuleForm`),
 or a `Map` of `{ descriptor }` by Form id; the dialog width is judged only for the Forms you hand over, as

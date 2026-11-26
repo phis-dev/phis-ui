@@ -16,7 +16,6 @@ import {
   readRenderableBlockConfig,
   type PhiCmsWidgetConfigBase,
 } from "../widgets/config/parser-primitives";
-import { PHI_LAYOUT } from "../../theme/phi-tokens";
 import { parsePhiControlPresentationConfig } from "../widgets/config/control-signal-config";
 import type { PhiFormSize } from "./form-provider-registry";
 
@@ -53,11 +52,13 @@ export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
    * cap was chosen to land on. Stated here, the number means the fields: the Frame adds the box's inset
    * back on so the box ends up wider than the cap, and what the fields read is what was written.
    *
-   * A length or a number of pixels, and always answered: `100%` is how "no ceiling" is spelled, as
-   * everywhere else. A block `maxSize` an author states still caps the block -- two boxes, both of
-   * which may be capped.
+   * A length or a number of pixels: `100%` is how "no ceiling" is spelled, as everywhere else. `null`
+   * where the placement states none, and the Widget answers it from the Form it draws
+   * (`resolvePhiFormHouseMaxWidth`): the reading measure, or more for a Form whose columns stand only at
+   * `wide` -- the parser does not know the Form. A block `maxSize` an author states still caps the
+   * block -- two boxes, both of which may be capped.
    */
-  maxFormWidth: number | string;
+  maxFormWidth: number | string | null;
   feedback: PhiCmsFormWidgetFeedbackConfig | null;
   /**
    * How large the Form draws its fields, its labels and its submit: `medium`, or `small` for a Form that
@@ -167,14 +168,15 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
     submit: rawConfig.submit === "inline" ? "inline" : "external",
     submitOnEnter: typeof rawConfig.submitOnEnter === "boolean" ? rawConfig.submitOnEnter : null,
     /*
-     * The house measure where the placement names none, and answered HERE as well as declared.
+     * Unstated stays unstated here, and the Widget answers it on the render path from its Form.
      *
      * `defaultConfig` reaches the Builder and the Inspector, but the render path merges only a Widget's
      * block base under a node (`widgetBlockDefaultsByType`) -- so a Preset placement that says nothing
      * arrives with no cap at all, which is exactly how every Preset-placed Form once rendered uncapped.
-     * A Widget field has to be answered by its parser. Both sides read the one constant.
+     * The house measure depends on the Form's columns (`resolvePhiFormHouseMaxWidth`), which only the
+     * Widget that resolved the Form knows, so it is answered there and never left open.
      */
-    maxFormWidth: maxFormWidth ?? PHI_LAYOUT.contentMax,
+    maxFormWidth,
     /*
      * No box unless one is named, and the name is read rather than the block's presence: an author who
      * takes the box off again leaves an empty `card` behind, and an empty block is not a box.

@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  PHI_FORM_DEFAULT_LAYOUT,
   PHI_FORM_SIDE_END_HALF,
   PHI_FORM_SIDE_START_HALF,
   PHI_FORM_STACKED_FULL,
   PHI_FORM_STACKED_LAYOUT,
   PHI_FORM_RESPONSIVE_MIN_WIDTH,
+  resolvePhiFormColumnCount,
+  resolvePhiFormColumnStep,
+  resolvePhiFormGridPlacement,
+  resolvePhiFormHouseMaxWidth,
+  resolvePhiFormLayout,
 } from "../components/forms/form-descriptor-contract";
+import { PHI_CONTAINER_BREAKPOINT_REGION } from "../theme/phi-container-breakpoints";
 import { PhiCmsPageType, PhiCmsStatus } from "../constants/phi-cms";
 import { checkPhiPresetTreeContract } from "../module-page-check";
 import { assertPhiCmsPresetTreeContract } from "../plugins/runtime-modules/descriptor-compiler";
@@ -20,11 +27,11 @@ import {
   PHI_DIALOG_WIDTH,
   PHI_DIALOG_WIDTH_SINGLE_COLUMN,
   isPhiFormSingleColumn,
-  resolvePhiDialogFormWidth,
+  resolvePhiDialogFormGeometry,
 } from "./cms-dialog";
 import { createPhiCmsPresetNodes } from "./cms-preset-nodes";
 
-/* A dialog is as wide as its Form needs: one column narrow, two at the reading measure. */
+/* A dialog is as wide as its Form needs: one column narrow, columns from `medium` at the reading measure, columns only at `wide` wider. */
 
 const text = (value: string) => ({ kind: "literal", value }) as const;
 const field = (key: string, placement?: PhiFormDescriptor["fields"][number]["placement"]) => ({
@@ -38,6 +45,30 @@ const form = (fields: PhiFormDescriptor["fields"], layout?: PhiFormDescriptor["l
 
 const ONE_COLUMN = form([field("name"), field("email")]);
 const TWO_COLUMNS = form([field("first", PHI_FORM_SIDE_START_HALF), field("last", PHI_FORM_SIDE_END_HALF)]);
+
+/*
+ * Columns only from `wide`: below it every field is one of the house's one column, as phis-products places
+ * its product Form (owner, 2026-11-26). `wideOnly` keeps the template below `wide` and the given ranges there.
+ */
+const wideOnly = (label: { start: number; end: number }, control: { start: number; end: number }) => ({
+  label: { compact: PHI_FORM_DEFAULT_LAYOUT.label.compact, medium: PHI_FORM_DEFAULT_LAYOUT.label.medium, wide: label },
+  control: { compact: PHI_FORM_DEFAULT_LAYOUT.control.compact, medium: PHI_FORM_DEFAULT_LAYOUT.control.medium, wide: control },
+});
+const WIDE_TWO_COLUMNS = form([
+  field("language", wideOnly({ start: 1, end: 5 }, { start: 5, end: 13 })),
+  field("key", wideOnly({ start: 13, end: 17 }, { start: 17, end: 25 })),
+  field("note", PHI_FORM_STACKED_FULL),
+]);
+const WIDE_THREE_COLUMNS = form([
+  field("a", wideOnly({ start: 1, end: 9 }, { start: 1, end: 9 })),
+  field("b", wideOnly({ start: 9, end: 17 }, { start: 9, end: 17 })),
+  field("c", wideOnly({ start: 17, end: 25 }, { start: 17, end: 25 })),
+]);
+/* Three columns at `wide`, two at `medium`, one at `compact`: the ladder the existing steps can write. */
+const LADDER = form(["a", "b", "c", "d"].map((key) => field(key, {
+  control: { compact: { start: 1, end: 25 }, medium: key === "a" || key === "c" ? { start: 1, end: 13 } : { start: 13, end: 25 },
+    wide: { a: { start: 1, end: 9 }, b: { start: 9, end: 17 }, c: { start: 17, end: 25 }, d: { start: 1, end: 9 } }[key]! },
+})));
 
 describe("PHI_DIALOG_WIDTH_SINGLE_COLUMN", () => {
   it("leaves a Form the width at which its labels stand beside its fields, inside the body's inset", () => {
@@ -74,8 +105,97 @@ describe("isPhiFormSingleColumn", () => {
   });
 
   it("chooses the dialog's width from it", () => {
-    expect(resolvePhiDialogFormWidth(ONE_COLUMN)).toBe(PHI_DIALOG_WIDTH_SINGLE_COLUMN);
-    expect(resolvePhiDialogFormWidth(TWO_COLUMNS)).toBe(PHI_DIALOG_WIDTH);
+    expect(resolvePhiDialogFormGeometry(ONE_COLUMN)).toEqual({ size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN } });
+    expect(resolvePhiDialogFormGeometry(TWO_COLUMNS)).toEqual({ size: { width: PHI_DIALOG_WIDTH } });
+  });
+});
+
+describe("resolvePhiFormColumnCount", () => {
+  it("counts the fields of the fullest row, and the room a row leaves for more of the same width", () => {
+    expect(resolvePhiFormColumnCount(ONE_COLUMN, "wide")).toBe(1);
+    expect(resolvePhiFormColumnCount(TWO_COLUMNS, "medium")).toBe(2);
+    expect(resolvePhiFormColumnCount(form([field("zip", PHI_FORM_SIDE_START_HALF)]), "wide")).toBe(2);
+    expect(resolvePhiFormColumnCount(form([field("a", { control: { compact: { start: 1, end: 9 } } })]), "wide")).toBe(3);
+    expect(resolvePhiFormColumnCount(WIDE_THREE_COLUMNS, "wide")).toBe(3);
+    expect(resolvePhiFormColumnCount(LADDER, "compact")).toBe(1);
+    expect(resolvePhiFormColumnCount(LADDER, "medium")).toBe(2);
+    expect(resolvePhiFormColumnCount(LADDER, "wide")).toBe(3);
+  });
+
+  it("reads a gap narrower than the row's fields as no column", () => {
+    const halvesApart = form([
+      field("a", { control: { compact: { start: 1, end: 12 } } }),
+      field("b", { control: { compact: { start: 13, end: 25 } } }),
+    ]);
+    expect(resolvePhiFormColumnCount(halvesApart, "wide")).toBe(2);
+    expect(resolvePhiFormColumnCount(form([field("a", { control: { compact: { start: 1, end: 24 } } })]), "wide")).toBe(1);
+  });
+});
+
+describe("resolvePhiFormColumnStep", () => {
+  it("names the smallest width at which a Form has the most columns it has", () => {
+    expect(resolvePhiFormColumnStep(ONE_COLUMN)).toBeNull();
+    expect(resolvePhiFormColumnStep(TWO_COLUMNS)).toEqual({ mode: "medium", columns: 2 });
+    expect(resolvePhiFormColumnStep(WIDE_TWO_COLUMNS)).toEqual({ mode: "wide", columns: 2 });
+    expect(resolvePhiFormColumnStep(WIDE_THREE_COLUMNS)).toEqual({ mode: "wide", columns: 3 });
+    expect(resolvePhiFormColumnStep(LADDER)).toEqual({ mode: "wide", columns: 3 });
+  });
+});
+
+/*
+ * A Form whose columns stand only at `wide` stood in one column in every dialog `dialog` made for it:
+ * `PHI_DIALOG_WIDTH` is 610 around the body's inset, the Form 568 inside it, under the 610 its columns
+ * need. phis-products and the Shop stated `size: { width: 980 }, maxSize: { width: "90vw" }` by hand.
+ */
+describe("a dialog for a Form whose columns stand at `wide`", () => {
+  it("is wide enough for them, and no wider than the window allows", () => {
+    expect(resolvePhiDialogFormGeometry(WIDE_TWO_COLUMNS)).toEqual({
+      size: { width: PHI_CONTAINER_BREAKPOINT_REGION },
+      maxSize: { width: "90vw" },
+    });
+    expect(resolvePhiDialogFormGeometry(WIDE_THREE_COLUMNS)).toEqual({
+      size: { width: PHI_LAYOUT.pageMax },
+      maxSize: { width: "90vw" },
+    });
+    expect(resolvePhiDialogFormGeometry(LADDER).size).toEqual({ width: PHI_LAYOUT.pageMax });
+  });
+
+  it("leaves its Form a width that is safely `wide`, inside the body's base inset at its largest step", () => {
+    // `PHI_SPACE.base` is a Theme variable; the house step is 21, and a Theme may set it to 34.
+    for (const inset of [21, 34]) {
+      expect(PHI_CONTAINER_BREAKPOINT_REGION - 2 * inset).toBeGreaterThan(PHI_FORM_RESPONSIVE_MIN_WIDTH.wide);
+      // Two columns at the width from which a label stands beside its field, and the gap between them.
+      expect(PHI_CONTAINER_BREAKPOINT_REGION - 2 * inset).toBeGreaterThanOrEqual(2 * PHI_FORM_RESPONSIVE_MIN_WIDTH.medium + inset);
+    }
+  });
+
+  it("is not capped back to the reading measure by its Form: the Form's own cap grows with its columns", () => {
+    expect(resolvePhiFormHouseMaxWidth(ONE_COLUMN)).toBe(PHI_LAYOUT.contentMax);
+    expect(resolvePhiFormHouseMaxWidth(TWO_COLUMNS)).toBe(PHI_LAYOUT.contentMax);
+    expect(resolvePhiFormHouseMaxWidth(WIDE_TWO_COLUMNS)).toBe(2 * PHI_LAYOUT.contentMax);
+    expect(resolvePhiFormHouseMaxWidth(WIDE_THREE_COLUMNS)).toBe(3 * PHI_LAYOUT.contentMax);
+    // The Form fills the body of the widest dialog it is given.
+    expect(resolvePhiFormHouseMaxWidth(WIDE_TWO_COLUMNS)).toBeGreaterThanOrEqual(PHI_CONTAINER_BREAKPOINT_REGION);
+    expect(resolvePhiFormHouseMaxWidth(WIDE_THREE_COLUMNS)).toBeGreaterThanOrEqual(PHI_LAYOUT.pageMax);
+  });
+
+  it("falls back on a narrow window by the Form's own width: two columns at `wide`, one below", () => {
+    const layout = resolvePhiFormLayout(WIDE_TWO_COLUMNS.layout);
+    const entries = WIDE_TWO_COLUMNS.fields.map((entry) => ({ key: entry.key, placement: entry.placement, inFlow: true, hasLabel: true }));
+    const wide = resolvePhiFormGridPlacement(layout, entries, "wide").placements;
+    const medium = resolvePhiFormGridPlacement(layout, entries, "medium").placements;
+    expect(wide.get("language")!.labelRow).toBe(wide.get("key")!.labelRow);
+    expect(medium.get("key")!.labelRow).toBeGreaterThan(medium.get("language")!.labelRow);
+  });
+
+  it("falls back three, two, one across the steps a descriptor has", () => {
+    const layout = resolvePhiFormLayout(LADDER.layout);
+    const entries = LADDER.fields.map((entry) => ({ key: entry.key, placement: entry.placement, inFlow: true, hasLabel: false }));
+    const rows = (mode: "compact" | "medium" | "wide") => {
+      const { placements } = resolvePhiFormGridPlacement(layout, entries, mode);
+      return new Set(["a", "b", "c", "d"].map((key) => placements.get(key)!.controlRow)).size;
+    };
+    expect([rows("wide"), rows("medium"), rows("compact")]).toEqual([2, 2, 4]);
   });
 });
 
@@ -147,6 +267,15 @@ describe("dialog on createPhiCmsPresetNodes", () => {
     const wide = { width: 960 };
     expect(dialogTree({ form: ONE_COLUMN, config: { size: wide } }).overlays[0]!.config.size).toBe(wide);
   });
+
+  it("states the room a Form's `wide` columns need, with the window's limit, and keeps the caller's limit", () => {
+    const config = dialogTree({ form: WIDE_TWO_COLUMNS }).overlays[0]!.config;
+    expect(config.size).toEqual({ width: PHI_CONTAINER_BREAKPOINT_REGION });
+    expect(config.maxSize).toEqual({ width: "90vw" });
+    expect(dialogTree({ form: TWO_COLUMNS }).overlays[0]!.config).not.toHaveProperty("maxSize");
+    const limit = { width: "80vw" };
+    expect(dialogTree({ form: WIDE_TWO_COLUMNS, config: { maxSize: limit } }).overlays[0]!.config.maxSize).toBe(limit);
+  });
 });
 
 /** The Forms by id, as the compiler holds the ones its Modules ship. */
@@ -157,6 +286,13 @@ describe("the descriptor compiler's dialog width", () => {
   it("refuses a one-column Form at the default full width", () => {
     expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, forms(ONE_COLUMN)))
       .toThrow(/one-column Form .* PHI_DIALOG_WIDTH_SINGLE_COLUMN/u);
+  });
+
+  it("refuses a Form whose columns stand only at `wide` at the default width", () => {
+    expect(() => assertPhiCmsPresetTreeContract(dialogTree({}), page, forms(WIDE_TWO_COLUMNS)))
+      .toThrow(/columns stand only at `wide`.*PHI_DIALOG_WIDTH/u);
+    expect(() => assertPhiCmsPresetTreeContract(dialogTree({ form: WIDE_TWO_COLUMNS }), page, forms(WIDE_TWO_COLUMNS)))
+      .not.toThrow();
   });
 
   it("passes the width `dialog` chose, a Form of two columns, a stated width and a Form it cannot see", () => {

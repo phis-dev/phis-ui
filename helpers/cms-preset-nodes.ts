@@ -11,7 +11,7 @@ import {
   PHI_DIALOG_BODY_CONFIG,
   PHI_DIALOG_COMMANDS_CONFIG,
   PHI_DIALOG_WIDTH,
-  resolvePhiDialogFormWidth,
+  resolvePhiDialogFormGeometry,
 } from "./cms-dialog";
 import type { PhiCommandToolbarWidgetPlacement } from "../types/core-widget-placements";
 import type {
@@ -106,15 +106,16 @@ export type PhiCmsPresetOverlayInput = {
  * Layout carries (a form's label column, say), and its buttons. How the body and the actions look is the
  * one answer every dialog shares (`helpers/cms-dialog.ts`), so it is not an input. Nor is the width, as
  * long as the dialog can see the Form it holds: given `body.form`, its `size` takes the width that Form
- * needs (`resolvePhiDialogFormWidth`); given none, `PHI_DIALOG_WIDTH`. A `size` in `config` is the
- * caller's own, for a table or an editor that needs more, and replaces the pair whole.
+ * needs, and a Form whose columns stand only at `wide` a `maxSize` of the window as well
+ * (`resolvePhiDialogFormGeometry`); given none, `PHI_DIALOG_WIDTH`. A `size` or `maxSize` in `config` is
+ * the caller's own, for a table or an editor that needs more, and replaces that pair whole.
  */
 export type PhiCmsPresetDialogInput = {
   id: PhiCmsInstanceId;
   bodyLayoutNodeId: PhiCmsInstanceId;
   sortOrder: number;
   label: string | null;
-  /** The Overlay's config: title, mount and close policy, open action, routes. `size` follows `body.form`. */
+  /** The Overlay's config: title, mount and close policy, open action, routes. `size` and `maxSize` follow `body.form`. */
   config: Record<string, unknown>;
   headerLayoutNodeId?: PhiCmsInstanceId | null;
   /**
@@ -249,7 +250,10 @@ function createPhiCmsPresetNodeSet(defaults: PhiCmsPresetNodeDefaults) {
         config: { ...input.body?.config, ...PHI_DIALOG_BODY_CONFIG },
       });
       const form = input.body?.form;
-      const config = { size: { width: form ? resolvePhiDialogFormWidth(form.descriptor) : PHI_DIALOG_WIDTH }, ...input.config };
+      const config = {
+        ...(form ? resolvePhiDialogFormGeometry(form.descriptor) : { size: { width: PHI_DIALOG_WIDTH } }),
+        ...input.config,
+      };
       const commands = input.commands;
       if (!commands) {
         return {

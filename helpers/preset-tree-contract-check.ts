@@ -13,6 +13,7 @@ import {
   isPhiFormSingleColumn,
 } from "./cms-dialog";
 import { resolvePhiLayoutCreationPreset } from "./cms-layout-defaults";
+import { resolvePhiFormColumnStep } from "../components/forms/form-descriptor-contract";
 import { isPhiRecord } from "./is-record";
 import {
   PHI_FORM_RECORD_TITLE_CAPABILITY,
@@ -361,9 +362,10 @@ function checkOverlayGeometry(
 
 /*
  * A dialog is as wide as its Form needs (`helpers/cms-dialog.ts`): one column takes
- * `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, two keep `PHI_DIALOG_WIDTH`, either as the width of the Overlay's
- * `size`. What is refused is the one width a Preset did not choose -- the default, holding nothing but
- * Forms of one column. Any other width was stated, by a caller that knows what else the body holds; a
+ * `PHI_DIALOG_WIDTH_SINGLE_COLUMN`, columns from `medium` keep `PHI_DIALOG_WIDTH`, columns only at `wide`
+ * take the room they need, each as the width of the Overlay's `size`. What is refused is the one width a
+ * Preset did not choose -- the default -- holding nothing but Forms of one column, or a Form whose columns
+ * it cannot reach. Any other width was stated, by a caller that knows what else the body holds; a
  * Form the caller cannot see is not judged.
  */
 function checkDialogWidth(
@@ -393,6 +395,14 @@ function checkDialogWidth(
       overlay.id,
       `Preset Overlay "${overlay.id}" holds the one-column Form "${String(formIds[0])}" at the full dialog width ` +
       "(PHI_DIALOG_WIDTH). Hand the Form to `dialog` as `body.form`, or state `size: { width: PHI_DIALOG_WIDTH_SINGLE_COLUMN }`.",
+    );
+  }
+  const wideColumns = descriptors.findIndex((descriptor) => descriptor != null && resolvePhiFormColumnStep(descriptor)?.mode === "wide");
+  if (wideColumns >= 0) {
+    report(
+      overlay.id,
+      `Preset Overlay "${overlay.id}" holds the Form "${String(formIds[wideColumns])}", whose columns stand only at \`wide\`, ` +
+      "at the reading measure (PHI_DIALOG_WIDTH), which leaves it one column. Hand the Form to `dialog` as `body.form`.",
     );
   }
 }
