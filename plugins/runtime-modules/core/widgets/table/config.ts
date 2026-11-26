@@ -56,11 +56,16 @@ const PHI_TABLE_DISABLED_CONDITION_CONFIG_FIELDS: PhiCmsConfigField[] = [
   { key: "reason", type: "string", label: "Disabled Reason", text: "message" },
 ];
 
+/*
+ * A condition list at the Widget's own level is edited in an Overlay like every Inspector list; one in an
+ * entry of an Overlay (a column's, an action's) is edited in place there and declares no presentation.
+ */
 function buildPhiTableConditionExpressionConfigFields(
   key: string,
   label: string,
   match: "all" | "any",
   emptyLabel: string,
+  level: "widget" | "entry",
 ): PhiCmsConfigField[] {
   return [
     {
@@ -75,6 +80,7 @@ function buildPhiTableConditionExpressionConfigFields(
     {
       key: `${key}.conditions`,
       type: "collection",
+      ...(level === "widget" ? { presentation: "overlay" as const } : {}),
       label,
       itemKeyField: "valuePath",
       itemLabelField: "valuePath",
@@ -151,8 +157,8 @@ const PHI_TABLE_ACTION_CONFIG_FIELDS: PhiCmsConfigField[] = [
   },
   /* For a row's own address only: an address chosen as the target says whether it opens a new tab itself. */
   { key: "newTab", type: "boolean", label: "Open In New Tab", visibleWhen: { field: "execution", equals: "link" } },
-  ...buildPhiTableConditionExpressionConfigFields("visibleWhen", "Visible Conditions", "all", "Always visible"),
-  ...buildPhiTableConditionExpressionConfigFields("disabledWhen", "Disabled Conditions", "any", "No disabled conditions"),
+  ...buildPhiTableConditionExpressionConfigFields("visibleWhen", "Visible Conditions", "all", "Always visible", "entry"),
+  ...buildPhiTableConditionExpressionConfigFields("disabledWhen", "Disabled Conditions", "any", "No disabled conditions", "entry"),
   { key: "reveal.title", type: "string", label: "Shown Once Title", visibleWhen: { field: "execution", equals: "provider" } },
   { key: "reveal.description", type: "string", label: "Shown Once Description", visibleWhen: { field: "execution", equals: "provider" } },
   { key: "confirm.title", type: "string", label: "Confirm Title" },
@@ -838,7 +844,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
           label: "Editor Unit",
           visibleWhen: { field: "editor.enabled", equals: true },
         },
-        ...buildPhiTableConditionExpressionConfigFields("editor.disabledWhen", "Editor Disabled Conditions", "any", "No disabled conditions").map((field) => ({ ...field, visibleWhen: { field: "editor.enabled", equals: true } })),
+        ...buildPhiTableConditionExpressionConfigFields("editor.disabledWhen", "Editor Disabled Conditions", "any", "No disabled conditions", "entry").map((field) => ({ ...field, visibleWhen: { field: "editor.enabled", equals: true } })),
         { key: "hidden", type: "boolean", label: "Hidden" },
         { key: "ellipsis", type: "boolean", label: "Ellipsis" },
       ],
@@ -1027,6 +1033,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     {
       key: "features.sorting.defaultSorts",
       type: "collection",
+      presentation: "overlay",
       label: "Default Sorts",
       itemKeyField: "key",
       itemLabelField: "key",
@@ -1057,13 +1064,13 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
       ],
     },
     { key: "features.rowSelection.preserveSelectedRowIdentities", type: "boolean", label: "Preserve Selection", visibleWhen: { field: "features.rowSelection.mode", notEquals: "none" } },
-    ...buildPhiTableConditionExpressionConfigFields("features.rowSelection.disabledWhen", "Selection Disabled Conditions", "any", "No disabled conditions").map((field) => ({ ...field, visibleWhen: { field: "features.rowSelection.mode", notEquals: "none" } })),
+    ...buildPhiTableConditionExpressionConfigFields("features.rowSelection.disabledWhen", "Selection Disabled Conditions", "any", "No disabled conditions", "widget").map((field) => ({ ...field, visibleWhen: { field: "features.rowSelection.mode", notEquals: "none" } })),
     { key: "features.editing.mode", type: "choice", label: "Editing", options: [
       { value: "none", label: "None" },
       { value: "cell", label: "Cell" },
       { value: "row", label: "Row" },
     ] },
-    ...buildPhiTableConditionExpressionConfigFields("features.editing.disabledWhen", "Editing Disabled Conditions", "any", "No disabled conditions"),
+    ...buildPhiTableConditionExpressionConfigFields("features.editing.disabledWhen", "Editing Disabled Conditions", "any", "No disabled conditions", "widget"),
     { key: "features.columnReordering.enabled", type: "boolean", label: "Visitor Column Reordering" },
     { key: "features.rowReordering.enabled", type: "boolean", label: "Provider Row Reordering" },
     { ...PHI_CONTROL_SIZE_FIELD, key: "presentation.controlSize", heading: "Appearance" },
@@ -1099,11 +1106,12 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
         { value: "compact", label: "Compact" },
       ],
     },
-    ...buildPhiTableConditionExpressionConfigFields("presentation.row.mutedWhen", "Muted Row Conditions", "any", "No muted rows"),
+    ...buildPhiTableConditionExpressionConfigFields("presentation.row.mutedWhen", "Muted Row Conditions", "any", "No muted rows", "widget"),
     {
       key: "presentation.footer.values",
       heading: "Footer and summary",
       type: "collection",
+      presentation: "overlay",
       label: "Footer Values",
       itemKeyField: "key",
       itemLabelField: "label",
@@ -1129,6 +1137,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     {
       key: "presentation.summary.rows",
       type: "collection",
+      presentation: "overlay",
       label: "Summary Rows",
       itemKeyField: "key",
       itemLabelField: "key",

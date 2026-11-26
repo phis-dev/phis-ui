@@ -77,6 +77,10 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
 - `editorPlacement` places a field: omitted or `inspector` in Settings, `geometry` in the shared
   Geometry section, `toolbar` in the scaffold toolbar. A toolbar field is not rendered again in the
   Inspector.
+- A `collection` the Inspector shows states its `presentation`: `overlay` -- the label and an Edit button,
+  the entries edited in a dialog -- or `select` for a list whose length is decided elsewhere. A list is
+  never edited in the Inspector column; a collection inside an Overlay entry is edited in place there and
+  states none ([BUILDER.md](../../BUILDER.md), "Field rows"; `scripts/validate-inspector-collections.ts`).
 - `category` is one of `PHI_CMS_PLUGIN_CATEGORIES` and only groups Widgets in the Picker. Availability
   comes from ownership: the Widget appears where its owner Module is active.
 - `runtimeSignals` declares signal capabilities and `signalSubcontrols` declares dynamic subcontrol

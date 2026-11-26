@@ -127,23 +127,24 @@ export type PhiCmsConfigFieldChoicePresentation =
 /**
  * Where a collection is edited.
  *
- * `inline` stacks the entries down the Inspector column, which is right for as long as an entry is two
- * or three short fields.
- *
- * `overlay` leaves a row at the field's place -- its label and an Edit button -- and opens an Overlay to
- * edit the entries; what the collection holds is read there, not in the Inspector column.
- * That is not a matter of taste: the Inspector column is narrow, and an entry carrying half a dozen
- * fields -- a table column with a key, a provider field, a title, a renderer, a width, an alignment --
- * becomes a column of truncated Controls in it. Which of the two a collection needs is known by the
- * collection and by nothing else, which is why it is declared here rather than decided by the Inspector
- * from the Widget type.
+ * A list is always edited in a dialog, never in the Inspector column (owner, 2026-11-25). `overlay`
+ * leaves a row at the field's place -- its label and an Edit button -- and opens an Overlay to edit the
+ * entries; what the collection holds is read there. The Inspector column is narrow, and an entry
+ * carrying half a dozen fields -- a table column with a key, a provider field, a title, a renderer, a
+ * width, an alignment -- becomes a column of truncated Controls in it; even a list of two short fields
+ * pushes every row under it down by its length. A collection inside an entry of an Overlay is edited
+ * in that Overlay, in place under its entry, and declares no presentation of its own.
  *
  * `select` shows one entry at a time: a select names the entry, and its fields stand under it. It adds
  * and removes nothing -- it is for a collection whose length is decided elsewhere, as a Command
  * Toolbar's buttons are counted on its scaffold -- and it keeps a column of identical cards from
  * growing with every entry when each one has the same handful of settings.
+ *
+ * A collection the Inspector shows declares one of the two; one edited on the canvas
+ * (`editorPlacement: "toolbar"`) declares neither. `scripts/validate-inspector-collections.ts` holds
+ * every first-party Widget and Layout to that.
  */
-export type PhiCmsConfigFieldCollectionPresentation = "inline" | "overlay" | "select";
+export type PhiCmsConfigFieldCollectionPresentation = "overlay" | "select";
 
 export type PhiCmsConfigFieldChoiceMode = "single" | "multiple";
 

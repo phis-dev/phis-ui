@@ -671,6 +671,17 @@ Field rows:
   Inspector clients.
 - a field that chooses Pages stores their references and offers the Pages the Area answers
   (`usePhiBuilderOfferedPageCatalog`), never paths a person typed (REFERENCES.md).
+- a list is always edited in a dialog, never in the Inspector column (owner, 2026-11-25). A `collection`
+  field the Inspector shows is a row like every other -- its label, and beside it a normal-size Edit
+  button -- and declares `presentation: "overlay"`; the entries are added, removed, ordered and edited in
+  the Overlay the button opens. `presentation: "select"` is the one other answer, for a list whose length
+  is decided elsewhere (one entry at a time, nothing added or removed). A collection inside an entry of an
+  Overlay is edited in place there and declares no presentation; one edited on the canvas
+  (`editorPlacement: "toolbar"`) declares none either. `scripts/validate-inspector-collections.ts`
+  (`runtime-modules:check`) holds every first-party Widget, Layout and data Provider to it.
+- inside such a dialog a row splits label and control 10 : 14 of 24, the medium tier of the house Form
+  layout (`PHI_INSPECTOR_DIALOG_FIELD_LABEL_SHARE`, read from `PHI_FORM_DEFAULT_LAYOUT`); the dialog says
+  so through `PhiInspectorDialogContext`. The Inspector column keeps `PHI_INSPECTOR_FIELD_LABEL_WIDTH`.
 
 Control rules:
 

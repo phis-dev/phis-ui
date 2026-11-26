@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useContext, useMemo, useState, type ReactNode } from "react";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { readPhiDotPath } from "../../../../helpers/dot-path";
 import { PhiCheckboxGroupControl } from "../../../../components/controls/phi-checkbox-group-control";
@@ -63,7 +63,7 @@ import { PhiPaddingControl } from "../../../../components/controls/phi-padding-c
 import type { PhiPaddingWidgetLabels } from "../../../../components/widgets/label-types/padding";
 import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
 import type { PhiBorderWidgetLabels } from "../../../../components/widgets/label-types/border";
-import { PHI_INSPECTOR_FIELD_LABEL_WIDTH, PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
+import { PHI_INSPECTOR_FIELD_LABEL_WIDTH, PhiInspectorDialogContext, PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
 import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
 import type { PhiBackgroundOverlay } from "../../../../components/widgets/config/background";
 import { readPhiSurface } from "../../../../types/surface";
@@ -775,6 +775,8 @@ function PhiInspectorCollectionFieldControl({
 }) {
   const { token } = usePhiConfig();
   const popup = usePhiWidgetScaffoldPopup();
+  /* Inside another list's Overlay an entry's own list is edited in place, not behind a second dialog. */
+  const insideOverlay = useContext(PhiInspectorDialogContext);
   const [overlayOpen, setOverlayOpen] = useState(false);
   /* The entry a `select` collection shows; held to the list when entries go. */
   const [selectedItemIndex, setSelectedItemIndex] = useState(0);
@@ -936,6 +938,10 @@ function PhiInspectorCollectionFieldControl({
     </PhiFlexControl>
   );
 
+  if (insideOverlay) {
+    return renderPhiInspectorConfigFieldBlock(field, editor);
+  }
+
   /*
    * The select is the field's row -- labelled with the field, "Button" -- and the chosen entry's fields
    * follow as rows of their own, so the entry reads as part of the settings and not as a card in them.
@@ -966,13 +972,10 @@ function PhiInspectorCollectionFieldControl({
     );
   }
 
-  if (field.presentation !== "overlay") {
-    return renderPhiInspectorConfigFieldBlock(field, editor);
-  }
-
   /*
-   * The same editor in a wider box, and deliberately without a draft: every change publishes as it is
-   * made, exactly as it does inline, so closing the Overlay decides nothing. The static options picker
+   * Every other list is edited in an Overlay (`PhiCmsConfigFieldCollectionPresentation`), never in the
+   * Inspector column, and deliberately without a draft: every change publishes as it is made, so
+   * closing the Overlay decides nothing. The static options picker
    * has its Cancel and Apply because it edits rows with identities and a validity rule of their own and
    * has something to hold back; here a second copy of the value would only be a second truth, and the
    * Builder's undo is already the way back. No actions, therefore, and so no Footer either.
@@ -999,7 +1002,7 @@ function PhiInspectorCollectionFieldControl({
         rootClassName={popup.rootClassName}
         onDismiss={() => setOverlayOpen(false)}
       >
-        {editor}
+        <PhiInspectorDialogContext.Provider value>{editor}</PhiInspectorDialogContext.Provider>
       </PhiDialogControl>
     </>,
   );
