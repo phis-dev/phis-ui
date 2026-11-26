@@ -396,6 +396,7 @@ A column may declare presentation metadata such as:
 - `ellipsis`
 - `hidden`
 - `valueMap`
+- `emptyText`, what the cell says where the row holds no value (below)
 - `tagColorMap` using only Ant Design's closed Tag status values `default`, `success`, `processing`,
   `warning`, and `error`; its preset colors `magenta`, `red`, `volcano`, `orange`, `gold`, `lime`,
   `green`, `cyan`, `blue`, `geekblue`, and `purple`; or the explicit
@@ -420,6 +421,16 @@ values to Ant Design's Tag status or preset colors and is used only by the `badg
 Standard entries persist the Ant Design color name, not a copied theme value; an intentional custom
 color uses only the explicit structured custom shape. `tagVariant` applies uniformly to every Tag in
 the column rather than introducing per-value presentation branches.
+
+`emptyText` is what a cell says where the row holds no value -- `null`, an empty text or an empty list
+-- already in the reader's language: "Unlimited" in a `datetime` column whose expiry is open (owner,
+2026-11-26). It is drawn as text in place of whatever the renderer would have drawn, for every renderer
+alike, because no value is no renderer's to draw: a `datetime` has nothing to format and `valueMap` maps
+values, not their absence. A value that is there -- `0`, `false` -- is drawn as before. Absent, the cell
+stays empty. The parser reads it strictly: anything but a text is refused, and an empty text is absent.
+It is translated the way the column's `title` is: a Preset writes it in the reader's language from its
+Label Set, as it writes the title, and its Inspector field declares it a label (`text: "label"`), so the
+Widget text pass counts it with the title wherever it reaches the column.
 
 ### Read renderers
 

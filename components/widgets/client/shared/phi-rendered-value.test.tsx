@@ -79,3 +79,25 @@ describe("the tag renderers", () => {
     expect(html).toMatch(/display:inline-flex;max-width:100%/);
   });
 });
+
+describe("what an empty value says", () => {
+  it("draws the column's empty text for no value, whatever the renderer", () => {
+    for (const renderer of ["datetime", "date", "text", "badge", "tags", "money", "interval", "image"] as const) {
+      for (const value of [null, undefined, "", []]) {
+        expect(renderPhiValueContent(value, { renderer, emptyText: "Unlimited" }, labels)).toBe("Unlimited");
+      }
+    }
+  });
+
+  it("is not a value: valueMap does not reach it, and a value that is there is drawn as it was", () => {
+    expect(renderPhiValueContent(null, { emptyText: "Unlimited", valueMap: { "": "Never" } }, labels)).toBe("Unlimited");
+    expect(renderPhiValueContent("active", { emptyText: "Unlimited", valueMap: { active: "Active" } }, labels)).toBe("Active");
+    expect(renderPhiValueContent(0, { emptyText: "Unlimited" }, labels)).toBe("0");
+    expect(renderPhiValueContent(false, { renderer: "checkbox", emptyText: "Unlimited" }, labels)).not.toBe("Unlimited");
+  });
+
+  it("leaves an empty cell empty where the column says nothing", () => {
+    expect(renderPhiValueContent(null, { renderer: "datetime" }, labels)).toBeNull();
+    expect(renderPhiValueContent("", {}, labels)).toBeNull();
+  });
+});

@@ -38,6 +38,8 @@ export type PhiRenderedValueDefinition = {
   valueMap?: Readonly<Record<string, string>>;
   tagColorMap?: Readonly<Record<string, PhiTableTagColor>>;
   tagVariant?: PhiTableTagVariant;
+  /** What is drawn where there is no value -- `null`, `""` or `[]` -- whatever the renderer. */
+  emptyText?: string;
 };
 
 /**
@@ -211,6 +213,13 @@ export function renderPhiValueContent(
   labels: PhiRenderedValueLabels,
   presentation: PhiRenderedValuePresentation = "cell",
 ): ReactNode {
+  /*
+   * No value is no renderer's to draw: a `datetime` has no date to format and `valueMap` maps values,
+   * not their absence. What the column says for it stands in their place, as text.
+   */
+  if (definition.emptyText && (value == null || value === "" || (Array.isArray(value) && value.length === 0))) {
+    return definition.emptyText;
+  }
   if (value == null || value === "") return null;
   /*
    * Read before anything is stringified: both are objects, and a value that is not one of them draws

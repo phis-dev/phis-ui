@@ -337,6 +337,7 @@ function readColumn(reader: PhiConfigReader): PhiTableColumnDefinition {
     valueMap,
     tagColorMap,
     tagVariant: reader.oneOf("tagVariant", PHI_TABLE_TAG_VARIANTS) as PhiTableTagVariant | undefined ?? "outlined",
+    emptyText: reader.string("emptyText"),
   };
 }
 
@@ -735,6 +736,8 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
         { key: "fieldKey", type: "string", label: "Provider Field", required: true },
         { key: "title", type: "string", label: "Title", required: true },
         { key: "description", type: "string", label: "Hint" },
+        // What an empty cell says ("Unlimited"): a word on the page, translated as a label.
+        { key: "emptyText", type: "string", label: "Empty Text", text: "label" },
         { key: "sortField", type: "string", label: "Provider Sort Field" },
         { key: "iconFieldKey", type: "string", label: "Icon Field" },
         { key: "imageFieldKey", type: "string", label: "Image Field" },

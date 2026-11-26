@@ -192,6 +192,14 @@ export type PhiTableColumnDefinition = {
   valueMap?: Readonly<Record<string, string>>;
   tagColorMap?: Readonly<Record<string, PhiTableTagColor>>;
   tagVariant?: PhiTableTagVariant;
+  /**
+   * What the cell says where the row holds no value -- `null`, an empty text or an empty list --
+   * already in the reader's language: "Unlimited" for an expiry that is open.
+   *
+   * For every renderer alike, because a missing value is none of theirs to draw: a `datetime` has no
+   * date to format and `valueMap` maps values, not their absence. Absent, the cell stays empty.
+   */
+  emptyText?: string;
 };
 
 export type PhiTableColumnEditorControl =
