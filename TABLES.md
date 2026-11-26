@@ -300,7 +300,9 @@ no Inspector field for the key yet: the Surface Control offers looks a Table can
 The header row and the footer bar stand one step of the padding scale shallower than the rows
 (owner, 2026-11-26): a large Table's `base` is `sm` there, a medium one's `sm` is `xs`, a small one's `xs`
 is `xxs`, each read from the Theme's spacing variables (`styles/controls.css`). A footer bar with nothing in
-it keeps the rows' depth: shallower, it read as a seam rather than as the Table's end. The body rows keep Ant
+it is as tall as the Table's rounded corner (`--phi-surface-radius`, its line included): a step
+shallower, it read as a seam rather than as the Table's end, and at the rows' depth it stood taller than
+the corner it rounds (owner, 2026-11-26). The body rows keep Ant
 Design's cell padding, which is why the step is taken on those two parts and never on the Table tokens
 (`cellPaddingBlock*`), which pad a header, a footer and a row alike. Only the block axis changes, a
 header cell with sort or reorder buttons grows to them, and the pagination below stands `xs` from the

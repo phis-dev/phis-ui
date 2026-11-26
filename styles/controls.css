@@ -687,8 +687,9 @@ h5.phi-typography, .phi-typography h5 {
  * the scale moves these with it. Only the block axis changes: a header's title still stands over its
  * column's values. A header cell with the sort or reorder buttons grows to them, as a row with a control
  * in it does, and the sticky header measures the row it is (`ResizeObserver` in `phi-table-control.tsx`).
- * An empty footer -- the closing bar alone, no text and no values -- keeps the rows' depth: one line
- * high and a step shallower, it read as a seam rather than as the Table's end (owner, 2026-11-26).
+ * An empty footer -- the closing bar alone, no text and no values -- is not one line high and a step
+ * shallower, which read as a seam rather than as the Table's end, but as tall as its rounded corner
+ * (below; owner, 2026-11-26).
  * The class is repeated because Ant Design weighs its size rule at the wrapper, the Table, its size and
  * the header, and its stylesheet comes after this one.
  */
@@ -708,14 +709,19 @@ h5.phi-typography, .phi-typography h5 {
   :is(
     [class~="ant-table-thead"] > tr > th,
     [class~="ant-table-thead"] > tr > td,
-    [class~="ant-table-footer"]:not(:has(> :empty))
+    [class~="ant-table-footer"]
   ) {
   padding-block: var(--phi-table-head-padding-block);
 }
 
-/* While the rows load the footer's text is held back, and its bar stands as it will with the text in it. */
-.phi-table-control.phi-table-control.phi-table-control.phi-table-control--loading [class~="ant-table-footer"] {
-  padding-block: var(--phi-table-head-padding-block);
+/*
+ * An empty footer bar is exactly as tall as the corner it rounds: the Theme's surface radius, its line
+ * included. Not while the rows load -- the footer's text is held back then, and its bar stands as it
+ * will with the text in it.
+ */
+.phi-table-control.phi-table-control.phi-table-control:not(.phi-table-control--loading)
+  [class~="ant-table-footer"]:has(> :empty) {
+  padding-block: calc((var(--phi-surface-radius) - var(--phi-line-width)) / 2);
 }
 
 .phi-table-control
