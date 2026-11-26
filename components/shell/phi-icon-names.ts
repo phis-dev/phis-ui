@@ -66,6 +66,9 @@ export const PHI_ANTD_ICON_NAMES: Readonly<Record<string, PhiAntdIconKey>> = {
   "check-outlined": "CheckOutlined",
   // Only the long name: a bare `clear` already means the close mark on a Button (phi-button-icons.tsx).
   "clear-outlined": "ClearOutlined",
+  clock: "ClockCircleOutlined",
+  "clock-circle": "ClockCircleOutlined",
+  "clock-circle-outlined": "ClockCircleOutlined",
   close: "CloseOutlined",
   "close-outlined": "CloseOutlined",
   code: "CodeOutlined",

@@ -104,18 +104,38 @@ export async function buildPhiDefaultAccountingProductsPageTree({
       sizing: { mode: "content" },
     },
     { key: "free", fieldKey: "free", title: labels.columns.free, renderer: "checkbox", sizing: { mode: "content" } },
+    /*
+     * Three narrow answers under headings longer than they are: an icon heads each, its title the tooltip
+     * and accessible name, and the hint says what the answer means (owner, 2026-11-26).
+     */
     {
       key: "accountRequired",
       fieldKey: "accountRequired",
       title: labels.columns.account,
+      titleIcon: "user",
+      titleDisplay: "icon",
+      description: labels.columnHints.account,
       renderer: "checkbox",
       sizing: { mode: "content" },
     },
-    { key: "partCount", fieldKey: "partCount", title: labels.columns.parts, align: "right", sizing: { mode: "content" } },
+    {
+      key: "partCount",
+      fieldKey: "partCount",
+      title: labels.columns.parts,
+      titleIcon: "appstore",
+      titleDisplay: "icon",
+      description: labels.columnHints.parts,
+      align: "right",
+      sizing: { mode: "content" },
+    },
     {
       key: "awaitingRelease",
       fieldKey: "awaitingRelease",
       title: labels.columns.waiting,
+      // A clock and not an hourglass: the hourglass is a licence's trial.
+      titleIcon: "clock",
+      titleDisplay: "icon",
+      description: labels.columnHints.waiting,
       renderer: "checkbox",
       sizing: { mode: "content" },
     },

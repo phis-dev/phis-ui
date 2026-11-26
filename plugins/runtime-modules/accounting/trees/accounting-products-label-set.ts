@@ -26,6 +26,11 @@ const PHI_ACCOUNTING_PRODUCTS_PAGE_LABEL_SET = definePhiRuntimeModuleLabelSet(PH
     column_account: "Account required",
     column_parts: "Bundle parts",
     column_waiting: "Terms waiting",
+    column_account_hint: definePhiMessageLabel("Guests cannot buy it: checkout asks the buyer to sign in."),
+    column_parts_hint: definePhiMessageLabel("The products a bundle contains."),
+    column_waiting_hint: definePhiMessageLabel(
+      "Changed terms -- sale, referral address, free, account -- that wait for release before they apply.",
+    ),
     state_draft: "Draft",
     state_active: "Active",
     state_withdrawn: "Withdrawn",
@@ -91,6 +96,11 @@ export async function getPhiAccountingProductsPageLabels(options: PhiGlobalTrans
       account: labels.column_account,
       parts: labels.column_parts,
       waiting: labels.column_waiting,
+    },
+    columnHints: {
+      account: labels.column_account_hint,
+      parts: labels.column_parts_hint,
+      waiting: labels.column_waiting_hint,
     },
     states: {
       draft: labels.state_draft,

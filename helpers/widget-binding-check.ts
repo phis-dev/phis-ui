@@ -37,7 +37,7 @@ function readSource(config: Readonly<Record<string, unknown>>) {
   return isPhiRecord(source) && typeof source.providerKey === "string" ? source : null;
 }
 
-/** The icons a Table's actions and binding tools draw: those shown with an icon, named and unknown. */
+/** The icons a Table's actions, binding tools and column headings draw: those shown with an icon, named and unknown. */
 function checkTableIcons(config: PhiTableWidgetConfig): string[] {
   const findings: string[] = [];
   const actions = [
@@ -53,6 +53,12 @@ function checkTableIcons(config: PhiTableWidgetConfig): string[] {
   for (const tool of config.features?.tools?.bindingFields ?? []) {
     if (tool.create?.display !== "label" && tool.create?.icon && !isPhiIconNameKnown(tool.create.icon.trim())) {
       findings.push(`Table binding field "${tool.key}" names the create icon "${tool.create.icon}", which PhiIcon does not know.`);
+    }
+  }
+  // A heading that is its icon alone (`titleDisplay: "icon"`) is nothing where the icon is unknown.
+  for (const column of config.presentation?.columns ?? []) {
+    if (column.titleIcon && !isPhiIconNameKnown(column.titleIcon.trim())) {
+      findings.push(`Table column "${column.key}" names the title icon "${column.titleIcon}", which PhiIcon does not know.`);
     }
   }
   return findings;

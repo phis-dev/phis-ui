@@ -41,6 +41,7 @@ const PHI_ANTD_ICON_LOADERS = {
   CalendarOutlined: () => import("@ant-design/icons-svg/es/asn/CalendarOutlined"),
   CheckOutlined: () => import("@ant-design/icons-svg/es/asn/CheckOutlined"),
   ClearOutlined: () => import("@ant-design/icons-svg/es/asn/ClearOutlined"),
+  ClockCircleOutlined: () => import("@ant-design/icons-svg/es/asn/ClockCircleOutlined"),
   CloseOutlined: () => import("@ant-design/icons-svg/es/asn/CloseOutlined"),
   CloudDownloadOutlined: () => import("@ant-design/icons-svg/es/asn/CloudDownloadOutlined"),
   CloudUploadOutlined: () => import("@ant-design/icons-svg/es/asn/CloudUploadOutlined"),

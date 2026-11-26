@@ -1453,8 +1453,8 @@ that quotes one mounts a Provider, never a Table.
 A Table's, a Tree's and a record Widget's config is checked against the resource its Provider declares
 where the config is made, and only there (owner, 2026-11-24): columns, filters, sorting, the counted
 footer, every Provider action in its scope with the confirmation and danger the resource asks for, binding
-tools, a Tree's node fields, editors and drag and drop, and every icon the Table's actions and binding tools
-name (`validatePhiTableWidgetBinding`, `validatePhiTreeWidgetBinding`, `validatePhiRecordWidgetBinding`,
+tools, a Tree's node fields, editors and drag and drop, and every icon the Table's actions, binding tools
+and column headings (`titleIcon`) name (`validatePhiTableWidgetBinding`, `validatePhiTreeWidgetBinding`, `validatePhiRecordWidgetBinding`,
 run together by `checkPhiWidgetBinding` in `helpers/widget-binding-check.ts`). The places:
 
 - a package's tests, `checkPhiPresetTables` from `@phis/ui/module/page-check` over every tree its presets

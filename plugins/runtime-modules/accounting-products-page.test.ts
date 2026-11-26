@@ -136,6 +136,34 @@ describe("the product directory page", () => {
     expect(checkPhiPresetTables(unknownIcon, { dataProviders: [] })).toEqual([]);
   });
 
+  it("heads its three narrow answers with an icon, the title as its name and a hint saying what it means", async () => {
+    const tree = await loadTree();
+    const table = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/table"))!;
+    const config = table.config as { presentation: { columns: Record<string, unknown>[] } };
+    const heads = Object.fromEntries(config.presentation.columns
+      .filter((column) => column.titleDisplay === "icon")
+      .map((column) => [column.key, { icon: column.titleIcon, title: column.title, hint: column.description }]));
+    expect(heads).toEqual({
+      accountRequired: { icon: "user", title: "Account required", hint: "Guests cannot buy it: checkout asks the buyer to sign in." },
+      partCount: { icon: "appstore", title: "Bundle parts", hint: "The products a bundle contains." },
+      awaitingRelease: {
+        icon: "clock",
+        title: "Terms waiting",
+        hint: "Changed terms -- sale, referral address, free, account -- that wait for release before they apply.",
+      },
+    });
+    // An unknown heading icon is refused where the config is made, as an action's is.
+    const unknown = {
+      ...tree,
+      contentWidgets: tree.contentWidgets.map((widget) => widget.id === table.id
+        ? { ...widget, config: { ...config, presentation: { ...config.presentation, columns: config.presentation.columns.map((column) =>
+          column.key === "partCount" ? { ...column, titleIcon: "bundle" } : column) } } }
+        : widget),
+    };
+    expect(checkPhiPresetTables(unknown, { dataProviders: PHI_ACCOUNTING_RUNTIME_DATA_PROVIDER_DESCRIPTORS }).map((finding) => finding.message))
+      .toEqual(['Table column "partCount" names the title icon "bundle", which PhiIcon does not know.']);
+  });
+
   // TABLES.md, "Footer and summary": a Table with a header ends in its footer; without a header it needs none.
   it("wants the footer of a Table that shows its header, and only of that one", async () => {
     const tree = await loadTree();
