@@ -1526,9 +1526,10 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
   }
   if (filter.type === "boolean") {
     if (filter.control === "switch") {
-      // A switch answers yes or no and nothing else, so an absent value reads as off.
+      // A switch answers yes or no and nothing else, so an absent value reads as off. Its label stands
+      // beside it as text, not as its name -- so the filter's label is also its accessible name.
       return <PhiSwitchControl checked={value === true} size={size === "large" ? undefined : size}
-        onChange={(next) => onChange(next)} />;
+        ariaLabel={filter.label} onChange={(next) => onChange(next)} />;
     }
     return <PhiSelectControl allowClear value={typeof value === "boolean" ? String(value) : undefined}
       options={[{ value: "true", label: labels.yes }, { value: "false", label: labels.no }]}
