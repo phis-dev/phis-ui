@@ -297,6 +297,14 @@ no Inspector field for the key yet: the Surface Control offers looks a Table can
 
 ### Footer and summary
 
+The header row and the footer bar stand one step of the padding scale shallower than the rows
+(owner, 2026-11-26): a large Table's `base` is `sm` there, a medium one's `sm` is `xs`, a small one's `xs`
+is `xxs`, each read from the Theme's spacing variables (`styles/controls.css`). The body rows keep Ant
+Design's cell padding, which is why the step is taken on those two parts and never on the Table tokens
+(`cellPaddingBlock*`), which pad a header, a footer and a row alike. Only the block axis changes, a
+header cell with sort or reorder buttons grows to them, and the pagination below stands `xs` from the
+Table.
+
 Table footer and column summary are separate native Table presentation contracts:
 
 - `presentation.footer` renders the full-width Ant Design Table footer below the Table body. It owns one

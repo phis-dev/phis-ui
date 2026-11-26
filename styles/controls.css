@@ -674,7 +674,37 @@ h5.phi-typography, .phi-typography h5 {
 }
 
 .phi-table-control [class~="ant-table-pagination"][class~="ant-pagination"] {
-  margin-block: var(--phi-padding-sm) 0 !important;
+  margin-block: var(--phi-padding-xs) 0 !important;
+}
+
+/*
+ * The header row and the footer bar are one step of the padding scale shallower than the rows
+ * (owner, 2026-11-26): they label and close the rows, and at the rows' own depth a small Table's header
+ * stood 36px tall over rows of the same height. Ant Design pads a header cell, a footer and a body cell
+ * with one token per size (`cellPaddingBlock`, `-MD`, `-SM`), so the step is taken here, on those two
+ * parts only, and never on the tokens -- which would take the rows with them. Large `base` becomes `sm`,
+ * medium `sm` becomes `xs`, small `xs` becomes `xxs`; each the Theme's variable, so a Theme that moves
+ * the scale moves these with it. Only the block axis changes: a header's title still stands over its
+ * column's values. A header cell with the sort or reorder buttons grows to them, as a row with a control
+ * in it does, and the sticky header measures the row it is (`ResizeObserver` in `phi-table-control.tsx`).
+ * The class is repeated because Ant Design weighs its size rule at the wrapper, the Table, its size and
+ * the header, and its stylesheet comes after this one.
+ */
+.phi-table-control [class~="ant-table"] {
+  --phi-table-head-padding-block: var(--phi-padding-sm);
+}
+
+.phi-table-control [class~="ant-table"][class~="ant-table-medium"] {
+  --phi-table-head-padding-block: var(--phi-padding-xs);
+}
+
+.phi-table-control [class~="ant-table"][class~="ant-table-small"] {
+  --phi-table-head-padding-block: var(--phi-padding-xxs);
+}
+
+.phi-table-control.phi-table-control.phi-table-control.phi-table-control
+  :is([class~="ant-table-thead"] > tr > th, [class~="ant-table-thead"] > tr > td, [class~="ant-table-footer"]) {
+  padding-block: var(--phi-table-head-padding-block);
 }
 
 .phi-table-control
