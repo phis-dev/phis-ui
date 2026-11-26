@@ -110,7 +110,12 @@ export const PhiCascaderFormControl: ComponentType<PhiFormFieldProviderProps> = 
     placeholder={placeholder}
     disabled={disabled}
     readOnly={readOnly}
-    options={options ?? []}
+    // A cascader's value is a path of text, so each option's value is its text.
+    options={(options ?? []).map(({ parentValue, ...option }) => ({
+      ...option,
+      value: String(option.value),
+      ...(parentValue === undefined ? {} : { parentValue: String(parentValue) }),
+    }))}
     allowRoot={field.config?.allowRoot !== false}
     allowClear={field.config?.allowClear === true}
     separator={typeof field.config?.separator === "string" ? field.config.separator : "/"}

@@ -120,7 +120,8 @@ export const PhiDimensionFormControl: ComponentType<PhiFormFieldProviderProps> =
 export const PhiFlagsFormControl: ComponentType<PhiFormFieldProviderProps> = ({
   field, value, onChange, options, disabled, readOnly, size,
 }) => {
-  const offered = useMemo(() => options ?? [], [options]);
+  // The checkbox group holds text; a bit stated as a number is the same bit (`flags-field.ts`).
+  const offered = useMemo(() => (options ?? []).map((option) => ({ ...option, value: String(option.value) })), [options]);
   const config = useMemo(() => readPhiFlagsFieldConfig(field.config, offered), [field.config, offered]);
   const mask = readPhiFlagsFieldValue(value);
   const checked = offered.filter((option) => (mask & (config.bits.get(option.value) ?? 0)) !== 0).map((option) => option.value);
@@ -135,7 +136,7 @@ export const PhiFlagsFormControl: ComponentType<PhiFormFieldProviderProps> = ({
         const needed = config.requires.get(config.bits.get(option.value) ?? 0);
         return needed !== undefined && (mask & needed) === 0 ? { ...option, disabled: true } : option;
       })}
-      onChange={(next) => onChange?.(writePhiFlagsFieldValue(config, mask, next))}
+      onChange={(next) => onChange?.(writePhiFlagsFieldValue(config, mask, next.map(String)))}
     />
   );
 };

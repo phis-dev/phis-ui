@@ -63,7 +63,8 @@ describe("how wide that gap is", () => {
   it("follows the stated row gap rather than the house one", () => {
     const layout = resolvePhiFormLayout({ gap: { compact: "xs", medium: "lg", wide: "lg" } });
 
-    expect(layout.columnGap).toEqual({ compact: "xs", medium: "lg", wide: "lg" });
+    // `spacious` cascades from `wide` where nothing states it (contracts 0.8.15).
+    expect(layout.columnGap).toEqual({ compact: "xs", medium: "lg", wide: "lg", spacious: "lg" });
   });
 
   it("is the form's own answer where it gives one", () => {
@@ -72,8 +73,8 @@ describe("how wide that gap is", () => {
       columnGap: { compact: "none", medium: "lg", wide: "xl" },
     });
 
-    expect(layout.columnGap).toEqual({ compact: "none", medium: "lg", wide: "xl" });
-    expect(layout.gap).toEqual({ compact: "sm", medium: "base", wide: "base" });
+    expect(layout.columnGap).toEqual({ compact: "none", medium: "lg", wide: "xl", spacious: "xl" });
+    expect(layout.gap).toEqual({ compact: "sm", medium: "base", wide: "base", spacious: "base" });
   });
 });
 

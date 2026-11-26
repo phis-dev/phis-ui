@@ -46,7 +46,7 @@ export type PhiFormFieldProviderProps = {
   controlLabel?: string;
   labels?: Readonly<Record<string, string>>;
   placeholder?: string;
-  options?: readonly PhiControlOption[];
+  options?: readonly PhiControlOption<string | number>[];
   value?: unknown;
   checked?: boolean;
   onChange?: (...args: unknown[]) => void;

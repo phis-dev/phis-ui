@@ -3,12 +3,13 @@ import { isPhiRecord } from "../../helpers/is-record";
 
 /**
  * The `flags` field: several yes-or-no answers held as one bit-flag number, the shape every yes-or-no
- * state of a Core contract has. Each option's `value` is its bit, written as the decimal number
- * (`"1"`, `"2"`, `"4"`, ...); the value is the sum of the bits checked, `0` for none. `config.requires`
+ * state of a Core contract has. Each option's `value` is its bit, a power of two as a number or as its
+ * decimal text (`4` or `"4"`); the value is the sum of the bits checked, `0` for none. `config.requires`
  * names, by option value, the option an option needs: it is offered only while that one is checked and
  * is cleared when it is unchecked -- a default only for a purpose the address has.
  */
 export type PhiFlagsFieldConfig = {
+  /** Each option's bit, by its value as text (`String(option.value)`). */
   bits: ReadonlyMap<string, number>;
   requires: ReadonlyMap<number, number>;
 };
@@ -24,15 +25,16 @@ function readBit(value: string, where: string) {
 /** The field's bits and dependencies, or an Error naming what is wrong: a field nobody can read the value of is refused. */
 export function readPhiFlagsFieldConfig(
   config: Readonly<Record<string, unknown>> | undefined,
-  options: readonly Pick<PhiControlOption, "value">[],
+  options: readonly Pick<PhiControlOption<string | number>, "value">[],
 ): PhiFlagsFieldConfig {
   const bits = new Map<string, number>();
   let all = 0;
   for (const option of options) {
-    const bit = readBit(option.value, "option");
+    const value = String(option.value);
+    const bit = readBit(value, "option");
     if ((all & bit) !== 0) throw new Error(`The flags field names the bit ${bit} twice.`);
     all |= bit;
-    bits.set(option.value, bit);
+    bits.set(value, bit);
   }
   const requires = new Map<number, number>();
   const stated = config?.requires;

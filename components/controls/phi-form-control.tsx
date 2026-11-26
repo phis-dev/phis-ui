@@ -62,6 +62,7 @@ import {
   PHI_FORM_SMALL_GAP_STEP,
   resolvePhiFormText,
   shouldPhiFormSubmitOnKeyDown,
+  type PhiFormResponsiveMode,
 } from "../forms/form-descriptor-contract";
 import { PhiFormFieldLabelText } from "../forms/form-field-row";
 import { readPhiMoneyFieldCurrencyFieldKey } from "../forms/money-field-currency-key";
@@ -494,22 +495,20 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
    * its controls are a step lower, and the rows between them keep the same proportion to them.
    */
   const gapAt = (step: PhiSpacingToken) => gapByToken[size === "small" ? PHI_FORM_SMALL_GAP_STEP[step] : step];
-  const rowGapByMode = {
-    compact: gapAt(layout.gap.compact),
-    medium: gapAt(layout.gap.medium),
-    wide: gapAt(layout.gap.wide),
-  } as const;
+  /*
+   * Every width the contract has, by its list (`PHI_FORM_RESPONSIVE_MODES`), never three named by hand: a
+   * fourth width in the contract was a TypeError here while the modes were spelled out (owner, 2026-11-26).
+   */
+  const byMode = <T,>(read: (mode: PhiFormResponsiveMode) => T) =>
+    Object.fromEntries(PHI_FORM_RESPONSIVE_MODES.map((mode) => [mode, read(mode)])) as Record<PhiFormResponsiveMode, T>;
+  const rowGapByMode = byMode((mode) => gapAt(layout.gap[mode]));
   /*
    * And the distance across, which is not the grid's `column-gap`: that one falls between every pair of
    * adjacent elements, so it would push a label away from its own control by the amount that separates
    * two fields. It is laid on the cell that opens a column instead (`phiFormCellOpensColumn`), so only
    * the boundary between two columns pays it.
    */
-  const columnGapByMode = {
-    compact: gapAt(layout.columnGap.compact),
-    medium: gapAt(layout.columnGap.medium),
-    wide: gapAt(layout.columnGap.wide),
-  } as const;
+  const columnGapByMode = byMode((mode) => gapAt(layout.columnGap[mode]));
   // The template's columns, for a field whose parts are rows of it (`phiFormPartProperties`).
   const partProperties = useMemo(() => Object.fromEntries(
     PHI_FORM_RESPONSIVE_MODES.flatMap((mode) => phiFormPartProperties(layout, mode)),
@@ -721,11 +720,9 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control",
       hasLabel: field.label != null && field.controlLabel == null,
     }));
-    return {
-      compact: resolvePhiFormGridPlacement(layout, entries, "compact"),
-      medium: resolvePhiFormGridPlacement(layout, entries, "medium"),
-      wide: resolvePhiFormGridPlacement(layout, entries, "wide"),
-    };
+    return Object.fromEntries(PHI_FORM_RESPONSIVE_MODES.map((mode) =>
+      [mode, resolvePhiFormGridPlacement(layout, entries, mode)])) as Record<
+        PhiFormResponsiveMode, ReturnType<typeof resolvePhiFormGridPlacement>>;
   }, [activeRegistry, layout, renderedFields, unavailableKeys]);
 
   return (
@@ -760,15 +757,11 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         alignItems: "start",
         width: "100%",
         minWidth: 0,
-        "--phi-form-row-gap-compact": `${rowGapByMode.compact}px`,
-        "--phi-form-row-gap-medium": `${rowGapByMode.medium}px`,
-        "--phi-form-row-gap-wide": `${rowGapByMode.wide}px`,
-        "--phi-form-label-gutter-compact": `${Math.round(rowGapByMode.compact / 2)}px`,
-        "--phi-form-label-gutter-medium": `${Math.round(rowGapByMode.medium / 2)}px`,
-        "--phi-form-label-gutter-wide": `${Math.round(rowGapByMode.wide / 2)}px`,
-        "--phi-form-column-gutter-compact": `${columnGapByMode.compact}px`,
-        "--phi-form-column-gutter-medium": `${columnGapByMode.medium}px`,
-        "--phi-form-column-gutter-wide": `${columnGapByMode.wide}px`,
+        ...Object.fromEntries(PHI_FORM_RESPONSIVE_MODES.flatMap((mode) => [
+          [`--phi-form-row-gap-${mode}`, `${rowGapByMode[mode]}px`],
+          [`--phi-form-label-gutter-${mode}`, `${Math.round(rowGapByMode[mode] / 2)}px`],
+          [`--phi-form-column-gutter-${mode}`, `${columnGapByMode[mode]}px`],
+        ])),
         // A label beside its control is as tall as the control, so the two read as one line.
         "--phi-form-label-min-height": `${size === "small" ? token.controlHeightSM : token.controlHeight}px`,
         // Written for a small Form alone: a medium one keeps the text it inherits, as it always has.
