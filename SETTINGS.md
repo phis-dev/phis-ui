@@ -56,8 +56,8 @@ target hides.
 
 ## 3. Navigation
 
-Settings navigation lives in the Area sidebar: the sidebar surface (`admin:sidebar`,
-`builder:sidebar`) declares one exported "Settings" container item, and the surface's `settings` anchor
+Settings navigation lives in the Area sidebar: the sidebar surface (`app:sidebar`, `admin:sidebar`,
+`builder:sidebar`, `accounting:sidebar`) declares one exported "Settings" container item, and the surface's `settings` anchor
 (`anchors` in `plugins/runtime-modules/area-definitions.ts`) names that container as its `parentItemKey`. There is no separate `<area>:settings` navigation surface and no in-content Settings navigation.
 
 The sidebar is rendered by the persistent Area shell (the root layout), which survives client-side
@@ -74,7 +74,9 @@ re-renders visibly on every switch. Settings navigation must therefore stay in t
   themselves by key: one placed `before` it stands ahead of everything held back to the end, and one
   placed `after` it stands behind the container and ahead of `end`.
 - The base Area Module's General page (section 5) is declared statically as the container's first
-  child by the Area definition. Every other Module reaches the container through the sidebar's
+  child by the Area definition. Accounting's container has no page of the Area's own: it holds only what
+  Modules hang under it -- the Billing Module's number series first (owner, 2026-11-27) -- and hides while
+  a viewer sees none of it. Every other Module reaches the container through the sidebar's
   `settings` anchor together with the `settings` mount -- `buildPhiSidebarRoutePresetDescriptor` with
   `anchor: "settings"` states both -- and is ordered after the static items. Ordering is owned by the
   surface declaration and the injection contract; independent Modules never coordinate order among

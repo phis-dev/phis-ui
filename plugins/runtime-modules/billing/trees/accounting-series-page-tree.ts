@@ -1,13 +1,16 @@
-import { createPhiPresetCmsInstanceIdMap, type PhiCmsInstanceId } from "../../../../types/cms-instance-id";
+import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
 import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
-import { PHI_DIALOG_COMMANDS_CONFIG } from "../../../../helpers/cms-dialog";
-import { PHI_TEXT_SOURCE_PRESET } from "../../../../helpers/text-source";
-import type { PhiCmsContentWidgetNode, PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
+import { resolvePhiDialogFormGeometry } from "../../../../helpers/cms-dialog";
+import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime, PhiFormDescriptor } from "../../../../types";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
-import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import {
+  buildPhiSettingsPageShellTree,
+  type PhiSettingsPageShellOverlay,
+} from "../../../../components/regions/presets/phi-settings-page-shell-tree";
+import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import { buildPhiWidgetLabelTranslatorOptions } from "../../../../components/widgets/label-sets/runtime-options";
 import { canPhiViewerAccess } from "../../../../types/access";
 import {
@@ -23,39 +26,28 @@ import { getPhiBillingSeriesPageLabels } from "../labels";
 
 const SYNTHETIC_REGION_ID = -587;
 
-const PRESET = {
-  domain: "page",
-  ownerModuleId: PHI_BILLING_RUNTIME_MODULE_ID,
-  presetKey: PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries,
-} as const;
+const PRESET_KEY = PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries;
 
-const WORKFLOWS = ["create", "edit", "replace"] as const;
-type Workflow = (typeof WORKFLOWS)[number];
-
-const LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(PRESET, WORKFLOWS.flatMap((workflow) => [`layout${workflow}Body`, `layout${workflow}Footer`]));
-const OVERLAY_IDS = createPhiPresetCmsInstanceIdMap(PRESET, WORKFLOWS.map((workflow) => `overlay${workflow}`));
-const WIDGET_IDS = createPhiPresetCmsInstanceIdMap(PRESET, [
-  "widgetTable",
-  ...WORKFLOWS.flatMap((workflow) => [`widget${workflow}Form`, `widget${workflow}Commands`]),
+/*
+ * The shell derives Overlay, Layout and Widget instance ids from the node keys; the same derivation here
+ * yields the addresses the Table and the dialogs speak to. A dialog's Form is `<nodeKey>Form`.
+ */
+const IDS = createPhiPresetCmsInstanceIdMap({ domain: "page", ownerModuleId: PHI_BILLING_RUNTIME_MODULE_ID, presetKey: PRESET_KEY }, [
+  "widgetSeriesTable",
+  "overlaySeriesCreate",
+  "overlaySeriesEdit",
+  "overlaySeriesEditForm",
+  "overlaySeriesReplace",
+  "overlaySeriesReplaceForm",
 ]);
 
-const FORM_ID_BY_WORKFLOW = {
-  create: PHI_BILLING_FORM_IDS.seriesCreate,
-  edit: PHI_BILLING_FORM_IDS.seriesEdit,
-  replace: PHI_BILLING_FORM_IDS.seriesReplace,
-} as const satisfies Record<Workflow, string>;
-
-/** The Table action that opens each dialog: Add from the toolbar, Edit and Replace from a row. */
-const ACTION_BY_WORKFLOW = { create: "create", edit: "edit", replace: "replace" } as const satisfies Record<Workflow, string>;
-
-function descriptorOf(workflow: Workflow): PhiFormDescriptor {
-  const form = PHI_BILLING_RUNTIME_MODULE_FORMS.find((entry) => entry.formId === FORM_ID_BY_WORKFLOW[workflow]);
-  if (!form) throw new Error(`The number series Form "${FORM_ID_BY_WORKFLOW[workflow]}" is not registered.`);
+function descriptorOf(formId: string): PhiFormDescriptor {
+  const form = PHI_BILLING_RUNTIME_MODULE_FORMS.find((entry) => entry.formId === formId);
+  if (!form) throw new Error(`The number series Form "${formId}" is not registered.`);
   return form.descriptor;
 }
 
-/** The Table's announcement of one of its actions, to one receiver that decides by the action's key. */
-function tableActionRoute(routeKey: string, receiver: PhiCmsInstanceId) {
+function tableActionRoute(routeKey: string, receiver: string) {
   return {
     routeKey,
     capabilityId: "actionActivate",
@@ -69,9 +61,10 @@ function tableActionRoute(routeKey: string, receiver: PhiCmsInstanceId) {
 }
 
 /**
- * The Accounting page `Number series` of the Billing Module, for Admin and Accountant: the Site's series
- * as one Table -- key, label, template, reset, the next number, kinds, allowed Add-ons, state -- and three
- * dialogs, each a Form of descriptor fields as wide as that Form needs.
+ * The Accounting Settings page `Number series` of the Billing Module, for Admin and Accountant, on the
+ * shared Settings page shell (SETTINGS.md section 4): the Site's series as one Table -- key, label,
+ * template, reset, the next number, kinds, allowed Add-ons, state -- and three dialogs, each a Form of
+ * descriptor fields as wide as that Form needs.
  *
  * - Add (toolbar): a new series, with the number its template would give first, as Core answers it.
  * - Edit (row): label, kinds and allowed Add-ons; key, template and reset are shown and stay -- a series
@@ -79,8 +72,8 @@ function tableActionRoute(routeKey: string, receiver: PhiCmsInstanceId) {
  * - Replace (row): a new series under the same key with a template and reset of its own; Core closes the
  *   one it replaces in the same step.
  *
- * Close is the Provider's row action and asks first. A saved dialog closes itself and the Table reads
- * itself again; what may change of a series is Core's to decide, and Core refuses the rest.
+ * Close is the Provider's row action and asks first. A saved dialog closes itself (the shell's) and the
+ * Table reads itself again; what may change of a series is Core's to decide, and Core refuses the rest.
  */
 export async function buildPhiBillingAccountingSeriesPageTree({
   page,
@@ -90,8 +83,6 @@ export async function buildPhiBillingAccountingSeriesPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiBillingSeriesPageLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
-  const nodes = createPhiCmsPresetNodes(page);
-  const scaffold = buildPhiBasePageContentScaffold({ page, regionId: SYNTHETIC_REGION_ID });
   const pageMeta = {
     title: { msgId: 0, source: "Number series", value: labels.pageTitle },
     description: {
@@ -101,6 +92,8 @@ export async function buildPhiBillingAccountingSeriesPageTree({
     },
   };
   if (!canPhiViewerAccess(runtime.viewer, PHI_BILLING_STAFF_ACCESS)) {
+    const nodes = createPhiCmsPresetNodes(page);
+    const scaffold = buildPhiBasePageContentScaffold({ page, regionId: SYNTHETIC_REGION_ID });
     return {
       page: nodes.page({ pageType: PhiCmsPageType.Standard }),
       pageMeta,
@@ -108,7 +101,7 @@ export async function buildPhiBillingAccountingSeriesPageTree({
       layoutNodes: [scaffold.layoutNode],
       overlays: [],
       contentWidgets: [nodes.widget({
-        id: WIDGET_IDS.widgetTable,
+        id: IDS.widgetSeriesTable,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "simple-text",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
@@ -120,198 +113,69 @@ export async function buildPhiBillingAccountingSeriesPageTree({
     };
   }
 
-  const tableAddress = createPhiSignalAddress("cms", WIDGET_IDS.widgetTable);
+  const tableAddress = createPhiSignalAddress("cms", IDS.widgetSeriesTable);
   const source = { providerKey: PHI_BILLING_RUNTIME_DATA_PROVIDER_KEYS.series, resourceKey: PHI_BILLING_SERIES_RESOURCE_KEY };
-  const titles: Record<Workflow, string> = {
-    create: labels.dialogs.create,
-    edit: labels.dialogs.edit,
-    replace: labels.dialogs.replace,
-  };
-
-  const dialogs = WORKFLOWS.map((workflow, index) => {
-    const overlayId = OVERLAY_IDS[`overlay${workflow}`]!;
-    const formId = WIDGET_IDS[`widget${workflow}Form`]!;
-    const commandsId = WIDGET_IDS[`widget${workflow}Commands`]!;
-    const bodyId = LAYOUT_IDS[`layout${workflow}Body`]!;
-    const overlayAddress = createPhiSignalAddress("cms", overlayId);
-    const formAddress = createPhiSignalAddress("cms", formId);
-    const submitAddress = createPhiSignalSubcontrolAddress("cms", commandsId, "submit");
-    const opensRecord = workflow !== "create";
-    const built = nodes.dialog({
-      id: overlayId,
-      bodyLayoutNodeId: bodyId,
-      sortOrder: index,
-      label: `billing series ${workflow} modal`,
-      // The dialog takes the width its Form needs.
-      body: { form: { descriptor: descriptorOf(workflow) } },
-      config: {
-        title: titles[workflow],
-        // Opened afresh each time, so a dialog cancelled half filled starts from the series again.
-        mountPolicy: "remount",
-        openActionKey: ACTION_BY_WORKFLOW[workflow],
+  // The Table's reload listener takes no value, and a listener matches on the value type too.
+  const reloadTable = (routeKey: string) => ({
+    routeKey,
+    capabilityId: "submitSuccess",
+    scope: "page" as const,
+    channel: "reload",
+    action: "activate" as const,
+    valueType: "none" as const,
+    receiver: tableAddress,
+  });
+  const dialog = (
+    nodeKey: string,
+    title: string,
+    openActionKey: string,
+    formId: (typeof PHI_BILLING_FORM_IDS)[keyof typeof PHI_BILLING_FORM_IDS],
+    formAddress: string | null,
+  ): PhiSettingsPageShellOverlay => ({
+    nodeKey,
+    title,
+    openActionKey,
+    formId,
+    // The dialog takes the width its Form needs.
+    size: resolvePhiDialogFormGeometry(descriptorOf(formId)).size,
+    label: title,
+    submitLabel: labels.dialogs.save,
+    cancelLabel: labels.dialogs.cancel,
+    configOverrides: formAddress === null
+      ? { signalRoutes: { emits: [reloadTable(`${nodeKey}-success`)] } }
+      : {
+        // Edit and Replace open on the series the row names, read again through the same Provider.
+        source,
+        openActionKey,
         signalRoutes: {
+          emits: [reloadTable(`${nodeKey}-success`)],
           listens: [{
-            routeKey: `billing-series-${workflow}-open`,
-            capabilityId: "open",
+            routeKey: `${nodeKey}-record-open`,
+            capabilityId: "recordOpen",
             scope: "page",
             channel: "action",
             action: "activate",
             valueType: "json",
             valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
-            receiver: overlayAddress,
-          }, {
-            routeKey: `billing-series-${workflow}-close`,
-            capabilityId: "close",
-            scope: "page",
-            channel: "dialog",
-            action: "close",
-            valueType: "none",
-            receiver: overlayAddress,
-          }, {
-            routeKey: `billing-series-${workflow}-busy`,
-            capabilityId: "busy",
-            scope: "page",
-            channel: "busy",
-            action: "change",
-            valueType: "boolean",
-            receiver: overlayAddress,
+            receiver: createPhiSignalAddress("cms", formAddress),
           }],
         },
       },
-      commands: {
-        footerLayoutNodeId: LAYOUT_IDS[`layout${workflow}Footer`]!,
-        widgetId: commandsId,
-        label: titles[workflow],
-        config: {
-          key: `billing-series-${workflow}-commands`,
-          textSource: PHI_TEXT_SOURCE_PRESET,
-          ...PHI_DIALOG_COMMANDS_CONFIG,
-          buttons: [
-            { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: labels.dialogs.cancel, icon: "close" },
-            { key: "submit", emits: [{ capabilityId: "submit", value: null }], label: labels.dialogs.save, variant: "primary" },
-          ],
-          signalRoutes: {
-            emits: [{
-              routeKey: `billing-series-${workflow}-cancel`,
-              capabilityId: "close",
-              scope: "page",
-              channel: "dialog",
-              action: "close",
-              valueType: "none",
-              receiver: overlayAddress,
-            }, {
-              routeKey: `billing-series-${workflow}-commands-submit`,
-              capabilityId: "submit",
-              scope: "page",
-              channel: "submit",
-              action: "activate",
-              valueType: "none",
-              receiver: formAddress,
-            }],
-            listens: [{
-              routeKey: `billing-series-${workflow}-commands-loading`,
-              capabilityId: "loading",
-              scope: "page",
-              channel: "loading",
-              action: "change",
-              valueType: "boolean",
-              receiver: submitAddress,
-            }],
-          },
-        },
-      },
-    });
-    const form: PhiCmsContentWidgetNode = nodes.widget({
-      id: formId,
-      parentLayoutNodeId: bodyId,
-      typeKey: "form",
-      slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-      sortOrder: 0,
-      label: titles[workflow],
-      flags: PhiCmsFlags.NoTranslate,
-      config: {
-        formId: FORM_ID_BY_WORKFLOW[workflow],
-        formConfig: {},
-        feedback: { mode: "message" },
-        execution: { mode: "handler" },
-        // Edit and Replace open on the series the row names, read again through the same Provider.
-        source: opensRecord ? source : null,
-        ...(opensRecord ? { openActionKey: ACTION_BY_WORKFLOW[workflow] } : {}),
-        signalRoutes: {
-          emits: [{
-            // A dialog that saved is finished, and the series it wrote belongs in the Table at once.
-            routeKey: `billing-series-${workflow}-success-close`,
-            capabilityId: "submitSuccess",
-            scope: "page",
-            channel: "dialog",
-            action: "close",
-            valueType: "none",
-            receiver: overlayAddress,
-          }, {
-            routeKey: `billing-series-${workflow}-success-reload`,
-            capabilityId: "submitSuccess",
-            scope: "page",
-            channel: "reload",
-            action: "activate",
-            valueType: "none",
-            receiver: tableAddress,
-          }, {
-            routeKey: `billing-series-${workflow}-submitting-busy`,
-            capabilityId: "submitting",
-            scope: "page",
-            channel: "busy",
-            action: "change",
-            valueType: "boolean",
-            receiver: overlayAddress,
-          }, {
-            routeKey: `billing-series-${workflow}-submit-loading`,
-            capabilityId: "submitting",
-            scope: "page",
-            channel: "loading",
-            action: "change",
-            valueType: "boolean",
-            receiver: submitAddress,
-          }],
-          listens: [{
-            routeKey: `billing-series-${workflow}-submit`,
-            capabilityId: "submit",
-            scope: "page",
-            channel: "submit",
-            action: "activate",
-            valueType: "none",
-            receiver: formAddress,
-          }, ...(opensRecord ? [{
-            routeKey: `billing-series-${workflow}-record-open`,
-            capabilityId: "recordOpen",
-            scope: "page" as const,
-            channel: "action",
-            action: "activate" as const,
-            valueType: "json" as const,
-            valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
-            receiver: formAddress,
-          }] : [])],
-        },
-      },
-    });
-    return { ...built, widgets: [form, ...built.widgets], overlayId, formId };
   });
 
-  const kindNames = labels.kinds;
-  return {
-    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
-    pageMeta,
-    overlays: dialogs.map((dialog) => dialog.overlay),
-    regions: [scaffold.region],
-    layoutNodes: [scaffold.layoutNode, ...dialogs.flatMap((dialog) => dialog.layouts)],
-    contentWidgets: [
-      nodes.widget({
-        id: WIDGET_IDS.widgetTable,
-        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
+  const tree = buildPhiSettingsPageShellTree({
+    page,
+    ownerModuleId: PHI_BILLING_RUNTIME_MODULE_ID,
+    presetKey: PRESET_KEY,
+    regionId: SYNTHETIC_REGION_ID,
+    label: labels.pageTitle,
+    panels: [{
+      nodeKey: "panelSeries",
+      title: labels.tableLabel,
+      description: labels.pageDescription,
+      sections: [{
+        nodeKey: "widgetSeriesTable",
         typeKey: "table",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        // The Module's Label Set, translated already.
-        flags: PhiCmsFlags.NoTranslate,
         label: labels.tableLabel,
         config: {
           source,
@@ -323,7 +187,7 @@ export async function buildPhiBillingAccountingSeriesPageTree({
               { key: "template", fieldKey: "template", title: labels.columns.template, renderer: "code", sizing: { mode: "content" } },
               { key: "reset", fieldKey: "reset", title: labels.columns.reset, valueMap: labels.resets, sizing: { mode: "content" } },
               { key: "next", fieldKey: "next", title: labels.columns.next, renderer: "code", sizing: { mode: "content" } },
-              { key: "kinds", fieldKey: "kinds", title: labels.columns.kinds, renderer: "tags", valueMap: kindNames, sizing: { mode: "fill", minWidth: 128 } },
+              { key: "kinds", fieldKey: "kinds", title: labels.columns.kinds, renderer: "tags", valueMap: labels.kinds, sizing: { mode: "fill", minWidth: 128 } },
               { key: "sources", fieldKey: "sources", title: labels.columns.sources, renderer: "tags", sizing: { mode: "fill", minWidth: 128 } },
               {
                 key: "state",
@@ -383,10 +247,13 @@ export async function buildPhiBillingAccountingSeriesPageTree({
           },
           signalRoutes: {
             // One announcement, every dialog and Form listening; each decides by the action's key.
-            emits: dialogs.flatMap((dialog, index) => [
-              tableActionRoute(`billing-series-table-open-${WORKFLOWS[index]}`, dialog.overlayId),
-              ...(WORKFLOWS[index] === "create" ? [] : [tableActionRoute(`billing-series-table-record-${WORKFLOWS[index]}`, dialog.formId)]),
-            ]),
+            emits: [
+              tableActionRoute("billing-series-table-open-create", IDS.overlaySeriesCreate),
+              tableActionRoute("billing-series-table-open-edit", IDS.overlaySeriesEdit),
+              tableActionRoute("billing-series-table-record-edit", IDS.overlaySeriesEditForm),
+              tableActionRoute("billing-series-table-open-replace", IDS.overlaySeriesReplace),
+              tableActionRoute("billing-series-table-record-replace", IDS.overlaySeriesReplaceForm),
+            ],
             listens: [{
               routeKey: "billing-series-table-reload",
               capabilityId: "reload",
@@ -398,8 +265,14 @@ export async function buildPhiBillingAccountingSeriesPageTree({
             }],
           },
         },
-      }),
-      ...dialogs.flatMap((dialog) => dialog.widgets),
+      }],
+    }],
+    overlays: [
+      dialog("overlaySeriesCreate", labels.dialogs.create, "create", PHI_BILLING_FORM_IDS.seriesCreate, null),
+      dialog("overlaySeriesEdit", labels.dialogs.edit, "edit", PHI_BILLING_FORM_IDS.seriesEdit, IDS.overlaySeriesEditForm),
+      dialog("overlaySeriesReplace", labels.dialogs.replace, "replace", PHI_BILLING_FORM_IDS.seriesReplace, IDS.overlaySeriesReplaceForm),
     ],
-  };
+  });
+
+  return { ...tree, pageMeta };
 }

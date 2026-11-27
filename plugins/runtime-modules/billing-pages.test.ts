@@ -10,6 +10,7 @@ import { createPhiAppRuntimeModuleCatalog } from "./area-catalogs/app";
 import { createPhiAccountingRuntimeModuleCatalog } from "./area-catalogs/accounting";
 import {
   compilePhiCmsActiveRouteTable,
+  resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
 } from "./descriptor-compiler";
@@ -59,8 +60,8 @@ const viewer = (flags: number) => ({
 
 const PAGES = {
   [PHI_BILLING_PAGE_PRESET_KEYS.appDocuments]: page("/billing", 2),
-  [PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments]: page("/billing/documents", 16),
-  [PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries]: page("/billing/number-series", 16),
+  [PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments]: page("/billing", 16),
+  [PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries]: page("/settings/number-series", 16),
 } as const;
 
 async function loadTree(presetKey: keyof typeof PAGES, roleFlags: number = PhiBaseRole.Accountant) {
@@ -86,21 +87,40 @@ describe("the Billing Module", () => {
     expect(createPhiDefaultAreaRuntimeModuleIds("app")).not.toContain(PHI_BILLING_RUNTIME_MODULE_ID);
     expect(createPhiDefaultAreaRuntimeModuleIds("accounting")).not.toContain(PHI_BILLING_RUNTIME_MODULE_ID);
     expect(routeIn("app", "/phis/ui/billing")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.appDocuments);
-    expect(routeIn("accounting", "/phis/ui/billing/documents")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments);
-    expect(routeIn("accounting", "/phis/ui/billing/number-series")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries);
+    expect(routeIn("accounting", "/phis/ui/billing")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments);
+    expect(routeIn("accounting", "/phis/ui/settings/number-series")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries);
   });
 
-  it("offers the Accounting container and its entries to Admin and Accountant, and the App's entry to every member", () => {
+  it("offers the Accounting entries to Admin and Accountant, Number series in the Settings container, and the App's to every member", () => {
     const staff = { access: "roles", providerId: PHI_CORE_ROLE_PROVIDER_ID, allowedRoleFlags: PhiBaseRole.Accountant };
-    const [app, documents, series] = PHI_BILLING_RUNTIME_MODULE_ROUTES;
-    expect(app.navigation?.[0]?.item.accessPolicy).toBeUndefined();
-    // One container for both Accounting Pages, its folder `/billing` leading to Documents.
-    const container = documents.navigation?.[0]?.item;
-    expect(container?.accessPolicy).toEqual(staff);
-    expect(container?.folderTarget).toBe(container?.children?.[0]?.itemKey);
-    expect(container?.children?.map((child) => [child.routePresetKey, child.accessPolicy]))
-      .toEqual([[PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments, staff], [PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries, staff]]);
-    expect(series.navigation).toEqual([]);
+    expect(PHI_BILLING_RUNTIME_MODULE_ROUTES.map((route) => [
+      route.presetKey,
+      route.navigation?.[0]?.anchor,
+      route.navigation?.[0]?.item.accessPolicy ?? null,
+    ])).toEqual([
+      [PHI_BILLING_PAGE_PRESET_KEYS.appDocuments, "main", null],
+      [PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments, "main", staff],
+      [PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries, "settings", staff],
+    ]);
+  });
+
+  it("leaves Accounting's Settings container out while no Module hangs a page under it", () => {
+    const entries = createPhiAccountingRuntimeModuleCatalog();
+    const catalog = resolvePhiCmsDescriptorCatalog(entries);
+    const sidebar = (withBilling: boolean) => {
+      const activeModuleIds = new Set<PhiRuntimeModuleId>(
+        [...entries.keys()].filter((moduleId) => withBilling || moduleId !== PHI_BILLING_RUNTIME_MODULE_ID),
+      );
+      const surface = resolvePhiCmsActiveNavigationSurfaces({
+        catalog,
+        area: "accounting",
+        activeModuleIds,
+        routeTable: compilePhiCmsActiveRouteTable({ catalog, area: "accounting", activeModuleIds }),
+      }).find(({ navKey }) => navKey === "accounting:sidebar")!;
+      return surface.items.map((item) => [item.label.defaultMessage, item.children.map((child) => child.label.defaultMessage)]);
+    };
+    expect(sidebar(true)).toContainEqual(["Settings", ["Number series"]]);
+    expect(sidebar(false).map(([label]) => label)).not.toContain("Settings");
   });
 
   it.each(Object.keys(PAGES) as (keyof typeof PAGES)[])("builds %s to the preset contracts, its Tables to the Provider's resources", async (presetKey) => {

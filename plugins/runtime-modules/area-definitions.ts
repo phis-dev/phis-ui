@@ -119,6 +119,7 @@ const PHI_PUBLIC_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/public/nav/account";
 
 const PHI_ADMIN_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/settings";
 const PHI_BUILDER_SETTINGS_NAV_ITEM_KEY = "@phis/ui/builder/nav/settings";
+const PHI_ACCOUNTING_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/accounting/nav/settings";
 
 /**
  * What the four sidebar anchors mean, which is the same in every Area that has a sidebar.
@@ -284,8 +285,20 @@ export const PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS = [
       /*
        * No entry of its own for the Area, as in the App: the root forwards to the first Module entry a
        * viewer can see -- the Dashboard's -- and the Overview that used to stand here was a placeholder.
+       *
+       * The Settings container, as the App, the Admin and the Builder have one (SETTINGS.md): Modules hang
+       * their Accounting settings under it by the `settings` anchor -- the Billing Module's number series
+       * first (owner, 2026-11-27). It has no page of its own and none of the Area's, so it hides until a
+       * Module's entry a viewer can see stands under it.
        */
       items: [
+        {
+          itemKey: PHI_ACCOUNTING_SETTINGS_NAV_ITEM_KEY,
+          label: label("Settings"),
+          icon: "antd:setting",
+          standing: "last",
+          children: [],
+        },
         // The way into the Admin, as the Builder has one; shown to whoever the Admin lets in.
         {
           itemKey: "@phis/ui/modules/accounting/nav/admin",
@@ -295,8 +308,8 @@ export const PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS = [
           target: { kind: "area", area: "admin" },
         },
       ],
-      exportedItemKeys: [],
-      anchors: sidebarAnchors(),
+      exportedItemKeys: [PHI_ACCOUNTING_SETTINGS_NAV_ITEM_KEY],
+      anchors: sidebarAnchors(PHI_ACCOUNTING_SETTINGS_NAV_ITEM_KEY),
     }, accountNavigationSurface(PHI_ACCOUNTING_ACCOUNT_NAV_ITEM_KEY, "accounting:account")],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
