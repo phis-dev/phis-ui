@@ -74,6 +74,37 @@ export function toPhiAntdMenuItems(items: readonly PhiMenuControlItem[]): ItemTy
 }
 
 /**
+ * The submenus an inline menu opens on: every entry with children that holds a selected key at any depth.
+ * A group is no submenu and has nothing to open. Handed to Ant Design as `defaultOpenKeys`, so the menu
+ * stays uncontrolled -- the reader still closes a submenu by hand -- and an active Page inside a container
+ * (Settings, Billing) is in sight instead of behind a closed one (owner, 2026-11-27).
+ */
+export function resolvePhiMenuOpenKeys(
+  items: readonly PhiMenuControlItem[],
+  selectedKeys: readonly string[],
+): string[] {
+  const selected = new Set(selectedKeys);
+  const open: string[] = [];
+  const holdsSelected = (entries: readonly PhiMenuControlItem[]): boolean => {
+    let found = false;
+    for (const item of entries) {
+      if ("type" in item && item.type === "divider") continue;
+      if ("type" in item && item.type === "group") {
+        if (holdsSelected(item.children)) found = true;
+        continue;
+      }
+      const children = item.children ?? [];
+      const below = children.length > 0 && holdsSelected(children);
+      if (below) open.push(item.key);
+      if (below || selected.has(item.key)) found = true;
+    }
+    return found;
+  };
+  holdsSelected(items);
+  return open;
+}
+
+/**
  * The canonical navigation menu presentation (SETTINGS.md-independent; see the Control layer
  * boundary in AGENTS.md): Widgets describe navigation as `PhiMenuControlItem`s and never touch the
  * Ant Design Menu or its item interface. The theme wiring lives here once — the transparent item
@@ -144,7 +175,13 @@ export function PhiMenuControl({
       theme={resolvedMenuTheme}
       selectedKeys={selectedKeys ? [...selectedKeys] : undefined}
       items={toPhiAntdMenuItems(items)}
-      {...(mode === "inline" ? { inlineCollapsed: collapsed, inlineIndent } : {})}
+      {...(mode === "inline"
+        ? {
+          inlineCollapsed: collapsed,
+          inlineIndent,
+          defaultOpenKeys: selectedKeys ? resolvePhiMenuOpenKeys(items, selectedKeys) : [],
+        }
+        : {})}
       style={{
         ...presentationVars,
         background: "transparent",
