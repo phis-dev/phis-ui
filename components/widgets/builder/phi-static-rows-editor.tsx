@@ -288,7 +288,8 @@ export function PhiStaticRowsToolButton<TRow extends PhiStaticRowsRecord>({
   onApply,
 }: {
   spec: PhiStaticRowsEditorSpec<TRow>;
-  rows: readonly TRow[];
+  /** The rows as the dialog edits them; `spec.normalizeRow` turns each back into what is stored. */
+  rows: readonly PhiStaticRowsRecord[];
   disabled?: boolean;
   onApply: (rows: TRow[]) => void;
 }) {

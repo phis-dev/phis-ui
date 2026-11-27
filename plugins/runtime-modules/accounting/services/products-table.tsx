@@ -1,5 +1,7 @@
 "use client";
 
+import { PhisProductFlag } from "@phis/contracts/products";
+
 import { isPhiRecord } from "../../../../helpers/is-record";
 import {
   buildPhiTablePageParams,
@@ -44,8 +46,8 @@ const versionsShown = new Map<string, number>();
 type Terms = {
   sale?: unknown;
   referralUrl?: unknown;
-  free?: unknown;
-  accountRequired?: unknown;
+  /** `PhisProductFlag`; on pending terms only `Free` and `AccountRequired` are set. */
+  flags?: unknown;
   parts?: unknown;
 };
 
@@ -54,28 +56,38 @@ type DirectoryResponse = { rows?: unknown; total?: unknown };
 const readParts = (value: unknown) =>
   Array.isArray(value) ? value.filter((part): part is string => typeof part === "string") : [];
 
+const readFlags = (value: unknown) => (typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : 0);
+
+const hasFlag = (flags: number, flag: number) => (flags & flag) !== 0;
+
 function termValues(prefix: "inForce" | "pending", terms: Terms | null) {
   return {
     [`${prefix}Sale`]: terms ? terms.sale ?? null : null,
     [`${prefix}ReferralUrl`]: terms ? terms.referralUrl ?? null : null,
-    [`${prefix}Free`]: terms ? terms.free === true : null,
-    [`${prefix}AccountRequired`]: terms ? terms.accountRequired === true : null,
+    [`${prefix}Free`]: terms ? hasFlag(readFlags(terms.flags), PhisProductFlag.Free) : null,
+    [`${prefix}AccountRequired`]: terms ? hasFlag(readFlags(terms.flags), PhisProductFlag.AccountRequired) : null,
     [`${prefix}Parts`]: terms ? readParts(terms.parts) : null,
   };
 }
 
 /**
- * A directory row as the Table speaks it: Core's fields, and what the Page reads off them -- the state as
- * a lock mark, the parts as a count, whether a release waits, and the terms in force beside the terms
- * waiting. A publisher's product never released has nothing in force; its terms are what waits. The
+ * A directory row as the Table speaks it: Core's fields, and what the Page reads off them -- the bits of
+ * `flags` as the yes/no cells and conditions read them, the state as a lock mark, the parts as a count,
+ * whether a release waits, and the terms in force beside the terms waiting. A publisher's product never released has nothing in force; its terms are what waits. The
  * Site's own product (no publisher) is always released and never waits.
  */
 export function toPhiAccountingProductRow(product: Record<string, unknown>) {
   const pending = isPhiRecord(product.pendingTerms) ? product.pendingTerms as Terms : null;
-  const released = product.released === true;
+  const flags = readFlags(product.flags);
+  const released = hasFlag(flags, PhisProductFlag.Released);
   const parts = readParts(product.parts);
   return {
     ...product,
+    flags,
+    free: hasFlag(flags, PhisProductFlag.Free),
+    accountRequired: hasFlag(flags, PhisProductFlag.AccountRequired),
+    counted: hasFlag(flags, PhisProductFlag.Counted),
+    released,
     parts,
     partCount: parts.length,
     locked: product.state === "locked",

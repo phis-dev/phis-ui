@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import type { PhiCollectionViewBindingModel } from "../../../../types/collection-provider";
 import type { PhiCmsCollectionViewWidgetConfig } from "../../../../types/collection-view-widget";
-import { readPhiTimelineEntries, type PhiTimelineEntry } from "@phis/contracts/timeline";
+import { PhiTimelineEntryFlag, readPhiTimelineEntries, type PhiTimelineEntry } from "@phis/contracts/timeline";
 
 import {
   PHI_DASHBOARD_CARD_LIST_LIMIT,
@@ -83,7 +83,7 @@ function PhiDashboardCardList({ entries }: { entries: readonly PhiTimelineEntry[
         ...(entry.time ?? entry.at ? { time: entry.time ?? formatPhiRelativeTime(entry.at, locale, renderedAt) } : {}),
         ...(entry.icon ? { icon: entry.icon } : {}),
         ...(entry.tone ? { tone: entry.tone } : {}),
-        ...(entry.pending ? { pending: true } : {}),
+        ...(((entry.flags ?? 0) & PhiTimelineEntryFlag.Pending) !== 0 ? { pending: true } : {}),
       }))}
     />
   );

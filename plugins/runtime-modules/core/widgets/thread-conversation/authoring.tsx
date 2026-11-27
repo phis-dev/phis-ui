@@ -79,7 +79,7 @@ function sampleThread(
       createdAt: messages[0]?.createdAt ?? "",
       updatedAt: latest ?? "",
       latestMessageAt: latest,
-      unread: false,
+      readerFlags: 0,
     },
     participants: file ? [] : [
       { kind: "user", user: member, flags: PhisThreadParticipantFlag.Requester },

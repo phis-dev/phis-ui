@@ -1,4 +1,4 @@
-import { PhisThreadFlag, PhisThreadStatus } from "../constants/threads";
+import { PhisThreadFlag, PhisThreadReaderFlag, PhisThreadStatus } from "../constants/threads";
 
 /**
  * What a cell shows and what a condition reads, neither of which is a flag.
@@ -16,12 +16,13 @@ import { PhisThreadFlag, PhisThreadStatus } from "../constants/threads";
 export function readPhiThreadInboxRow(row: Record<string, unknown>) {
   const archived = row.status === PhisThreadStatus.Archived;
   const locked = typeof row.flags === "number" && (row.flags & PhisThreadFlag.Locked) !== 0;
+  const unread = typeof row.readerFlags === "number" && (row.readerFlags & PhisThreadReaderFlag.Unread) !== 0;
   return {
     ...row,
     kind: String(row.kind),
     status: String(row.status),
     archived,
     locked,
-    state: archived ? "archived" : row.unread === true ? "unread" : locked ? "locked" : "open",
+    state: archived ? "archived" : unread ? "unread" : locked ? "locked" : "open",
   };
 }

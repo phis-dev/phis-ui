@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { PhiTimelineEntry } from "@phis/contracts/timeline";
+import { PhiTimelineEntryFlag, type PhiTimelineEntry } from "@phis/contracts/timeline";
 
 import type { PhiTimelineTimeFormat, PhiTimelineWidgetConfig } from "./config";
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
@@ -93,7 +93,7 @@ export function PhiTimelineWidget({
     time: formatEntryTime(entry, format, locale, timeZone, renderedAt),
     icon: entry.icon,
     tone: entry.tone,
-    pending: entry.pending,
+    pending: ((entry.flags ?? 0) & PhiTimelineEntryFlag.Pending) !== 0,
   }));
 
   /*

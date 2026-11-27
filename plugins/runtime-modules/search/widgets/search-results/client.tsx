@@ -1,6 +1,6 @@
 "use client";
 
-import type { PhiSearchSnippetSegment } from "@phis/contracts/search";
+import { PhiSearchSnippetSegmentFlag, type PhiSearchSnippetSegment } from "@phis/contracts/search";
 
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -41,7 +41,7 @@ function PhiSearchSnippet({ segments }: { segments: PhiSearchSnippetSegment[] })
   return (
     <PhiTypographyControl presentation="paragraph" style={{ marginBottom: 0 }}>
       {segments.map((segment, index) => (
-        segment.match
+        (segment.flags & PhiSearchSnippetSegmentFlag.Match) !== 0
           ? <PhiTypographyControl key={index} mark>{segment.text}</PhiTypographyControl>
           : <span key={index}>{segment.text}</span>
       ))}

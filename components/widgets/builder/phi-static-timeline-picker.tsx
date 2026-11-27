@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { isPhiTimelineTone, readPhiTimelineEntry, type PhiTimelineEntry } from "@phis/contracts/timeline";
+import { isPhiTimelineTone, PhiTimelineEntryFlag, readPhiTimelineEntry, type PhiTimelineEntry } from "@phis/contracts/timeline";
 import { usePhiAuthoringToolsLabels } from "../client/shared/phi-authoring-tools-labels";
 import { createPhiSharedRuntimeDataProviderKey } from "../../../constants/runtime-data-provider-key";
 import type { PhiAuthoringToolsLabels } from "../label-types/authoring-tools";
@@ -16,6 +16,22 @@ const PHI_STATIC_TIMELINE_TABLE_PROVIDER_KEY = createPhiSharedRuntimeDataProvide
 
 function readText(row: PhiStaticRowsRecord, key: string) {
   return typeof row[key] === "string" ? (row[key] as string).trim() : "";
+}
+
+/*
+ * `pending` is the dialog's switch for the entry's `Pending` bit: a row edits it as a yes or no, the entry
+ * keeps it in `flags` beside whatever other bits it carries.
+ */
+function toEditorRow({ flags, ...entry }: PhiTimelineEntry): PhiStaticRowsRecord {
+  return { ...entry, flags: flags ?? 0, pending: ((flags ?? 0) & PhiTimelineEntryFlag.Pending) !== 0 };
+}
+
+function fromEditorRow({ pending, flags, ...row }: PhiStaticRowsRecord): PhiTimelineEntry | null {
+  const entry = readPhiTimelineEntry({ ...row, tone: isPhiTimelineTone(row.tone) ? row.tone : undefined });
+  if (!entry) return null;
+  const held = typeof flags === "number" ? flags & ~PhiTimelineEntryFlag.Pending : 0;
+  const next = held | (pending === true ? PhiTimelineEntryFlag.Pending : 0);
+  return { ...entry, ...(next !== 0 ? { flags: next } : {}) };
 }
 
 function createStaticTimelineSpec(
@@ -58,10 +74,7 @@ function createStaticTimelineSpec(
       return { key: `entry${index}`, content: "" };
     },
     /* Read as the contract reads a stored entry, so what the editor applies is what the Widget keeps. */
-    normalizeRow: (row) => readPhiTimelineEntry({
-      ...row,
-      tone: isPhiTimelineTone(row.tone) ? row.tone : undefined,
-    }) ?? { key: readText(row, "key"), content: "" },
+    normalizeRow: (row) => fromEditorRow(row) ?? { key: readText(row, "key"), content: "" },
     validate: (rows) => {
       if (rows.some((row) => !readText(row, "key"))) return labels.keyRequired;
       const keys = rows.map((row) => readText(row, "key"));
@@ -105,5 +118,6 @@ export function PhiStaticTimelineToolButton({
       },
     };
   }, [toolsLabels]);
-  return <PhiStaticRowsToolButton spec={spec} rows={entries} disabled={disabled} onApply={onApply} />;
+  const rows = useMemo(() => entries.map(toEditorRow), [entries]);
+  return <PhiStaticRowsToolButton spec={spec} rows={rows} disabled={disabled} onApply={onApply} />;
 }

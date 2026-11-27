@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { PHI_SHARED_PACKAGE_NAME } from "../constants/package";
 import { createPhiRuntimeModuleId } from "../constants/module-identity";
 
-import { PHI_SEARCH_MAX_DOCUMENTS, type PhiSearchDocument } from "@phis/contracts/search";
+import { PHI_SEARCH_MAX_DOCUMENTS, PhiSearchIndexWriteResultFlag, type PhiSearchDocument } from "@phis/contracts/search";
 
 import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redirect";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
@@ -316,7 +316,7 @@ async function indexArea({
     }
     // One line per set, so an operator's log says when a Site became searchable and how large it is.
     console.info(
-      `[phis-ui] Search index ${area}/${locale}: ${answer.accepted ? `${answer.state.documentCount} documents written` : "already held"}.`,
+      `[phis-ui] Search index ${area}/${locale}: ${(answer.flags & PhiSearchIndexWriteResultFlag.Accepted) !== 0 ? `${answer.state.documentCount} documents written` : "already held"}.`,
     );
   }
 }

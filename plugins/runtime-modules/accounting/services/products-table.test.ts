@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { PhisProductFlag } from "@phis/contracts/products";
+
 import { buildPhiAccountingProductCommandPath, toPhiAccountingProductRow } from "./products-table";
 
 const ID = "@acme/licences:pro.yearly";
@@ -12,10 +14,8 @@ const product = (rest: Record<string, unknown> = {}) => ({
   state: "active",
   sale: "payout",
   referralUrl: null,
-  free: false,
-  accountRequired: true,
+  flags: PhisProductFlag.AccountRequired | PhisProductFlag.Supplied | PhisProductFlag.Released,
   parts: [],
-  released: true,
   pendingTerms: null,
   version: 4,
   ...rest,
@@ -35,9 +35,18 @@ describe("the product directory's Provider", () => {
 
   it("sets the terms in force beside the ones waiting for a released product with pending terms", () => {
     const row = toPhiAccountingProductRow(product({
-      pendingTerms: { sale: "payout", referralUrl: null, free: true, accountRequired: true, parts: ["@acme/licences:seat"] },
+      pendingTerms: {
+        sale: "payout",
+        referralUrl: null,
+        flags: PhisProductFlag.Free | PhisProductFlag.AccountRequired,
+        parts: ["@acme/licences:seat"],
+      },
     }));
     expect(row).toMatchObject({
+      free: false,
+      accountRequired: true,
+      counted: false,
+      released: true,
       locked: false,
       awaitingRelease: true,
       partCount: 0,
@@ -50,8 +59,9 @@ describe("the product directory's Provider", () => {
   });
 
   it("has nothing in force for a product never released, whose terms are what waits", () => {
-    const row = toPhiAccountingProductRow(product({ released: false, parts: ["@acme/licences:seat"] }));
+    const row = toPhiAccountingProductRow(product({ flags: PhisProductFlag.AccountRequired | PhisProductFlag.Supplied, parts: ["@acme/licences:seat"] }));
     expect(row).toMatchObject({
+      released: false,
       awaitingRelease: true,
       partCount: 1,
       inForceSale: null,

@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   PHI_SEARCH_QUERY_PARAM,
+  PhiSearchSnippetSegmentFlag,
   type PhiSearchDocument,
   type PhiSearchHit,
   type PhiSearchIndexState,
@@ -32,6 +33,10 @@ function readString(value: unknown) {
   return typeof value === "string" ? value : "";
 }
 
+function readFlags(value: unknown) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : 0;
+}
+
 function readHit(value: unknown): PhiSearchHit | null {
   if (!isPhiRecord(value)) return null;
   const path = readString(value.path);
@@ -44,7 +49,7 @@ function readHit(value: unknown): PhiSearchHit | null {
     snippet: Array.isArray(value.snippet)
       ? value.snippet.flatMap((segment) =>
           isPhiRecord(segment) && typeof segment.text === "string"
-            ? [{ text: segment.text, match: segment.match === true }]
+            ? [{ text: segment.text, flags: readFlags(segment.flags) & PhiSearchSnippetSegmentFlag.Match }]
             : [])
       : [],
     rank: typeof value.rank === "number" ? value.rank : 0,
@@ -147,7 +152,7 @@ export async function putPhiSiteSearchIndexSet(
     throw new Error("The search index write answered without its state.");
   }
   return {
-    accepted: payload.accepted === true,
+    flags: readFlags(payload.flags),
     state,
     dropped: typeof payload.dropped === "number" ? payload.dropped : 0,
   };

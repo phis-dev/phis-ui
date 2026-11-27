@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { PhisThreadFlag, PhisThreadStatus } from "../../../../constants/threads";
+import { PhisThreadFlag, PhisThreadReaderFlag, PhisThreadStatus } from "../../../../constants/threads";
 import { readPhiThreadInboxActionBody } from "./thread-inbox-table";
 import { readPhiThreadInboxRow } from "../../../../helpers/thread-inbox-row";
 
-function row(input: { status?: number; flags?: number; unread?: boolean }) {
-  return { id: 7, kind: 1, status: PhisThreadStatus.Open, flags: 0, unread: false, ...input };
+function row(input: { status?: number; flags?: number; readerFlags?: number }) {
+  return { id: 7, kind: 1, status: PhisThreadStatus.Open, flags: 0, readerFlags: 0, ...input };
 }
 
 describe("a conversation's row in the inbox", () => {
@@ -20,7 +20,7 @@ describe("a conversation's row in the inbox", () => {
   it("lets archived and unread win the one badge over the lock", () => {
     expect(readPhiThreadInboxRow(row({ flags: PhisThreadFlag.Locked, status: PhisThreadStatus.Archived })).state)
       .toBe("archived");
-    expect(readPhiThreadInboxRow(row({ flags: PhisThreadFlag.Locked, unread: true })).state).toBe("unread");
+    expect(readPhiThreadInboxRow(row({ flags: PhisThreadFlag.Locked, readerFlags: PhisThreadReaderFlag.Unread })).state).toBe("unread");
   });
 });
 

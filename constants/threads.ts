@@ -12,5 +12,6 @@ export {
   PhisThreadKind,
   PhisThreadMessageFlag,
   PhisThreadParticipantFlag,
+  PhisThreadReaderFlag,
   PhisThreadStatus,
 } from "@phis/contracts/threads";

@@ -7,7 +7,7 @@ vi.mock("../../helpers/phis-server-credentials", () => ({
 
 import { PHI_CORE_ROLE_PROVIDER_ID, PhiBaseRole } from "@phis/contracts/access";
 import { PhiCmsPageType, PhiCmsStatus } from "../../constants/phi-cms";
-import { PhisThreadKind, PhisThreadStatus } from "../../constants/threads";
+import { PhisThreadKind, PhisThreadReaderFlag, PhisThreadStatus } from "../../constants/threads";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS, PHI_SITE_MEMBER_SEARCH_MIN_CHARS } from "../../constants/core-data-provider-keys";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../../types/access";
 import type { PhiCmsPageNode } from "../../types/cms";
@@ -198,7 +198,7 @@ describe("the customer file page", () => {
     expect(buildPhiCustomerFilePath(5, new URLSearchParams({ page: "1", pageSize: "25" }))).toBe("/api/site/members/5/file?page=1&pageSize=25");
     expect(toPhiCustomerFilePersonRow({ userId: 5, displayName: "Ada", name: { firstName: "Ada", lastName: "Lovelace", companyName: null }, phone: { phone: "1", mobile: null } }))
       .toEqual({ userId: 5, displayName: "Ada", fullName: "Ada Lovelace", companyName: "", email: "", phone: "1", mobile: "" });
-    const answer = { fileThreadId: 9, threads: [{ id: 3, kind: PhisThreadKind.Support, status: PhisThreadStatus.Open, unread: true }] };
+    const answer = { fileThreadId: 9, threads: [{ id: 3, kind: PhisThreadKind.Support, status: PhisThreadStatus.Open, readerFlags: PhisThreadReaderFlag.Unread }] };
     expect(toPhiCustomerFileThreadRows(answer).map((row) => [(row as { id?: unknown }).id, row.kind, row.state]))
       .toEqual([[3, String(PhisThreadKind.Support), "unread"]]);
     // A row of the file the list carries is left out: the file has its own panel.
