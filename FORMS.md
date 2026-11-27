@@ -507,7 +507,7 @@ lists, the colour panel, the Media picker, a slider's tooltip -- are mounted whe
 - `plugins/runtime-modules/form-field-size.test.tsx` mounts every registered field with a container of
   its own, opens everything that opens a layer and fails a field whose layer stands outside it; the
   fields that have a layer are listed there, so one that opens nothing it lists, or something it does
-  not, fails too. `table` and `tree` stand out of it as they stand out of the size: the lists their cell
+  not, fails too. `table`, `tree` and `list` stand out of it as they stand out of the size: the lists their cell
   editors open are the Table and Tree Controls' own and are not handed the container.
 
 ### Compound Table and Tree values
@@ -528,6 +528,41 @@ means other words. Provider queries,
 server pagination, Provider actions, per-row persistence, and a Draft lifecycle are not available in this
 mode; such a collection is a separate Table or Tree Widget coordinated with the Form through signals. The
 Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md).
+
+### List values
+
+The Core `list` field (`PHI_FORM_FIELD_PROVIDER_KEYS.list`, owner, 2026-11-27) holds a list of objects whose
+entries are themselves Forms: its `fields` are the entry fields (phis-contracts
+`PhiFormFieldDescriptor.fields`), and an entry is edited in a dialog built from them, never in cells. A
+listing's plans are the first user: each plan a title, a key, how it is sold and its prices, edited in the
+plan dialog and saved with the listing in one submit.
+
+- **Rows.** The list stands under a compact card heading -- the field's label, its description as the
+  `(i)` -- with Add in the heading, small, as every card heading's action is; the Form draws no label of its
+  own beside it, and the field takes the whole row unless its placement says otherwise. Its rows are a
+  read-only Table of the entry fields `config.columns` names, each titled with that field's label: a field
+  of several choices as tags, a yes/no field as a mark, an amount as money, a field of one choice by its
+  option's label, the text otherwise; `renderer` names another of the Table's renderers (`text`, `badge`,
+  `tags`, `money`, `checkbox`, `code`, `date`, `datetime`).
+- **The entry dialog.** Add and a row's Edit open it: a Form of the entry fields on `config.entryLayout`,
+  as wide as that Form needs (`resolvePhiDialogFormGeometry`), with Cancel and Apply. Its fields validate,
+  derive and follow their conditions as any Form's do, read against the entry. Apply lays what the dialog's
+  Form submitted over the entry: an entry field it did not submit (hidden by its condition) is left out, and
+  every value of the entry that is no entry field -- an id, a mark the handler writes -- is kept. The
+  entry's title is the value of `itemLabelField`, else the Edit word; `itemKeyField` names an entry field no
+  two entries share, refused in the dialog.
+- **Removal** asks first. `removeDisabledWhen`, a condition on the entry (`source: "row"`), and
+  `removeDisabledReason`, a Form text, refuse it for an entry somebody else refers to -- a plan a
+  subscription names -- and the row says why on its Remove. `minItems` and `maxItems` stop Remove and Add;
+  `reorderable` lets entries be dragged into another order.
+- **Words.** `addLabel`, `emptyLabel` and `editLabel` are Form texts; the rest -- and those where the config
+  names none -- are the Form's words under `PHI_FORM_LIST_LABEL_KEYS` (`components/forms/list-field-labels.ts`),
+  which the Form Widget fills from Core's `widget:table` set for every Form with a list field at any level.
+- The config is read strictly (`readPhiFormListFieldConfig`, `components/forms/list-field.ts`), and
+  `checkPhiFormDescriptorFields` checks it and the entry fields as a level of their own where the Form is
+  made; entry fields on a field of Core's that is no list are refused. The Area's catalog asks for the field
+  types, validation rules and owning Modules of entry fields as for the Form's own
+  (`listPhiFormFieldsDeep`).
 
 ## Field and validation Providers
 
@@ -591,7 +626,7 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
   `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`, `link-target`, `dimension`, `color`,
-  `money`, `country`, `address`, `flags`. The Asset Module
+  `money`, `country`, `address`, `flags`, `list`. The Asset Module
   owns `media-asset` (below); it is not part of the shared registry.
 - A `select` field may be emptied when its `config.allowClear` is `true`, for a choice whose empty answer
   means something ("the Site's own language"), and takes a typed value beside its options when its

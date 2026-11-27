@@ -14,6 +14,10 @@ import { PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY, PHI_FORM_UPLOAD_LABEL_KEYS } from "
 import { getPhiTableFormFieldLabels } from "../widgets/label-sets/table";
 import { PHI_FORM_TABLE_FIELD_PROVIDER_KEY } from "./table-field-keys";
 import { PHI_FORM_TABLE_LABEL_KEYS } from "./table-field-labels";
+import { getPhiListFormFieldLabels } from "../widgets/label-sets/table";
+import { PHI_FORM_LIST_FIELD_PROVIDER_KEY } from "./list-field-keys";
+import { PHI_FORM_LIST_LABEL_KEYS } from "./list-field-labels";
+import { listPhiFormFieldsDeep } from "./form-field-walk";
 import type { PhiFormRenderContext } from "./form-resolution";
 
 /**
@@ -37,24 +41,28 @@ export async function resolvePhiFormFieldLabels(
   context: PhiFormRenderContext,
   descriptor: PhiFormDescriptor,
 ): Promise<Record<string, string>> {
-  const hasUpload = descriptor.fields.some((field) => field.fieldProviderKey === PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY);
-  const hasMediaAsset = descriptor.fields.some((field) =>
+  // A list's entry fields are drawn by the entry dialog with the Form's labels, so they count as the Form's.
+  const fields = listPhiFormFieldsDeep(descriptor.fields);
+  const hasUpload = fields.some((field) => field.fieldProviderKey === PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY);
+  const hasMediaAsset = fields.some((field) =>
     field.fieldProviderKey === PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY ||
     field.fieldProviderKey === PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY);
-  const hasTable = descriptor.fields.some((field) => field.fieldProviderKey === PHI_FORM_TABLE_FIELD_PROVIDER_KEY);
-  if (!hasUpload && !hasMediaAsset && !hasTable) return {};
+  const hasTable = fields.some((field) => field.fieldProviderKey === PHI_FORM_TABLE_FIELD_PROVIDER_KEY);
+  const hasList = fields.some((field) => field.fieldProviderKey === PHI_FORM_LIST_FIELD_PROVIDER_KEY);
+  if (!hasUpload && !hasMediaAsset && !hasTable && !hasList) return {};
   const rt = phiRuntime(context.runtime);
   const options = {
     apiBaseUrl: rt.apiBaseUrl,
     internalToken: rt.internalToken,
     locale: context.runtime.locale.current,
   };
-  const [upload, media, table] = await Promise.all([
+  const [upload, media, table, list] = await Promise.all([
     hasUpload || hasMediaAsset ? readUploadFieldLabels(options) : {},
     hasMediaAsset ? readMediaAssetFieldLabels(options) : {},
     hasTable ? readTableFieldLabels(options) : {},
+    hasList ? readListFieldLabels(options) : {},
   ]);
-  return { ...upload, ...media, ...table };
+  return { ...upload, ...media, ...table, ...list };
 }
 
 async function readUploadFieldLabels(options: PhiGlobalTranslatorOptions): Promise<Record<string, string>> {
@@ -81,6 +89,11 @@ async function readTableFieldLabels(options: PhiGlobalTranslatorOptions): Promis
   const { add, remove, empty } = await getPhiTableFormFieldLabels(options);
   const keys = PHI_FORM_TABLE_LABEL_KEYS;
   return { [keys.add]: add, [keys.remove]: remove, [keys.empty]: empty };
+}
+
+async function readListFieldLabels(options: PhiGlobalTranslatorOptions): Promise<Record<string, string>> {
+  const words = await getPhiListFormFieldLabels(options);
+  return Object.fromEntries(Object.entries(PHI_FORM_LIST_LABEL_KEYS).map(([role, key]) => [key, words[role as keyof typeof words]]));
 }
 
 async function readMediaAssetFieldLabels(options: PhiGlobalTranslatorOptions): Promise<Record<string, string>> {

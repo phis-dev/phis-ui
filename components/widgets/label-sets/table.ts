@@ -5,6 +5,7 @@ import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../
 import type { PhiTableWidgetLabels } from "../label-types/table";
 import { getPhiIntervalLabels } from "./interval";
 import { PHI_FORM_TABLE_DEFAULT_LABELS } from "../../forms/table-field-labels";
+import { PHI_FORM_LIST_DEFAULT_LABELS } from "../../forms/list-field-labels";
 
 const PHI_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:table",
@@ -37,6 +38,15 @@ const PHI_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
     form_add: PHI_FORM_TABLE_DEFAULT_LABELS.add,
     form_remove: PHI_FORM_TABLE_DEFAULT_LABELS.remove,
     form_empty: definePhiMessageLabel(PHI_FORM_TABLE_DEFAULT_LABELS.empty),
+    // The Core `list` form field's words where its config names none (`list-field-labels.ts`).
+    form_list_add: PHI_FORM_LIST_DEFAULT_LABELS.add,
+    form_list_edit: PHI_FORM_LIST_DEFAULT_LABELS.edit,
+    form_list_remove: PHI_FORM_LIST_DEFAULT_LABELS.remove,
+    form_list_empty: definePhiMessageLabel(PHI_FORM_LIST_DEFAULT_LABELS.empty),
+    form_list_apply: PHI_FORM_LIST_DEFAULT_LABELS.apply,
+    form_list_cancel: PHI_FORM_LIST_DEFAULT_LABELS.cancel,
+    form_list_remove_title: definePhiMessageLabel(PHI_FORM_LIST_DEFAULT_LABELS.removeTitle),
+    form_list_key_taken: definePhiMessageLabel(PHI_FORM_LIST_DEFAULT_LABELS.keyTaken),
   },
 });
 
@@ -79,4 +89,19 @@ export async function getPhiTableWidgetLabels(
 export async function getPhiTableFormFieldLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_TABLE_WIDGET_LABEL_SET);
   return { add: labels.form_add, remove: labels.form_remove, empty: labels.form_empty };
+}
+
+/** The Core `list` form field's words, which the Form Widget hands to the field. */
+export async function getPhiListFormFieldLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_TABLE_WIDGET_LABEL_SET);
+  return {
+    add: labels.form_list_add,
+    edit: labels.form_list_edit,
+    remove: labels.form_list_remove,
+    empty: labels.form_list_empty,
+    apply: labels.form_list_apply,
+    cancel: labels.form_list_cancel,
+    removeTitle: labels.form_list_remove_title,
+    keyTaken: labels.form_list_key_taken,
+  } satisfies Record<keyof typeof PHI_FORM_LIST_DEFAULT_LABELS, string>;
 }

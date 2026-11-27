@@ -3,6 +3,7 @@ import type { PhiFormDescriptor } from "@phis/contracts/forms";
 import { readPhiFlagsFieldConfig } from "./flags-field";
 import { readPhiMoneyFieldConfig } from "./money-field";
 import { PHI_FORM_FIELD_PROVIDER_KEYS } from "./form-provider-contract";
+import { readPhiFormListFieldConfig } from "./list-field";
 
 /**
  * What a Form's fields break of the rules their Controls read them by, as messages, checked where the
@@ -20,6 +21,8 @@ import { PHI_FORM_FIELD_PROVIDER_KEYS } from "./form-provider-contract";
  *   is a slug (FORMS.md, "Derived fields"). That `from` names another field, one that derives nothing and,
  *   for `optionLabel`, one with options, is the contract's own parser's (`parsePhiFormDescriptor`).
  *   A field type of a Module is not judged here: only that Module knows what its field holds.
+ * - a `list` field's config (`readPhiFormListFieldConfig`), and its entry fields as a level of their own,
+ *   by these same rules; entry fields (`fields`) on a field of Core's that is no list, which nothing reads.
  *
  * A validation rule naming a Provider nobody declares is refused by catalog construction, which knows
  * the Area's Providers (`plugins/runtime-modules/resolver.ts`); this check knows only the descriptor.
@@ -32,11 +35,15 @@ const DERIVED_TEXT_FIELD_PROVIDER_KEYS: ReadonlySet<string> = new Set([
   PHI_FORM_FIELD_PROVIDER_KEYS.hidden,
 ]);
 
-export function checkPhiFormDescriptorFields(descriptor: Pick<PhiFormDescriptor, "fields">): string[] {
+export function checkPhiFormDescriptorFields(descriptor: Pick<PhiFormDescriptor, "fields">, within = ""): string[] {
   const findings: string[] = [];
   const keys = new Set(descriptor.fields.map((field) => field.key));
   for (const field of descriptor.fields) {
-    const where = `Field "${field.key}"`;
+    const where = `Field "${within}${field.key}"`;
+    if (field.fields && CORE_FIELD_PROVIDER_KEYS.has(field.fieldProviderKey) &&
+      field.fieldProviderKey !== PHI_FORM_FIELD_PROVIDER_KEYS.list) {
+      findings.push(`${where} has entry fields, which only a list field edits.`);
+    }
     if (field.emptyOption && field.fieldProviderKey !== PHI_FORM_FIELD_PROVIDER_KEYS.select) {
       findings.push(`${where} declares an emptyOption, which only a select field draws.`);
     }
@@ -52,6 +59,9 @@ export function checkPhiFormDescriptorFields(descriptor: Pick<PhiFormDescriptor,
         }
       } else if (field.fieldProviderKey === PHI_FORM_FIELD_PROVIDER_KEYS.flags && field.options && !field.optionsProvider) {
         readPhiFlagsFieldConfig(field.config, field.options);
+      } else if (field.fieldProviderKey === PHI_FORM_FIELD_PROVIDER_KEYS.list) {
+        readPhiFormListFieldConfig(field);
+        findings.push(...checkPhiFormDescriptorFields({ fields: field.fields ?? [] }, `${within}${field.key}.`));
       }
     } catch (error) {
       findings.push(`${where}: ${error instanceof Error ? error.message : String(error)}`);

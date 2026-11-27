@@ -11,7 +11,7 @@ import { PhiButtonControl } from "./phi-button-control";
 import { PhiCompactGroupControl } from "./phi-compact-group-control";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiFlexControl } from "./phi-flex-control";
-import { PhiModalControl } from "./phi-modal-control";
+import { PhiModalControl, type PhiModalControlProps } from "./phi-modal-control";
 import { PhiDrawerControl, type PhiDrawerControlProps } from "./phi-drawer-control";
 
 /**
@@ -39,7 +39,7 @@ import { PhiDrawerControl, type PhiDrawerControlProps } from "./phi-drawer-contr
  *
  * A Modal unless `presentation` says `drawer`: the Header Navigation's entries on a phone were the first
  * Dialog built in code and drawn from the side. `PhiDrawerControl` zeroes its zones as the Modal does, so
- * the inside is the same; `placement` and `size` are the Drawer's own and nobody else reads them.
+ * the inside is the same; `placement` is the Drawer's own, and `size` sizes whichever of the two it is.
  */
 
 export type PhiDialogControlAction = {
@@ -85,8 +85,14 @@ export type PhiDialogControlProps = {
   presentation?: "modal" | "drawer";
   /** The edge a Drawer comes from. */
   placement?: PhiDrawerControlProps["placement"];
-  /** A Drawer's size, a block's pair: its `width`, or its `height` from the top or bottom. */
+  /**
+   * The Dialog's size, a block's pair: a Modal's `width` (over `controlSize`), a Drawer's `width`, or its
+   * `height` from the top or bottom. A Dialog whose subject is a Form takes the Form's width
+   * (`resolvePhiDialogFormGeometry`).
+   */
   size?: PhiDrawerControlProps["size"];
+  /** A Modal's viewport limit, as `maxSize` of an Overlay (`{ width: "90vw" }`). */
+  maxSize?: PhiModalControlProps["maxSize"];
   onDismiss?: (source: PhiOverlayCloseSource) => void;
   afterOpenChange?: (open: boolean) => void;
 };
@@ -107,6 +113,7 @@ export function PhiDialogControl({
   presentation = "modal",
   placement,
   size,
+  maxSize,
   onDismiss,
   afterOpenChange,
 }: PhiDialogControlProps) {
@@ -184,6 +191,8 @@ export function PhiDialogControl({
       mountPolicy={mountPolicy}
       centered={centered}
       controlSize={controlSize}
+      size={size}
+      maxSize={maxSize}
       rootClassName={rootClassName}
       onDismiss={onDismiss}
       afterOpenChange={afterOpenChange}

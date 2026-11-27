@@ -50,6 +50,7 @@ import {
 } from "../../constants/media-library-provider-keys";
 import { isPhiRecord } from "../../helpers/is-record";
 import { buildPhiRecordDeclarationsByKey } from "../../helpers/record-fields";
+import { listPhiFormFieldsDeep } from "../../components/forms/form-field-walk";
 
 function loadRuntimeWidgetPlugin(entry: PhiRuntimeModuleWidgetDefinition) {
   return entry.loadRuntime();
@@ -376,7 +377,7 @@ export async function resolvePhiRuntimeModuleSet({
   }
 
   for (const form of formDefinitionsById.values()) {
-    for (const field of form.descriptor.fields) {
+    for (const field of listPhiFormFieldsDeep(form.descriptor.fields)) {
       /*
        * A field type that an installed Module owns, but that is not active in this Area, is not an error:
        * the Form still stands there, and the field says that its Module is not available
@@ -647,7 +648,7 @@ export function collectPhiRuntimeDataProviderKeys({
            * one repeating the Provider in its descriptor.
            */
           if (
-            form.descriptor.fields.some((field) =>
+            listPhiFormFieldsDeep(form.descriptor.fields).some((field) =>
               field.fieldProviderKey === PHI_MEDIA_ASSET_FORM_FIELD_PROVIDER_KEY ||
               field.fieldProviderKey === PHI_MEDIA_ASSETS_FORM_FIELD_PROVIDER_KEY) &&
             knownProviderKeys.has(PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection)
@@ -722,7 +723,7 @@ function collectPhiRuntimeFormModuleIds({
       const form = moduleSet.formDefinitionsById.get(config.formId);
       if (form) {
         collected.add(form.ownerModuleId);
-        for (const field of form.descriptor.fields) {
+        for (const field of listPhiFormFieldsDeep(form.descriptor.fields)) {
           const fieldOwner = moduleSet.formFieldTypeProviderDescriptorsByKey.get(field.fieldProviderKey)?.ownerModuleId;
           if (fieldOwner) {
             collected.add(fieldOwner);

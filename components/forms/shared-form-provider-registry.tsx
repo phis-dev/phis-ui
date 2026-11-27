@@ -58,6 +58,9 @@ const PhiLazyCompoundTableFormControl = lazyPhiFormFieldControl(() =>
   import("./compound-form-controls").then((module) => module.PhiCompoundTableFormControl), 3);
 const PhiLazyCompoundTreeFormControl = lazyPhiFormFieldControl(() =>
   import("./compound-form-controls").then((module) => module.PhiCompoundTreeFormControl), 3);
+// The card heading, the Table's head and at least one row.
+const PhiLazyListFormControl = lazyPhiFormFieldControl(() =>
+  import("./list-form-control").then((module) => module.PhiListFormControl), 3);
 // The trigger, and above it the row the attachments occupy once there is one.
 const PhiLazyUploadFormControl = lazyPhiFormFieldControl(() =>
   import("./upload-form-control").then((module) => module.PhiUploadFormControl), 2);
@@ -316,6 +319,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.flags, {
       Control: PhiLazyFlagsFormControl,
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.list, {
+      Control: PhiLazyListFormControl,
     }),
   ],
   validationRules: [

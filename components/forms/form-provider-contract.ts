@@ -8,6 +8,7 @@ import { PhiMediaKind } from "../../constants/media";
 import { PHIS_PAYMENT_CURRENCY_EXPONENTS } from "@phis/contracts/payments";
 import { PHI_FORM_UPLOAD_FIELD_PROVIDER_KEY } from "./upload-field-keys";
 import { PHI_FORM_TABLE_FIELD_PROVIDER_KEY } from "./table-field-keys";
+import { PHI_FORM_LIST_FIELD_PROVIDER_KEY } from "./list-field-keys";
 
 export function createPhiSharedFormProviderKey(
   kind: "field" | "validation" | "handler",
@@ -51,6 +52,8 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   country: createPhiSharedFormProviderKey("field", "country"),
   address: createPhiSharedFormProviderKey("field", "address"),
   flags: createPhiSharedFormProviderKey("field", "flags"),
+  // Spelled beside its label keys, as the table field is.
+  list: PHI_FORM_LIST_FIELD_PROVIDER_KEY,
 } as const;
 
 /**
@@ -408,6 +411,11 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
     valueType: "number",
     presentation: "control",
   },
+  /*
+   * A list of objects, each entry edited in a dialog built from the field's entry fields (`fields`); the
+   * config is read by `readPhiFormListFieldConfig` (FORMS.md, "List values").
+   */
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.list, title: "List", valueType: "json", presentation: "control" },
 ] as const satisfies readonly PhiSharedFormFieldTypeDescriptor[];
 
 export const PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS = [

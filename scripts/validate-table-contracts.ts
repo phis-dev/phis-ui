@@ -52,6 +52,8 @@ const sourceFiles = sourceRoots.flatMap((root) => {
 const directTableControlAllowlist = new Set([
   "components/controls/phi-table-control.tsx",
   "components/forms/compound-form-controls.tsx",
+  // The list field's rows: a Form value drawn read-only, its entries edited in the entry dialog (FORMS.md).
+  "components/forms/list-form-control.tsx",
   "components/tables/client/phi-table-binding-control.tsx",
   "components/widgets/builder/phi-static-options-picker.tsx",
   "plugins/runtime-modules/theme/widgets/brand-controls/client.tsx",

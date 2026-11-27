@@ -126,6 +126,13 @@ const FIXTURES: Readonly<Record<string, Partial<PhiFormFieldProviderProps>>> = {
   },
   [PHI_ASSET_MEDIA_ASSET_FORM_PROVIDER_DESCRIPTOR.key]: { value: 5 },
   [PHI_ASSET_MEDIA_ASSETS_FORM_PROVIDER_DESCRIPTOR.key]: { value: [] },
+  [PHI_FORM_FIELD_PROVIDER_KEYS.list]: {
+    value: [{ title: "One" }],
+    field: {
+      fields: [{ key: "title", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text, label: { kind: "literal", value: "Title" } }],
+      config: { columns: [{ field: "title" }] },
+    } as never,
+  },
 };
 
 /*
@@ -136,6 +143,8 @@ const ONE_SIZE: Readonly<Record<string, string>> = {
   // A Table or a Tree in a Form is collection chrome -- its header, toolbar and rows -- small at every size.
   [PHI_FORM_FIELD_PROVIDER_KEYS.table]: "collection chrome, small at every size",
   [PHI_FORM_FIELD_PROVIDER_KEYS.tree]: "collection chrome, small at every size",
+  // A list's heading and rows are collection chrome as well; its entries are edited in a dialog of the Form's size.
+  [PHI_FORM_FIELD_PROVIDER_KEYS.list]: "collection chrome, small at every size",
 };
 
 /* Each Ant Design control root that has a small form, and the class that says it is in it. */

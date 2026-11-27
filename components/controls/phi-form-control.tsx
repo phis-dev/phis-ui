@@ -151,7 +151,11 @@ export type PhiFormControlHandle = {
  */
 function resolveFieldPlacement(field: PhiFormFieldDescriptor) {
   return field.placement ??
-    (PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS.has(field.fieldProviderKey) ? { control: PHI_FORM_ROW_FULL } : undefined);
+    (PHI_FORM_PART_ROWS_FIELD_PROVIDER_KEYS.has(field.fieldProviderKey) ||
+      // A list draws its label as its own card heading, so it takes the whole row the label would share.
+      field.fieldProviderKey === PHI_FORM_FIELD_PROVIDER_KEYS.list
+      ? { control: PHI_FORM_ROW_FULL }
+      : undefined);
 }
 
 function resolveFieldRules(field: PhiFormFieldDescriptor) {
@@ -977,6 +981,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         const showLabel = !hidden && !honeypot && !field.controlLabel &&
           field.fieldProviderKey !== PHI_FORM_FIELD_PROVIDER_KEYS.table &&
           field.fieldProviderKey !== PHI_FORM_FIELD_PROVIDER_KEYS.tree &&
+          field.fieldProviderKey !== PHI_FORM_FIELD_PROVIDER_KEYS.list &&
           renderedFieldLabel != null;
 
         return (
