@@ -58,9 +58,9 @@ const viewer = (flags: number) => ({
 });
 
 const PAGES = {
-  [PHI_BILLING_PAGE_PRESET_KEYS.appDocuments]: page("/documents", 2),
-  [PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments]: page("/documents", 16),
-  [PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries]: page("/number-series", 16),
+  [PHI_BILLING_PAGE_PRESET_KEYS.appDocuments]: page("/billing", 2),
+  [PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments]: page("/billing/documents", 16),
+  [PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries]: page("/billing/number-series", 16),
 } as const;
 
 async function loadTree(presetKey: keyof typeof PAGES, roleFlags: number = PhiBaseRole.Accountant) {
@@ -85,18 +85,22 @@ describe("the Billing Module", () => {
     expect(PHI_BILLING_RUNTIME_MODULE_DEFINITION.serverBinding).toBe(PHI_CORE_SERVER_BINDING);
     expect(createPhiDefaultAreaRuntimeModuleIds("app")).not.toContain(PHI_BILLING_RUNTIME_MODULE_ID);
     expect(createPhiDefaultAreaRuntimeModuleIds("accounting")).not.toContain(PHI_BILLING_RUNTIME_MODULE_ID);
-    expect(routeIn("app", "/phis/ui/documents")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.appDocuments);
-    expect(routeIn("accounting", "/phis/ui/documents")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments);
-    expect(routeIn("accounting", "/phis/ui/number-series")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries);
+    expect(routeIn("app", "/phis/ui/billing")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.appDocuments);
+    expect(routeIn("accounting", "/phis/ui/billing/documents")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments);
+    expect(routeIn("accounting", "/phis/ui/billing/number-series")?.descriptor.presetKey).toBe(PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries);
   });
 
-  it("offers the Accounting entries to Admin and Accountant, and the App's to every member", () => {
-    const policies = PHI_BILLING_RUNTIME_MODULE_ROUTES.map((route) => [route.presetKey, route.navigation?.[0]?.item.accessPolicy ?? null]);
-    expect(policies).toEqual([
-      [PHI_BILLING_PAGE_PRESET_KEYS.appDocuments, null],
-      [PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments, { access: "roles", providerId: PHI_CORE_ROLE_PROVIDER_ID, allowedRoleFlags: PhiBaseRole.Accountant }],
-      [PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries, { access: "roles", providerId: PHI_CORE_ROLE_PROVIDER_ID, allowedRoleFlags: PhiBaseRole.Accountant }],
-    ]);
+  it("offers the Accounting container and its entries to Admin and Accountant, and the App's entry to every member", () => {
+    const staff = { access: "roles", providerId: PHI_CORE_ROLE_PROVIDER_ID, allowedRoleFlags: PhiBaseRole.Accountant };
+    const [app, documents, series] = PHI_BILLING_RUNTIME_MODULE_ROUTES;
+    expect(app.navigation?.[0]?.item.accessPolicy).toBeUndefined();
+    // One container for both Accounting Pages, its folder `/billing` leading to Documents.
+    const container = documents.navigation?.[0]?.item;
+    expect(container?.accessPolicy).toEqual(staff);
+    expect(container?.folderTarget).toBe(container?.children?.[0]?.itemKey);
+    expect(container?.children?.map((child) => [child.routePresetKey, child.accessPolicy]))
+      .toEqual([[PHI_BILLING_PAGE_PRESET_KEYS.accountingDocuments, staff], [PHI_BILLING_PAGE_PRESET_KEYS.accountingSeries, staff]]);
+    expect(series.navigation).toEqual([]);
   });
 
   it.each(Object.keys(PAGES) as (keyof typeof PAGES)[])("builds %s to the preset contracts, its Tables to the Provider's resources", async (presetKey) => {
