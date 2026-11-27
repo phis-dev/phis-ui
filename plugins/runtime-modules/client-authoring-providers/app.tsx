@@ -9,6 +9,7 @@ import { PHI_GROUPS_RUNTIME_MODULE_ID } from "../groups/ids";
 import { PHI_AVATAR_RUNTIME_MODULE_ID } from "../avatar/ids";
 import { PHI_VIDEO_RUNTIME_MODULE_ID } from "../video/ids";
 import { PHI_SEARCH_RUNTIME_MODULE_ID } from "../search/ids";
+import { PHI_BILLING_RUNTIME_MODULE_ID } from "../billing/ids";
 import { PHI_COMMON_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS } from "./common";
 import { PHI_DASHBOARD_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTION } from "../dashboard/authoring-client";
 
@@ -39,6 +40,11 @@ export const PHI_APP_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS = [
       moduleId: PHI_VIDEO_RUNTIME_MODULE_ID,
       loadAuthoring: () => import("../video/authoring")
         .then((module) => module.PhiVideoRuntimeModuleAuthoringClient),
+    }),
+    definePhiRuntimeModuleAuthoringClientContribution({
+      moduleId: PHI_BILLING_RUNTIME_MODULE_ID,
+      loadAuthoring: () => import("../billing/authoring")
+        .then((module) => module.PhiBillingRuntimeModuleAuthoringClient),
     }),
     definePhiRuntimeModuleAuthoringClientContribution({
       moduleId: PHI_APP_RUNTIME_MODULE_ID,
